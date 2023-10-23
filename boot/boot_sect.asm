@@ -22,11 +22,11 @@
 
     jmp $
 
-%include "print_string.asm"
-%include "print_string_pm.asm"
-%include "disk_read.asm"
-%include "gdt.asm"
-%include "switch_pm.asm"
+%include "boot/print_string.asm"
+%include "boot/print_string_pm.asm"
+%include "boot/disk_read.asm"
+%include "boot/gdt.asm"
+%include "boot/switch_pm.asm"
 
 [bits 16]
 load_kernel:
