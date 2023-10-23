@@ -47,16 +47,11 @@ BEGIN_PM:
 
     call KERNEL_OFFSET ; call the kernel
 
-    mov bx, MSG_LOADED_KERNEL
-    call print_string_pm
-
-
 
 BOOT_DRIVE db 0
 MSG_REAL_MODE db "Started in 16-bit Real Mode", 0
 MSG_PROT_MODE db "Switched to 32-bit Protected Mode", 0
 MSG_LOAD_KERNEL db "Loading Kernel into memory" , 0
-MSG_LOADED_KERNEL db "Kernel Loaded Successfullyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy" , 0
 
 ; padding
 times 510-($-$$) db 0 ; pad with zeros until 510 bytes

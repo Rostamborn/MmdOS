@@ -9,7 +9,7 @@ odin build kernel/kernel.odin -file -out:bin/kernel.o -target:freestanding_amd64
 nasm -f bin boot/boot_sect.asm -o bin/boot_sect.bin
 
 echo ":: Linking objects"
-ld -o bin/kernel.bin -Ttext 0x1000 bin/kernel.o --oformat binary
+ld -o bin/kernel.bin -Ttext 0x1000 bin/kernel_entry.o bin/sse_enable.o bin/kernel.o --oformat binary
 
 
 cat bin/boot_sect.bin bin/kernel.bin > bin/os-image

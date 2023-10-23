@@ -1,6 +1,6 @@
 [bits 32]
-[extern main]
+[extern m_main]
 
-call main
+call m_main
 
 jmp $
