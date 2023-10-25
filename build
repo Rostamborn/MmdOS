@@ -3,17 +3,17 @@
 echo ":: Building the objects"
 
 nasm -f elf64 kernel/kernel_entry.asm -o bin/kernel_entry.o
-nasm -f elf64 kernel/sse_enable.asm -o bin/sse_enable.o
-odin build kernel/kernel.odin -file -out:bin/kernel.o -target:freestanding_amd64_sysv -build-mode:obj
+nasm -f elf64 kernel/cpu/cpu.asm -o bin/cpu.o
+odin build kernel -out:bin/kernel.o -target:freestanding_amd64_sysv -build-mode:obj
 
 nasm -f bin boot/boot_sect.asm -o bin/boot_sect.bin
 
 echo ":: Linking objects"
-ld -o bin/kernel.bin -Ttext 0x1000 bin/kernel_entry.o bin/sse_enable.o bin/kernel.o --oformat binary
+ld -o bin/kernel.bin -Ttext 0x1000 bin/kernel_entry.o bin/cpu.o bin/kernel.o --oformat binary
 
 
 cat bin/boot_sect.bin bin/kernel.bin > bin/os-image
 
 qemu-system-x86_64 bin/os-image
 
-rm -rf bin/*.bin bin/*.o os-image
+rm -rf bin/*.bin bin/*.o bin/os-image
