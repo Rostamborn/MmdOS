@@ -4,7 +4,7 @@
 A simple 32-bit (maybe 64-bit in the future) OS
 
 ## Installation
-You need an [Odin](http://odin-lang.org/) compiler and [qemu](https://www.qemu.org/) installed. 
+You need an [Odin](http://odin-lang.org/) compiler, [qemu](https://www.qemu.org/) and [nasm](https://www.nasm.us/) installed. 
 Then run:
 ```sh
 ./build
