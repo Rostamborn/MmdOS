@@ -1,0 +1,6 @@
+[submodule "limine@"]
+	path = limine@
+	url = https://github.com/limine-bootloader/limine
+[submodule "limine_c"]
+	path = limine_c
+	url = https://github.com/limine-bootloader/limine
