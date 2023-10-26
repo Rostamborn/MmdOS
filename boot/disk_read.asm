@@ -17,8 +17,4 @@ disk_load:
     ret
 
 disk_error:
-    mov bx, disk_error_msg
-    call print_string
     jmp $
-
-disk_error_msg: db 'Disk read error!', 0

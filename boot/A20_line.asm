@@ -8,14 +8,11 @@ check_A20:
     cmpsd             ;compare addresses to see if the're equivalent.
     popad
     jne A20_on        ;if not equivalent , A20 line is set.
-    mov ebx, MSG_A20_off
-    call print_string_pm
+    
     call enable_A20
     jmp check_A20
      
     A20_on:
-    mov ebx, MSG_A20_on
-    call print_string_pm
     ret
 
 ; Enable A20 line
