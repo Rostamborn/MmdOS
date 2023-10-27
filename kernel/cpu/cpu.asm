@@ -1,6 +1,7 @@
 [bits 32]
 
 global enable_sse
+global hcf
 
 enable_sse: ; not sure if it's correct
     mov eax, cr0
@@ -14,3 +15,9 @@ enable_sse: ; not sure if it's correct
     or ax, 3 << 9
     mov cr4, eax
     ret
+
+hcf:
+    cli
+    .loop:
+        hlt
+        jmp .loop

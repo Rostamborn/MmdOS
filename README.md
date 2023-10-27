@@ -7,16 +7,17 @@ A simple 32-bit (maybe 64-bit in the future) OS
 You need an [Odin](http://odin-lang.org/) compiler, [qemu](https://www.qemu.org/) and [nasm](https://www.nasm.us/) installed. 
 Then run:
 ```sh
-./build
+./boom
 ```
 
 #### Implemented features
 | Feature | State |
 | ------- | -------|
-| simple boot loader | working state |
+| Limine bootloader | working state |
 | kernel loading | working state |
 
 #### TODO for the forseeable future
+*** FIX THE LIMINE RELATED STUFF DURING STARTUP. LIKE THE Term_Request AND Frame_Buffers ****
 | Feature |
 | ------- |
 | implement IDT(interrupt descriptor table) |
@@ -24,12 +25,9 @@ Then run:
 | driver for screen output |
 
 #### Description
-We get the boot loader at an offset, setup our stack, then load the kernel. 
-But in order to tell the CPU which function is our main function(in freestanding platforms, this is not obvious), 
-we must provide a kernel entry point which we do in `kernel_entry.asm`. 
-We build the Kernel as an object file and then link it with other needed object files create in the 
-`bin` directory. 
-We define our low level functions(which will be used extensively in the kernel and drivers) in `cpu` package 
-and use Odin's `foreign` system to import and use those assembly functions as Odin does not support(as of yet) 
-inline assembly. Anytime we need those functions, we just import the `cpu` package and use the procedures defined in 
-`cpu.odin`.
+After using the appropriate `Limine` binaries, the `boot/limine.cfg` is checked to see where is the kernel entry point. 
+We have a `startup()` procedure which is the entry point whilst linking using the `linker` file in `kernel` directory. 
+It must be mentioned that we've ported some `Limine` functionalities according to the protocol in the `kernel/limine/limine.odin` which 
+Limine will look for symbols and magic numbers to figure them out. 
+We must do stuff according to the boot protocol and have our environment set (like memory mapping, frame buffers, etc.) 
+At the end of `startup()` we call the kernel by `kmain()`.
