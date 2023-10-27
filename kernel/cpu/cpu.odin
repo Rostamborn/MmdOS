@@ -4,6 +4,6 @@ package cpu
 
 @(default_calling_convention="sysv")
 foreign cpu {
-    call_main :: proc() ---
     enable_sse :: proc() ---
+    hcf :: proc() ---
 }
