@@ -10,19 +10,27 @@ if [ ! -d bin ]; then
 fi
 
 # # Check limine build, install if needed
-if [ ! -f limine_c/bin/limine-deploy ]; then
-    echo "Note: limine isn't build. Building limine..."
-    pushd limine_c
-    ./bootstrap
-    ./configure --enable-all CROSS_TOOLCHAIN=llvm
-    make
-    popd
-fi
 
 echo ":: Building the objects"
 nasm -f elf64 kernel/cpu/cpu.asm -o bin/cpu.o
 echo ":: Building the Kernel"
-odin build kernel -out:bin/kernel.o -target:freestanding_amd64_sysv -build-mode:obj -collection:kernel=kernel
+odin build kernel                     \
+    -out:bin/kernel.o                   \
+    -collection:kernel=kernel         \
+    -debug                            \
+    -build-mode:obj                   \
+    -target:freestanding_amd64_sysv   \
+    -no-crt                           \
+    -no-thread-local                  \
+    -no-entry-point                   \
+    -reloc-mode:pic                   \
+    -disable-red-zone                 \
+    -default-to-nil-allocator         \
+    -foreign-error-procedures         \
+    -vet                              \
+    -disallow-do                      \
+    -no-threaded-checker              \
+    -max-error-count:5
 echo ":: Linking objects"
 ld -o bin/kernel.elf bin/cpu.o bin/kernel.o -T kernel/linker
 
