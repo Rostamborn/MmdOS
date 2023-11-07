@@ -16,7 +16,6 @@ nasm -f elf64 kernel/cpu/cpu.asm -o bin/cpu.o
 echo ":: Building the Kernel"
 odin build kernel                     \
     -out:bin/kernel.o                   \
-    -collection:kernel=kernel         \
     -debug                            \
     -build-mode:obj                   \
     -target:freestanding_amd64_sysv   \
@@ -39,7 +38,7 @@ make -C limine
 mkdir -p iso_root
  
 # Copy the relevant files over.
-cp -v bin/kernel.elf boot/limine.cfg limine/limine-bios.sys \
+cp -v bin/kernel.elf limine.cfg limine/limine-bios.sys \
       limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/
  
 # Create the EFI boot tree and copy Limine's EFI executables over.

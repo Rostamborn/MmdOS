@@ -1,4 +1,4 @@
-package main
+package main 
 
 import "cpu"
 import "limine"
@@ -26,11 +26,15 @@ limine_mem_req := limine.Memmap_Request {
     revision = 0,
 }
 
-@(export, link_name="m_main")
+@(export, link_name="_start")
 m_main :: proc "contextless" () {
     cpu.enable_sse()
     context = {}
     #force_no_inline _startup_runtime()
+
+    if limine_mem_req.response == nil || limine_fb_req.response.framebuffer_count < 1 {
+        cpu.hcf()
+    }
 
     if limine_term_req.response == nil || limine_term_req.response.terminal_count < 1 {
         cpu.hcf()
@@ -42,5 +46,4 @@ m_main :: proc "contextless" () {
     ternimal_rs.write(terminal, cast([^]u8)raw_data(str), cast(u64)len(str))
 
     // kmain()
-    cpu.hcf()
 }
