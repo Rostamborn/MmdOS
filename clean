@@ -1,5 +1,0 @@
-#!/bin/bash
-rm -rf bin/
-echo ":: Removed bin"
-rm -rf iso_root/
-echo ":: Removed iso_root"
