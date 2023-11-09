@@ -1,0 +1,36 @@
+#!/bin/bash
+echo "compiling C files"
+gcc -ffreestanding \
+	-mno-red-zone \
+	-mno-80387 \
+	-mno-mmx \
+	-mno-3dnow \
+	-mno-sse \
+	-mno-sse2 \
+	-Wall \
+	-Wextra \
+    -o bin/kernel.o \
+    -c kernel/kernel.c
+
+echo "linking..."
+ld -m elf_x86_64 \
+    -nostdlib \
+    -static \
+    -pie \
+    --no-dynamic-linker \
+    -z text \
+    -z max-page-size=0x1000 \
+    -T linker.ld \
+    -o disk/kernel.elf \
+    bin/kernel.o
+
+echo "building iso..."
+xorriso -as mkisofs -b limine/limine-cd.bin -no-emul-boot \
+-boot-load-size 4 -boot-info-table --efi-boot \
+limine/limine-cd-efi.bin -efi-boot-part --efi-boot-image \
+--protective-msdos-label disk -o my_iso.iso
+
+echo "installing limine..."
+sudo ./limine-deploy my_iso.iso
+
+echo "SUCCESS"
