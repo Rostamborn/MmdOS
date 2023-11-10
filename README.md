@@ -1,10 +1,10 @@
 # MamadOS
 
 ### Overview
-A simple 32-bit (maybe 64-bit in the future) OS
+A 64-bit higher half kernel OS
 
 ## Installation
-You need an [Odin](http://odin-lang.org/) compiler, [qemu](https://www.qemu.org/) and [nasm](https://www.nasm.us/) installed. 
+You need an GCC compiler, [qemu](https://www.qemu.org/) and [nasm](https://www.nasm.us/) installed. 
 Then run:
 ```sh
 ./boom
@@ -13,21 +13,22 @@ Then run:
 #### Implemented features
 | Feature | State |
 | ------- | -------|
-| Limine bootloader | working state |
-| kernel loading | working state |
+| Limine bootloader | works |
+| kernel loading | works |
+| printing to stdout for debugging | works |
 
 #### TODO for the forseeable future
-*** FIX THE LIMINE RELATED STUFF DURING STARTUP. LIKE THE Term_Request AND Frame_Buffers ****
+*** create a functiong `Makefile` to automate the make phase(currently using bash which is not ideal)***
 | Feature |
 | ------- |
-| implement IDT(interrupt descriptor table) |
-| implement paging |
-| driver for screen output |
+| make it higher halved |
+| IDT |
+| Timer |
+| Keyboard |
 
 #### Description
-After using the appropriate `Limine` binaries, the `boot/limine.cfg` is checked to see where is the kernel entry point. 
-We have a `startup()` procedure which is the entry point whilst linking using the `linker` file in `kernel` directory. 
-It must be mentioned that we've ported some `Limine` functionalities according to the protocol in the `kernel/limine/limine.odin` which 
-Limine will look for symbols and magic numbers to figure them out. 
-We must do stuff according to the boot protocol and have our environment set (like memory mapping, frame buffers, etc.) 
-At the end of `startup()` we call the kernel by `kmain()`.
+The `C` files and potential `asm` files are compiled into object files in the `bin` 
+directory and then will be linked by the linker `ld` and the `linker.ld` script with 
+appropriate flags and the linked result will be put in `disk` directory. here the `iso` 
+will be created and `limine` will be installed on it and the result of the process would 
+be a bootable `iso`.

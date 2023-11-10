@@ -10,7 +10,7 @@ gcc -ffreestanding \
 	-Wall \
 	-Wextra \
     -o bin/kernel.o \
-    -c kernel/kernel.c
+    -c kernel/startup.c
 
 echo "linking..."
 ld -m elf_x86_64 \

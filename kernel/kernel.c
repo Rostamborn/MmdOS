@@ -28,8 +28,6 @@ void _start(void) {
         uint32_t *fb_ptr = framebuffer->address;
         fb_ptr[i * (framebuffer->pitch / 4) + i] = 0xffffff;
     }
-    volatile char *video = (volatile char*)0xB8000;
-    video[0] = 'H';
 
     hcf();
 }
