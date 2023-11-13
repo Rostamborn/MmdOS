@@ -4,11 +4,14 @@
 A 64-bit higher half kernel OS
 
 ## Installation
-You need an GCC compiler, [qemu](https://www.qemu.org/) and [nasm](https://www.nasm.us/) installed. 
+You need an [GCC compiler](https://gcc.gnu.org/), [ld linker](https://www.gnu.org/software/binutils/) 
+which are usually pre-installed on UNIX-like systems. Also [qemu](https://www.qemu.org/) and [nasm](https://www.nasm.us/) 
+[xorriso](https://www.gnu.org/software/xorriso/) must be available. 
 Then run:
 ```sh
 ./boom
 ```
+which will build, run and clean.
 
 #### Implemented features
 | Feature | State |
@@ -21,7 +24,6 @@ Then run:
 *** create a functiong `Makefile` to automate the make phase(currently using bash which is not ideal)***
 | Feature |
 | ------- |
-| make it higher halved |
 | IDT |
 | Timer |
 | Keyboard |

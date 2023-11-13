@@ -9,9 +9,10 @@ gcc -ffreestanding \
 	-mno-sse2 \
 	-Wall \
 	-Wextra \
-    -o bin/kernel.o \
-    -c kernel/startup.c
+    -mcmodel=large \
+    -c kernel/startup.c kernel/cpu.c \
 
+mv startup.o bin/ && mv cpu.o bin/
 echo "linking..."
 ld -m elf_x86_64 \
     -nostdlib \
@@ -22,7 +23,7 @@ ld -m elf_x86_64 \
     -z max-page-size=0x1000 \
     -T linker.ld \
     -o disk/kernel.elf \
-    bin/kernel.o
+    bin/startup.o bin/cpu.o \
 
 echo "building iso..."
 xorriso -as mkisofs -b limine/limine-cd.bin -no-emul-boot \

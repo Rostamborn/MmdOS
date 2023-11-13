@@ -16,7 +16,8 @@ override LDFLAGS += \
 	-nostdlib \
     -static \
     -pie \
-    --no-dynamic-linker
+    --no-dynamic-linker \
+	-T linker.ld
 
 override NASMFLAGS += \
 	-f elf64 \
@@ -31,7 +32,7 @@ OBJS += $(pathsubst %.asm, build/%.asm.o, $(ASM_SRCS))
 
 all: $(OBJS)
 	@echo "Linking..."
-	ld -o $(TARGET) $(LDFLAGS) $(OBJS) -T linker.ld
+	ld -o $(TARGET) $(LDFLAGS) $(OBJS)
 	@echo "Program Linked, placed at $(TARGET)"
 
 build/%.c.o: %.c
