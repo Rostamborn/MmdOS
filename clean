@@ -1,1 +1,1 @@
-rm -rf bin/*.o my_iso.iso disk/kernel.elf
+rm *.o my_iso.iso disk/kernel.elf

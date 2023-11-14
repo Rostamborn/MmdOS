@@ -10,9 +10,8 @@ gcc -ffreestanding \
 	-Wall \
 	-Wextra \
     -mcmodel=large \
-    -c kernel/startup.c kernel/cpu.c kernel/limine_terminal.c\
+    -c kernel/startup.c kernel/cpu.c kernel/limine_terminal.c kernel/gdt.c\
 
-mv startup.o bin/ && mv cpu.o bin/ && mv limine_terminal.o bin/
 echo "linking..."
 ld -m elf_x86_64 \
     -nostdlib \
@@ -23,7 +22,7 @@ ld -m elf_x86_64 \
     -z max-page-size=0x1000 \
     -T linker.ld \
     -o disk/kernel.elf \
-    bin/startup.o bin/cpu.o bin/limine_terminal.o\
+    startup.o gdt.o cpu.o limine_terminal.o \
 
 echo "building iso..."
 xorriso -as mkisofs -b limine/limine-cd.bin -no-emul-boot \

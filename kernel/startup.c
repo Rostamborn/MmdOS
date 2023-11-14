@@ -1,6 +1,7 @@
 #include "limine.h"
 #include "cpu.h"
 #include "limine_terminal.h"
+#include "gdt.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -13,6 +14,7 @@
 // };
 
 void _start(void) {
+    gdt_init();
     // if (frame_buf_req.response == NULL || frame_buf_req.response->framebuffer_count < 1) {
     //     hcf();
     // }
