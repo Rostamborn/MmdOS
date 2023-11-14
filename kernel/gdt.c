@@ -11,7 +11,7 @@ struct gdt_descriptor {
 };
 
 struct gdt {
-    struct gdt_descriptor descriptors[11];
+    struct gdt_descriptor descriptors[9];
 };
 
 struct gdtr {
@@ -21,29 +21,6 @@ struct gdtr {
 
 static struct gdt gdt_instance;
 static struct gdtr gdtr_instance;
-
-// void flush_gdt() {
-//     // we assume kernel code selector in 0x8
-//     asm volatile("\
-//         mov $0x10, %ax \n\
-//         mov %ax, %ds \n\
-//         mov %ax, %es \n\
-//         mov %ax, %fs \n\
-//         mov %ax, %gs \n\
-//         mov %ax, %ss \n\
-//         \n\
-//         pop %rdi \n\
-//         push $0x8 \n\
-//         push %rdi \n\
-//         retfq \n\
-//     ");
-// }
-//
-// void load_gdt() {
-//     asm volatile("lgdt %0" : : "m"(gdtr_instance));
-//     flush_gdt();
-// }
-//
 
 void gdt_load(void) {
     asm volatile (
@@ -123,20 +100,20 @@ void gdt_init() {
     gdt_instance.descriptors[6].base_high8  = 0;
 
     // User code 64.
-    gdt_instance.descriptors[9].limit       = 0;
-    gdt_instance.descriptors[9].base_low16  = 0;
-    gdt_instance.descriptors[9].base_mid8   = 0;
-    gdt_instance.descriptors[9].access      = 0b11111010;
-    gdt_instance.descriptors[9].granularity = 0b00100000;
-    gdt_instance.descriptors[9].base_high8  = 0;
+    gdt_instance.descriptors[7].limit       = 0;
+    gdt_instance.descriptors[7].base_low16  = 0;
+    gdt_instance.descriptors[7].base_mid8   = 0;
+    gdt_instance.descriptors[7].access      = 0b11111010;
+    gdt_instance.descriptors[7].granularity = 0b00100000;
+    gdt_instance.descriptors[7].base_high8  = 0;
 
     // User data 64.
-    gdt_instance.descriptors[10].limit       = 0;
-    gdt_instance.descriptors[10].base_low16  = 0;
-    gdt_instance.descriptors[10].base_mid8   = 0;
-    gdt_instance.descriptors[10].access      = 0b11110010;
-    gdt_instance.descriptors[10].granularity = 0;
-    gdt_instance.descriptors[10].base_high8  = 0;
+    gdt_instance.descriptors[8].limit       = 0;
+    gdt_instance.descriptors[8].base_low16  = 0;
+    gdt_instance.descriptors[8].base_mid8   = 0;
+    gdt_instance.descriptors[8].access      = 0b11110010;
+    gdt_instance.descriptors[8].granularity = 0;
+    gdt_instance.descriptors[8].base_high8  = 0;
 
     gdtr_instance.limit = sizeof(struct gdt) - 1;
     gdtr_instance.address = (uint64_t)&gdt_instance;

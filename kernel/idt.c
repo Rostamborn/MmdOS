@@ -36,5 +36,5 @@ void load_idt(void *idt_address) {
     struct idtr idtr_instance; // it's ok to have it on stack as IDTR register will keep the copy.
     idtr_instance.limit = 0xfff;
     idtr_instance.address = (uint64_t)idt_address;
-    asm volatile("lidt %0" : : "m"(idtr_instance));
+    asm volatile("lidt %0" : : "m"(idtr_instance) : "memory");
 }
