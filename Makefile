@@ -1,4 +1,4 @@
-ISO_FILENAME := build/mamadOS.iso
+ISO_FILENAME = mamadOS.iso
 override DEFAULT_CC := gcc
 override DEFAULT_LD := ld
 override DEFAULT_CFLAGS += \
@@ -10,43 +10,94 @@ override DEFAULT_CFLAGS += \
 	-mno-sse \
 	-mno-sse2 \
 	-Wall \
-	-Wextra
+	-Wextra \
+    -mcmodel=large \
 
 override LDFLAGS += \
-	-nostdlib \
+	-m elf_x86_64 \
+    -nostdlib \
     -static \
     -pie \
     --no-dynamic-linker \
-	-T linker.ld
+    -z text \
+    -z max-page-size=0x1000 \
+    -T linker.ld \
 
 override NASMFLAGS += \
-	-f elf64 \
-	-Wall \
+	-felf64 \
 
-C_SRCS := $(wildcard *.c)
-ASM_SRCS := $(wildcard *.asm)
-TARGET := build/kernel.elf
+override XORRISOFLAGS += \
+	-as mkisofs \
+	-b limine/limine-cd.bin \
+	-no-emul-boot \
+	-boot-load-size 4 \
+	-boot-info-table \
+	--efi-boot \
+	limine/limine-cd-efi.bin \
+	-efi-boot-part \
+	--efi-boot-image \
+	--protective-msdos-label disk \
 
-OBJS = $(pathsubst %.c, build/%.c.o, $(C_SRCS))
-OBJS += $(pathsubst %.asm, build/%.asm.o, $(ASM_SRCS))
+LIMINE_DEPLOY := ./limine-deploy		
+
+KERNEL_DIR := ./kernel
+OBJECTS_DIR := ./obj
+# C_SRCS = $(wildcard *.c)
+# ASM_SRCS = $(wildcard *.asm)
+KERNEL_C_FILES :=  $(wildcard $(KERNEL_DIR)/*.c)
+KERNEL_C_FILES +=  $(wildcard $(KERNEL_DIR)/*.h)
+KERNEL_ASSEMBLY_FILES := $(wildcard $(KERNEL_DIR)/*.asm)
+
+TARGET := disk/kernel.elf
+
+OBJS := $(pathsubst $(KERNEL_DIR)/%.c)
+OBJS += $(pathsubst $(KERNEL_DIR)/%.asm)
 
 all: $(OBJS)
-	@echo "Linking..."
-	ld -o $(TARGET) $(LDFLAGS) $(OBJS)
-	@echo "Program Linked, placed at $(TARGET)"
+	@echo "making kernel"
+	make kernel -B
+
+	@echo "making iso"
+	make iso -B
+
+	@echo "deploying lemine"
+	make deploy-limine -B
+
+kernel: $(KERNEL_C_FILES, KERNEL_ASSEMBLY_FILES)
+	@echo "compiling c files to objects"
+	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -c $(KERNEL_C_FILES)
+	mv *.o $(OBJECTS_DIR)
+
+	@echo "compiling assembly files to objects"
+	nasm ${KERNEL_ASSEMBLY_FILES} ${NASMFLAGS} -o $(OBJECTS_DIR)/interrupt_vector.o
+
+	@echo "linking..."
+	$(DEFAULT_LD) $(LDFLAGS) -o $(TARGET) \
+	$(OBJECTS_DIR)/*.o
+
+	@echo "created kernel"
+
+iso: 
+	@echo "building iso"
+	xorriso $(XORRISOFLAGS) \
+	-o $(ISO_FILENAME)
+	@echo "iso built"
+
+deploy-limine:
+	sudo $(LIMINE_DEPLOY) $(ISO_FILENAME)
 
 build/%.c.o: %.c
 	@echo "Compiling C files..."
 	@mkdir -p $(@D)
-	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -c $< -o $@
+	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -c $< 
 
 build/%.asm.o: %.asm
 	@echo "Assembling file: $<"
 	@mkdir -p $(@D)
 	nasm $(NASMFLAGS) $< -c -o $@
 
-run: build/mamadOS.iso
-	qemu-system-x86_64 -cdrom -monitor $(ISO_FILENAME)
+run: $(ISO_FILENAME)
+	qemu-system-x86_64 -serial stdio $(ISO_FILENAME)
 
 clean :
-	rm -r build/*.o bulid/*.bin build/*.elf build/*.iso
+	rm $(OBJECTS_DIR)/* $(ISO_FILENAME) $(TARGET)
