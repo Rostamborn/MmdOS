@@ -4,9 +4,9 @@
 
 extern void *isr_stub_table[];
 
-struct interrupt_descriptor {
+struct interrupt_descriptor { // I think it's also called a gate descriptor
     uint16_t address_low;
-    uint16_t selector;
+    uint16_t selector; // this would be the base address of the code segment
     uint8_t ist;
     uint8_t flags;
     uint16_t address_mid;
@@ -41,13 +41,15 @@ struct interrupt_frame {
     uint64_t rcx;
     uint64_t rbx;
     uint64_t rax;
+    uint64_t int_number; // this is pushed in the macro (Hopefully it's 8 bytes)
+    uint64_t error_code; // This is pushed by the cpu if the interrupt is an error interrupt.
+                         // If not, then we push a dummy value of 0(in the macro)
     uint64_t iret_rip; // iret prefix means that the cpu pushed this automatically and we didn't
     uint64_t iret_cs;
     uint64_t iret_flags;
     uint64_t iret_rsp;
     uint64_t iret_ss;
-    uint64_t int_number; // this is pushed in the macro (Hopefully it's 8 bytes)
-    uint64_t error_code; // this is pushed in the macro (Hopefully it's 8 bytes)
+
 } __attribute__ ((packed));
 
 // because we have the interrupt number, we can send all interrupts here and then call
@@ -169,7 +171,7 @@ void set_interrupt_descriptor(uint8_t vector, void *handler, uint8_t dpl) {
     entry->address_low = handler_address & 0xffff;
     entry->address_mid = (handler_address >> 16) & 0xffff;
     entry->address_high = (handler_address >> 32) & 0xffffffff;
-    entry->selector = 0x28; // kernel code selector is 0x28
+    entry->selector = 0x28; // kernel code selector is 0x28 (refer to GDT). the base address of the code segment
     entry->flags = 0b1110 | ((dpl & 0b11) << 5) | (1 << 7);
     entry->ist = 0;
     entry->reserved = 0;
@@ -177,13 +179,15 @@ void set_interrupt_descriptor(uint8_t vector, void *handler, uint8_t dpl) {
 
 void idt_load() {
     struct idtr idtr_instance; // it's ok to have it on stack as IDTR register will keep the copy.
-    idtr_instance.limit = 256 * sizeof(struct interrupt_descriptor) - 1;
+    idtr_instance.limit = 256 * sizeof(struct interrupt_descriptor) - 1; // the limit is added to the base address.
+                                                                         // the minus one is because we want
+                                                                         // point to the last byte of the table.
     idtr_instance.address = (uint64_t)idt;
     asm volatile("lidt %0" : : "m"(idtr_instance) : "memory");
     asm volatile("sti");
 }
 
-// populate the idt with the interrupt stubs
+// populate the idt with the interrupt stubs (no need to populate all of the table)
 extern void idt_init() {
     // for (int i = 0; i < 256; i++) {
     //     set_interrupt_descriptor(i, isr_stub_table[i], 0);

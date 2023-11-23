@@ -22,6 +22,24 @@ struct gdtr {
 static struct gdt gdt_instance;
 static struct gdtr gdtr_instance;
 
+// TODO: implement this later
+struct tss {
+    uint32_t unused0;
+    uint64_t rsp0;
+    uint64_t rsp1;
+    uint64_t rsp2;
+    uint64_t unused1;
+    uint64_t ist1;
+    uint64_t ist2;
+    uint64_t ist3;
+    uint64_t ist4;
+    uint64_t ist5;
+    uint64_t ist6;
+    uint64_t ist7;
+    uint64_t unused2;
+    uint32_t iopb;
+} __attribute__((packed));
+
 void gdt_load(void) {
     asm volatile (
         "lgdt %0\n\t"

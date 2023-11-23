@@ -5,12 +5,33 @@
 #define PORT 0x3f8
 #define LOG_PREFIX "LOG :: "
 
+#define PIC_COMMAND_MASTER 0x20
+#define PIC_DATA_MASTER 0x21
+#define PIC_COMMAND_SLAVE 0xa0
+#define PIC_DATA_SLAVE 0xa1
+
+#define ICW_1 0x11
+#define ICW_2_MASTER 0x20
+#define ICW_2_SLAVE 0x28
+#define ICW_3_MASTER 0x4 // 0x04 ??
+#define ICW_3_SLAVE 0x2 // 0x02 ??
+#define ICW_4 0x1 // not sure
+
+
 // halt, catch fire
 void hcf(void) {
     asm ("cli");
     for (;;) {
         asm ("hlt");
     }
+}
+
+inline void enable_interrupts() {
+    asm volatile("sti");
+}
+
+inline void disable_interrupts() {
+    asm volatile("clie");
 }
 
 // to communicate with the serial port
@@ -92,4 +113,24 @@ void print_digit(uint8_t digit) {
     }
 
     log_to_serial(str);
+}
+
+void disable_pic() {
+    // ICW: https://wiki.osdev.org/8259_PIC#Initialisation
+    outb(PIC_COMMAND_MASTER, ICW_1);
+    outb(PIC_COMMAND_SLAVE, ICW_1);
+    outb(PIC_DATA_MASTER, ICW_2_MASTER);
+    outb(PIC_DATA_SLAVE, ICW_2_SLAVE);
+    outb(PIC_DATA_MASTER, ICW_3_MASTER);
+    outb(PIC_DATA_SLAVE, ICW_3_SLAVE);
+    outb(PIC_DATA_MASTER, ICW_4);
+    outb(PIC_DATA_SLAVE, ICW_4);
+    outb(PIC_DATA_MASTER, 0xff);
+    outb(PIC_DATA_SLAVE, 0xff);
+}
+
+inline uint64_t rdmsr(uint32_t msr) { // read model specific register insctruction
+    uint32_t low = 0, high = 0; // low: eax, high: edx, input: ecx
+    asm volatile("rdmsr" : "=a" (low), "=d" (high) : "c" (msr) : "memory");
+    return ((uint64_t)high << 32) | low; // return the 64-bit result
 }

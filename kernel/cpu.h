@@ -13,3 +13,7 @@ int init_serial();
 void log_to_serial(char *string);
 
 void print_digit(uint8_t digit);
+
+void disable_pic();
+
+inline uint64_t rdmsr(uint32_t msr);

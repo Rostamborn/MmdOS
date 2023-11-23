@@ -100,4 +100,4 @@ run: $(ISO_FILENAME)
 	qemu-system-x86_64 -serial stdio $(ISO_FILENAME)
 
 clean :
-	rm $(OBJECTS_DIR)/* $(ISO_FILENAME) $(TARGET)
+	rm $(OBJECTS_DIR)/* $(ISO_FILENAME) $(TARGET) kernel/*.h.gch
