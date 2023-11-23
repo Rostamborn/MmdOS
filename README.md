@@ -9,7 +9,8 @@ which are usually pre-installed on UNIX-like systems. Also [qemu](https://www.qe
 [xorriso](https://www.gnu.org/software/xorriso/) must be available. 
 Then run:
 ```sh
-./boom
+make
+make run
 ```
 which will build, run and clean.
 
@@ -20,12 +21,12 @@ which will build, run and clean.
 | kernel loading | works |
 | printing to stdout for debugging | works |
 | IDT | Kinda works |
+| LAPIC | Kinda works |
 
 #### TODO for the forseeable future
-*** create a functiong `Makefile` to automate the make phase(currently using bash which is not ideal)***
 | Feature to be implemented |
 | ------- |
-| APIC |
+| I/O APIC |
 | Timer |
 | Keyboard |
 

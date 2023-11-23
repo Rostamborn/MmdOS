@@ -85,6 +85,9 @@ interrupt_stub:
     pop rbx
     pop rax
     add rsp, 16 ; remove interrupt number and error code as the stacks grows downwards
+
+; TODO: send EOI interrupt(don't know how D:)
+
     iretq
 ;
 ; global isr_stub_table

@@ -31,7 +31,7 @@ inline void enable_interrupts() {
 }
 
 inline void disable_interrupts() {
-    asm volatile("clie");
+    asm volatile("cli");
 }
 
 // to communicate with the serial port
@@ -129,7 +129,7 @@ void disable_pic() {
     outb(PIC_DATA_SLAVE, 0xff);
 }
 
-inline uint64_t rdmsr(uint32_t msr) { // read model specific register insctruction
+uint64_t rdmsr(uint32_t msr) { // read model specific register insctruction
     uint32_t low = 0, high = 0; // low: eax, high: edx, input: ecx
     asm volatile("rdmsr" : "=a" (low), "=d" (high) : "c" (msr) : "memory");
     return ((uint64_t)high << 32) | low; // return the 64-bit result

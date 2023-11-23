@@ -16,4 +16,8 @@ void print_digit(uint8_t digit);
 
 void disable_pic();
 
-inline uint64_t rdmsr(uint32_t msr);
+uint64_t rdmsr(uint32_t msr);
+
+inline void enable_interrupts();
+
+inline void enable_interrupts();

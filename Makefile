@@ -38,14 +38,13 @@ override XORRISOFLAGS += \
 	--efi-boot-image \
 	--protective-msdos-label disk \
 
-LIMINE_DEPLOY := ./limine-deploy		
+LIMINE_DEPLOY := ./disk/limine/limine-deploy
 
 KERNEL_DIR := ./kernel
 OBJECTS_DIR := ./obj
 # C_SRCS = $(wildcard *.c)
 # ASM_SRCS = $(wildcard *.asm)
 KERNEL_C_FILES :=  $(wildcard $(KERNEL_DIR)/*.c)
-KERNEL_C_FILES +=  $(wildcard $(KERNEL_DIR)/*.h)
 KERNEL_ASSEMBLY_FILES := $(wildcard $(KERNEL_DIR)/*.asm)
 
 TARGET := disk/kernel.elf
@@ -99,5 +98,5 @@ build/%.asm.o: %.asm
 run: $(ISO_FILENAME)
 	qemu-system-x86_64 -serial stdio $(ISO_FILENAME)
 
-clean :
-	rm $(OBJECTS_DIR)/* $(ISO_FILENAME) $(TARGET) kernel/*.h.gch
+clean:
+	rm $(OBJECTS_DIR)/* $(ISO_FILENAME) $(TARGET)
