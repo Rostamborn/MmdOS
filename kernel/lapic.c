@@ -15,7 +15,7 @@
 #define LAPIC_REG_SPURIOUS 0xf0
 #define LAPIC_REG_CMCI 0x2f0 // LVT Corrected machine check interrupt
 #define LAPIC_REG_ICR0 0x300 // Interrupt command register
-#define LAPIC_REG_ICR1 0x310
+#define LAPIC_REG_ICR1 0x310 // /ICR1 should be written first and then ICR0
 #define LAPIC_REG_LVT_TIMER 0x320
 #define LAPIC_REG_TIMER_INITCNT 0x380 // Initial count register
 #define LAPIC_REG_TIMER_CURCNT 0x390 // Current count register
@@ -44,11 +44,19 @@ uint32_t lapic_read(uintptr_t offset) {
     return *(uintptr_t*)(LAPIC_BASE_ADDR + offset);
 }
 
+void lapic_send_ipi(uint32_t id, uint8_t vector) { // IPI: we can send an interrupt to the target
+                                                   // core(id) with the given offset(index) 
+                                                   // in the interrupt vector(vector)
+    lapic_write(LAPIC_REG_ICR1, id << 24);
+    lapic_write(LAPIC_REG_ICR0, vector); // by writing to the lower half, we send the interrupt
+}
+
+// *** send EOI interrupt before iret whilst handling interrupts ***
 void lapic_init() {
-    // THIS IS FOR APIC
     // NOTE: not sure about the casting
     // uintptr_t *apic_base = (uintptr_t*)rdmsr(IA32_APIC_BASE_MSR);// 0xfee00000; // APIC base address
     
     lapic_write(LAPIC_REG_SPURIOUS, 0x1ff | (1 << 8)); // enable spurious interrupt vector
     lapic_write(LAPIC_REG_EOI, LAPIC_EOI_ACK); // Acknowledge any outstanding interrupts
+                                               // TODO: Be sure to send EOI interrupt before iret
 }

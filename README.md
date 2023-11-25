@@ -48,3 +48,4 @@ registers in order to save the state and calls `interrupt_dispatch` which takes 
 can now properly handle the raised interrupt with their associated number. How do we access this number? Using the stack pointer we just pushed. 
 To ease the access to the contents of the stack, we create a struct which mirrors the stack in terms of it's contents and also order(`interrupt_frame` structure).
 there's still a lot more to finish handling interrupts...
+*** we can send interrupts using the `lapic_send_ipi` function in `lapic.c` ***
