@@ -36,12 +36,18 @@
 // #define X2LAPIC_REG_TIMER_DIV 0x83e
 
 // I think this doesn't work...
+// But this must be how we send interrupts
 void lapic_write(uintptr_t offset, uint32_t value) {
     *(uintptr_t*)(LAPIC_BASE_ADDR + offset) = value;
 }
 
 uint32_t lapic_read(uintptr_t offset) {
     return *(uintptr_t*)(LAPIC_BASE_ADDR + offset);
+}
+
+void lapic_eoi() {
+    lapic_write(LAPIC_REG_EOI, LAPIC_EOI_ACK);
+    // be sure to send EOI before iret
 }
 
 void lapic_send_ipi(uint32_t id, uint8_t vector) { // IPI: we can send an interrupt to the target
@@ -51,12 +57,24 @@ void lapic_send_ipi(uint32_t id, uint8_t vector) { // IPI: we can send an interr
     lapic_write(LAPIC_REG_ICR0, vector); // by writing to the lower half, we send the interrupt
 }
 
+void lapic_timer_stop() {
+    lapic_write(LAPIC_REG_TIMER_INITCNT, 0);
+    lapic_write(LAPIC_REG_LVT_TIMER, 1 << 16);
+}
+
+void lapic_one_shot_timer(uint64_t ticks) {
+    lapic_write(LAPIC_REG_TIMER_INITCNT, ticks);
+    // lapic_write(LAPIC_REG_LVT_TIMER, 32 | (1 << 17));
+}
+
+// NOTE: IDK what the return value is...
+uint64_t lapic_reg_id() {
+    return lapic_read(LAPIC_REG_ID);
+}
+
 // *** send EOI interrupt before iret whilst handling interrupts ***
 void lapic_init() {
-    // NOTE: not sure about the casting
-    // uintptr_t *apic_base = (uintptr_t*)rdmsr(IA32_APIC_BASE_MSR);// 0xfee00000; // APIC base address
-    
+        
+    // enabling apic
     lapic_write(LAPIC_REG_SPURIOUS, 0x1ff | (1 << 8)); // enable spurious interrupt vector
-    lapic_write(LAPIC_REG_EOI, LAPIC_EOI_ACK); // Acknowledge any outstanding interrupts
-                                               // TODO: Be sure to send EOI interrupt before iret
 }

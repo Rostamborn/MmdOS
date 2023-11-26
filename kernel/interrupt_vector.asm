@@ -50,6 +50,7 @@ isr_err 14
 %endrep
 
 extern interrupt_dispatch
+extern lapic_eoi
 interrupt_stub:
     push rax
     push rbx
@@ -86,10 +87,10 @@ interrupt_stub:
     pop rax
     add rsp, 16 ; remove interrupt number and error code as the stacks grows downwards
 
-; TODO: send EOI interrupt(don't know how D:)
+    call lapic_eoi ; send EOI(End of Interrupt) to local APIC
 
     iretq
-;
+
 ; global isr_stub_table
 ; isr_stub_table:
 ;     %assign i 0

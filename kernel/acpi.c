@@ -38,13 +38,20 @@ struct rsdt { // root system description table
     char sdt_entry[];
 } __attribute__((packed));
 
+struct madt { // multiple APIC description table
+    struct sdt_header header;
+    uint32_t local_controller_addr;
+    uint32_t flags;
+    // char madt_entries[];
+} __attribute__((packed));
+
 void acpi_init() {
     struct limine_rsdp_response *rsdp_resp = rsdp_req.response;
     if (rsdp_resp == NULL || rsdp_resp->address == NULL) {
         hcf();
     }
 
-    struct rsdp *rsdp = rsdp_resp->address;
+    // struct rsdp *rsdp = rsdp_resp->address;
 
     // TODO: I don't know what to do D:
 }

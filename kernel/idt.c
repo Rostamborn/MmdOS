@@ -7,7 +7,7 @@ extern void *isr_stub_table[];
 struct interrupt_descriptor { // I think it's also called a gate descriptor
     uint16_t address_low;
     uint16_t selector; // this would be the base address of the code segment
-    uint8_t ist;
+    uint8_t ist; // should have zero value
     uint8_t flags;
     uint16_t address_mid;
     uint32_t address_high;
@@ -189,57 +189,59 @@ void idt_load() {
 
 // populate the idt with the interrupt stubs (no need to populate all of the table)
 extern void idt_init() {
+    // NOTE(ARMAN): I hope this works
+    // 32 onwards are IRQs
     // for (int i = 0; i < 256; i++) {
     //     set_interrupt_descriptor(i, isr_stub_table[i], 0);
     // }
     set_interrupt_descriptor(0, isr0, 0);
-    set_interrupt_descriptor(0, isr1, 0);
-    set_interrupt_descriptor(0, isr2, 0);
-    set_interrupt_descriptor(0, isr3, 0);
-    set_interrupt_descriptor(0, isr4, 0);
-    set_interrupt_descriptor(0, isr5, 0);
-    set_interrupt_descriptor(0, isr6, 0);
-    set_interrupt_descriptor(0, isr7, 0);
-    set_interrupt_descriptor(0, isr_err8, 0);
-    set_interrupt_descriptor(0, isr9, 0);
-    set_interrupt_descriptor(0, isr_err10, 0);
-    set_interrupt_descriptor(0, isr_err11, 0);
-    set_interrupt_descriptor(0, isr_err12, 0);
-    set_interrupt_descriptor(0, isr_err13, 0);
-    set_interrupt_descriptor(0, isr_err14, 0);
-    set_interrupt_descriptor(0, isr15, 0);
-    set_interrupt_descriptor(0, isr16, 0);
-    set_interrupt_descriptor(0, isr17, 0);
-    set_interrupt_descriptor(0, isr18, 0);
-    set_interrupt_descriptor(0, isr19, 0);
-    set_interrupt_descriptor(0, isr20, 0);
-    set_interrupt_descriptor(0, isr21, 0);
-    set_interrupt_descriptor(0, isr22, 0);
-    set_interrupt_descriptor(0, isr23, 0);
-    set_interrupt_descriptor(0, isr24, 0);
-    set_interrupt_descriptor(0, isr25, 0);
-    set_interrupt_descriptor(0, isr26, 0);
-    set_interrupt_descriptor(0, isr27, 0);
-    set_interrupt_descriptor(0, isr28, 0);
-    set_interrupt_descriptor(0, isr29, 0);
-    set_interrupt_descriptor(0, isr30, 0);
-    set_interrupt_descriptor(0, isr31, 0);
-    set_interrupt_descriptor(0, isr32, 0);
-    set_interrupt_descriptor(0, isr33, 0);
-    set_interrupt_descriptor(0, isr34, 0);
-    set_interrupt_descriptor(0, isr35, 0);
-    set_interrupt_descriptor(0, isr36, 0);
-    set_interrupt_descriptor(0, isr37, 0);
-    set_interrupt_descriptor(0, isr38, 0);
-    set_interrupt_descriptor(0, isr39, 0);
-    set_interrupt_descriptor(0, isr40, 0);
-    set_interrupt_descriptor(0, isr41, 0);
-    set_interrupt_descriptor(0, isr42, 0);
-    set_interrupt_descriptor(0, isr43, 0);
-    set_interrupt_descriptor(0, isr44, 0);
-    set_interrupt_descriptor(0, isr45, 0);
-    set_interrupt_descriptor(0, isr46, 0);
-    set_interrupt_descriptor(0, isr47, 0);
+    set_interrupt_descriptor(1, isr1, 0);
+    set_interrupt_descriptor(2, isr2, 0);
+    set_interrupt_descriptor(3, isr3, 0);
+    set_interrupt_descriptor(4, isr4, 0);
+    set_interrupt_descriptor(5, isr5, 0);
+    set_interrupt_descriptor(6, isr6, 0);
+    set_interrupt_descriptor(7, isr7, 0);
+    set_interrupt_descriptor(8, isr_err8, 0);
+    set_interrupt_descriptor(9, isr9, 0);
+    set_interrupt_descriptor(10, isr_err10, 0);
+    set_interrupt_descriptor(11, isr_err11, 0);
+    set_interrupt_descriptor(12, isr_err12, 0);
+    set_interrupt_descriptor(13, isr_err13, 0);
+    set_interrupt_descriptor(14, isr_err14, 0);
+    set_interrupt_descriptor(15, isr15, 0);
+    set_interrupt_descriptor(16, isr16, 0);
+    set_interrupt_descriptor(17, isr17, 0);
+    set_interrupt_descriptor(18, isr18, 0);
+    set_interrupt_descriptor(19, isr19, 0);
+    set_interrupt_descriptor(20, isr20, 0);
+    set_interrupt_descriptor(21, isr21, 0);
+    set_interrupt_descriptor(22, isr22, 0);
+    set_interrupt_descriptor(23, isr23, 0);
+    set_interrupt_descriptor(24, isr24, 0);
+    set_interrupt_descriptor(25, isr25, 0);
+    set_interrupt_descriptor(26, isr26, 0);
+    set_interrupt_descriptor(27, isr27, 0);
+    set_interrupt_descriptor(28, isr28, 0);
+    set_interrupt_descriptor(29, isr29, 0);
+    set_interrupt_descriptor(30, isr30, 0);
+    set_interrupt_descriptor(31, isr31, 0);
+    set_interrupt_descriptor(32, isr32, 0); // here on would be IRQs
+    set_interrupt_descriptor(33, isr33, 0);
+    set_interrupt_descriptor(34, isr34, 0);
+    set_interrupt_descriptor(35, isr35, 0);
+    set_interrupt_descriptor(36, isr36, 0);
+    set_interrupt_descriptor(37, isr37, 0);
+    set_interrupt_descriptor(38, isr38, 0);
+    set_interrupt_descriptor(39, isr39, 0);
+    set_interrupt_descriptor(40, isr40, 0);
+    set_interrupt_descriptor(41, isr41, 0);
+    set_interrupt_descriptor(42, isr42, 0);
+    set_interrupt_descriptor(43, isr43, 0);
+    set_interrupt_descriptor(44, isr44, 0);
+    set_interrupt_descriptor(45, isr45, 0);
+    set_interrupt_descriptor(46, isr46, 0);
+    set_interrupt_descriptor(47, isr47, 0);
 
     idt_load();
 }

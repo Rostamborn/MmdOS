@@ -21,3 +21,5 @@ uint64_t rdmsr(uint32_t msr);
 inline void enable_interrupts();
 
 inline void enable_interrupts();
+
+void memset_k(void *ptr, uint8_t value, uint64_t size);

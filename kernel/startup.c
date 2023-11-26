@@ -42,6 +42,7 @@ void _start(void) {
     init_serial();
     log_to_serial("Hello, world!\n");
     print_digit(123);
+    uint8_t a = 1/0; // I can not belive the interrupt system works
 
     hcf(); // halt, catch fire
 }
