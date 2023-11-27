@@ -10,8 +10,10 @@ void lapic_send_ipi(uint32_t id, uint8_t vector);
 
 void lapic_timer_stop();
 
-void lapic_one_shot_timer(uint64_t ticks);
+void lapic_one_shot_timer(uint32_t ticks);
 
-uint64_t lapic_reg_id();
+void lapic_timer_periodic(uint32_t ticks);
+
+uint32_t lapic_reg_id();
 
 void lapic_init();

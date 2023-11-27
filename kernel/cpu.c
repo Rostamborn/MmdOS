@@ -34,15 +34,15 @@ inline void disable_interrupts() {
     asm volatile("cli");
 }
 
-// to communicate with the serial port
-extern inline unsigned char inb(int portnum) {
+// to communicate with ports(using inb & outb asm instructions)
+extern unsigned char inb(int portnum) {
     unsigned char data = 0;
     __asm__ __volatile__("inb %%dx, %%al" : "=a" (data) : "d" (portnum));
     // "=a" is the output operand and "d" is the input operand
     return data;
 }
 
-extern inline unsigned char outb(int portnum, unsigned char value) {
+extern unsigned char outb(int portnum, unsigned char value) {
     __asm__ __volatile__("outb %%al, %%dx" : : "a" (value), "d" (portnum));
     return value;
 }

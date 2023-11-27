@@ -49,3 +49,16 @@ can now properly handle the raised interrupt with their associated number. How d
 To ease the access to the contents of the stack, we create a struct which mirrors the stack in terms of it's contents and also order(`interrupt_frame` structure).
 there's still a lot more to finish handling interrupts...
 *** we can send interrupts using the `lapic_send_ipi` function in `lapic.c` ***
+
+#### I/O APIC
+the regular `local APIC(lapic)` works just fine as indicated by divion by zero. 
+now we need to implement `I/O APIC` to handle interrupts sent by peripheral hardware 
+and redirect them to LAPIC so that it could send it to the CPU. `LAPIC` is highly important
+for the development of the rest of the OS and stuff like timers and keyboards and etc. must 
+be handled with it. 
+note for MAHBOD: pay attention to the `lapic.c` and `timer.c` files. I/O APIC somehow requires a table 
+called `MADT` which I tried to ignore and hardcoce addresses. If you need to implement it pay attention to
+`acpi.c` which contains the `RSDT` which is need for `MADT` (I think :D ).
+the goal for now is to be able to handle interrupts easily with `ioapic` and defite the `PIT` timer to be able
+to calibrate other timers with it and use them throught the kernel.
+May the gods give you courage and the mental fortification needed for this foul endeavour. good luck soldier.

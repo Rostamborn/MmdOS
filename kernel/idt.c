@@ -124,36 +124,55 @@ extern struct interrupt_frame* interrupt_dispatch(struct interrupt_frame *frame)
             log_to_serial("Reserved\n");
             break;
         case 22:
+            log_to_serial("Reserved\n");
             // do something 
             break;
         case 23:
+            log_to_serial("TIMER\n");
             // do something
             break;
         case 24:
+            log_to_serial("TIMER\n");
             // do something
             break;
         case 25:
+            log_to_serial("TIMER\n");
             // do something
             break;
         case 26:
+            log_to_serial("TIMER\n");
             // do something
             break;
         case 27:
+            log_to_serial("TIMER\n");
             // do something
             break;
         case 28:
+            log_to_serial("TIMER\n");
             // do something
         case 29:
+            log_to_serial("TIMER\n");
             // do something
             break;
         case 30:
+            log_to_serial("TIMER\n");
             // do something
             break;
         case 31:
+            log_to_serial("TIMER\n");
             // do something
             break;
+        case 32:
+            log_to_serial("TIMER\n");
+            break;
+        case 33:
+            log_to_serial("TIMER\n");
+            break;
+        case 34:
+            log_to_serial("TIMER\n");
+            break;
         default:
-            // do something
+            log_to_serial("Unknown interrupt\n");
             break;
     }
 

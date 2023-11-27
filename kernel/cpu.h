@@ -2,9 +2,9 @@
 
 #define PORT 0x3f8
 
-extern inline unsigned char inb(int portnum);
+extern unsigned char inb(int portnum);
 
-extern inline unsigned char outb(int portnum, unsigned char value);
+extern unsigned char outb(int portnum, unsigned char value);
 
 void hcf(void);
 
