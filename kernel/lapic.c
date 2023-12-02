@@ -27,7 +27,7 @@
 #define IOAPIC_BASE 0xfec00000
 #define IOREGSEL 0x00 // I/O register select: We put the offset to select the desired register(ID, VER, etc.)
 #define IOWIN 0x10 // I/O APIC window: after IOREGSEL is set, we read/write the value from this register
-                   // read or write heppens when IOWIN is accessed.
+                   // read or write happens when IOWIN is accessed.
 #define IOAPIC_REG_ID 0x00 // ID
 #define IOAPIC_REG_VER 0x01 // version
 #define IOAPIC_REG_ARB 0x02 // arbitration ID
@@ -56,7 +56,7 @@ void lapic_eoi() {
     // be sure to send EOI before iret
 }
 
-// CUATION: hasn't been tested yet
+// CAUTION: hasn't been tested yet
 void lapic_send_ipi(uint32_t id, uint8_t vector) { // IPI: we can send an interrupt to the target
                                                    // core(id) with the given offset(index) 
                                                    // in the interrupt vector(vector)

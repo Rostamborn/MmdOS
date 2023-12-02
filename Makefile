@@ -41,11 +41,14 @@ override XORRISOFLAGS += \
 LIMINE_DEPLOY := ./disk/limine/limine-deploy
 
 KERNEL_DIR := ./kernel
+LIB_C_DIR := ./lib
 OBJECTS_DIR := ./obj
 # C_SRCS = $(wildcard *.c)
 # ASM_SRCS = $(wildcard *.asm)
 KERNEL_C_FILES :=  $(wildcard $(KERNEL_DIR)/*.c)
 KERNEL_ASSEMBLY_FILES := $(wildcard $(KERNEL_DIR)/*.asm)
+
+LIB_C_FILES := $(wildcard $(LIB_C_DIR)/*.c)
 
 TARGET := disk/kernel.elf
 
@@ -75,6 +78,11 @@ kernel: $(KERNEL_C_FILES, KERNEL_ASSEMBLY_FILES)
 	$(OBJECTS_DIR)/*.o
 
 	@echo "created kernel"
+
+lib: $(LIB_C_FILES)
+	@echo "compiling c files to objects"
+	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -c $(LIB_C_FILES)
+	mv *.o $(OBJECTS_DIR)
 
 iso: 
 	@echo "building iso"
