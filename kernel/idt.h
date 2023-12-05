@@ -1,36 +1,5 @@
 #include <stdint.h>
-
-// Note(Arman): This is nothing short of genius. We pass the stack pointer to
-// interrupt_dispatch in interrupt_stub. To make it easier to access the stack
-// contents, we create a struct which resembles the pushed content and thus we
-// can access the stack contents easily.
-typedef struct {
-    uint64_t rbp;
-    uint64_t r15;
-    uint64_t r14;
-    uint64_t r13;
-    uint64_t r12;
-    uint64_t r11;
-    uint64_t r10;
-    uint64_t r9;
-    uint64_t r8;
-    uint64_t rsi;
-    uint64_t rdi;
-    uint64_t rdx;
-    uint64_t rcx;
-    uint64_t rbx;
-    uint64_t rax;
-    uint64_t int_number; // this is pushed in the macro (Hopefully it's 8 bytes)
-    uint64_t error_code; // This is pushed by the cpu if the interrupt is an error interrupt.
-                         // If not, then we push a dummy value of 0(in the macro)
-    uint64_t iret_rip; // iret prefix means that the cpu pushed this automatically and we didn't
-    uint64_t iret_cs;
-    uint64_t iret_flags;
-    uint64_t iret_rsp;
-    uint64_t iret_ss;
-
-} __attribute__ ((packed)) interrupt_frame;
-
+#include "cpu.h"
 
 extern void idt_init(void);
 // extern struct interrupt_frame *interrupt_dispatch(struct interrupt_frame *frame);

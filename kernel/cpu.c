@@ -93,6 +93,10 @@ void log_to_serial(char *string) {
 
 }
 
+char* decimal_to_str(uint64_t digit) {
+    return "0";
+}
+
 // NOTE(Arman): I made this in a hurry, so it's not the best
 void log_to_serial_digit(uint64_t digit) {
     uint8_t dig = digit;

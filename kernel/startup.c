@@ -1,10 +1,10 @@
 #include "limine.h"
-#include "cpu.h"
 #include "limine_term.h"
 #include "gdt.h"
 #include "idt.h"
 #include "timer.h"
 #include "pic.h"
+#include "keyboard.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -19,16 +19,11 @@ void _start(void) {
     gdt_init();
     idt_init();
     timer_init();
+    keyboard_init();
 
     if (frame_buf_req.response == NULL || frame_buf_req.response->framebuffer_count < 1) {
         hcf();
     }
-
-    // if (rsdp_req.response == NULL) {
-    //     hcf();
-    // }
-    //
-    // void *rsdp_ptr = rsdp_req.response->address;
 
     struct limine_framebuffer *framebuffer = frame_buf_req.response->framebuffers[0];
 

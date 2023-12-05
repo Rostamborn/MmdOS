@@ -1,8 +1,6 @@
 #include "stdint.h"
 #include "idt.h"
-#include "cpu.h"
 #include "timer.h"
-#include "limine_term.h"
 #include <stdint.h>
 
 // I/O port     Usage
@@ -13,8 +11,7 @@
 #define MODE_CMD    0x43    // Mode/Command register (write only, a read is ignored)
                             //
 interrupt_frame* timer_handler(interrupt_frame *frame) {
-    limine_write("Tick");
-    // log_to_serial("Tick");
+    log_to_serial("Tick");
     return frame;
 }
 

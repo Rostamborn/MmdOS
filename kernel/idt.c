@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include "idt.h"
 #include "limine_term.h"
-#include "cpu.h"
 #include "pic.h"
 
 extern void *isr_stub_table[];
