@@ -47,6 +47,10 @@ extern unsigned char outb(int portnum, unsigned char value) {
     return value;
 }
 
+// extern inline void io_wait(void) {
+//     outb(0x80, 0);
+// }
+
 // https://wiki.osdev.org/Serial_Ports
 int init_serial() {
    outb(PORT + 1, 0x00);    // Disable all interrupts
@@ -84,10 +88,13 @@ void log_to_serial(char *string) {
         outb(PORT, *string); // write char to serial port
         string++;
     }
+    while ((inb(PORT + 5) & 0x20) == 0); // *check if transmit buffer is empty*
+    outb(PORT, '\n'); // write char to serial port
+
 }
 
 // NOTE(Arman): I made this in a hurry, so it's not the best
-void print_digit(uint8_t digit) {
+void log_to_serial_digit(uint64_t digit) {
     uint8_t dig = digit;
     uint8_t len = 0;
     while(dig > 0) {
@@ -95,18 +102,17 @@ void print_digit(uint8_t digit) {
         len++;
     }
     dig = digit;
-    char str[len + 2];
+    char str[len + 1];
     uint8_t remainder = 0;
     for(uint8_t i = 0; i < len; i++) {
         remainder = dig % 10;
         dig /= 10;
         str[i] = remainder + '0';
     }
-    str[len] = '\n';
-    str[len+1] = '\0'; // null termination
+    str[len] = '\0'; // null termination
 
     // reverse string
-    for(uint8_t i = 0; i < len; i++) {
+    for(uint8_t i = 0; i < len/2; i++) {
         char tmp = str[i];
         str[i] = str[len - i - 1];
         str[len - i - 1] = tmp;
@@ -115,19 +121,19 @@ void print_digit(uint8_t digit) {
     log_to_serial(str);
 }
 
-void disable_pic() {
-    // ICW: https://wiki.osdev.org/8259_PIC#Initialisation
-    outb(PIC_COMMAND_MASTER, ICW_1);
-    outb(PIC_COMMAND_SLAVE, ICW_1);
-    outb(PIC_DATA_MASTER, ICW_2_MASTER);
-    outb(PIC_DATA_SLAVE, ICW_2_SLAVE);
-    outb(PIC_DATA_MASTER, ICW_3_MASTER);
-    outb(PIC_DATA_SLAVE, ICW_3_SLAVE);
-    outb(PIC_DATA_MASTER, ICW_4);
-    outb(PIC_DATA_SLAVE, ICW_4);
-    outb(PIC_DATA_MASTER, 0xff);
-    outb(PIC_DATA_SLAVE, 0xff);
-}
+// void disable_pic() {
+//     // ICW: https://wiki.osdev.org/8259_PIC#Initialisation
+//     outb(PIC_COMMAND_MASTER, ICW_1);
+//     outb(PIC_COMMAND_SLAVE, ICW_1);
+//     outb(PIC_DATA_MASTER, ICW_2_MASTER);
+//     outb(PIC_DATA_SLAVE, ICW_2_SLAVE);
+//     outb(PIC_DATA_MASTER, ICW_3_MASTER);
+//     outb(PIC_DATA_SLAVE, ICW_3_SLAVE);
+//     outb(PIC_DATA_MASTER, ICW_4);
+//     outb(PIC_DATA_SLAVE, ICW_4);
+//     outb(PIC_DATA_MASTER, 0xff);
+//     outb(PIC_DATA_SLAVE, 0xff);
+// }
 
 uint64_t rdmsr(uint32_t msr) { // read model specific register insctruction
     uint32_t low = 0, high = 0; // low: eax, high: edx, input: ecx
@@ -135,7 +141,7 @@ uint64_t rdmsr(uint32_t msr) { // read model specific register insctruction
     return ((uint64_t)high << 32) | low; // return the 64-bit result
 }
 
-void memset_k(void *ptr, uint8_t value, uint64_t size) {
+void memset(void *ptr, uint8_t value, uint64_t size) {
     uint8_t *tmp = (uint8_t*)ptr;
     for (; size > 0; size--) {
         *tmp = value;

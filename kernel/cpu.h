@@ -6,13 +6,15 @@ extern unsigned char inb(int portnum);
 
 extern unsigned char outb(int portnum, unsigned char value);
 
+// extern inline void io_wait(void);
+
 void hcf(void);
 
 int init_serial();
 
 void log_to_serial(char *string);
 
-void print_digit(uint8_t digit);
+void log_to_serial_digit(uint64_t digit);
 
 void disable_pic();
 

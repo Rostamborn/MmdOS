@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "idt.h"
+#include "limine_term.h"
 #include "cpu.h"
+#include "pic.h"
 
 extern void *isr_stub_table[];
 
@@ -20,165 +22,77 @@ struct idtr {
 } __attribute__ ((packed));
 
 struct interrupt_descriptor idt[256]; // 256 interrupts
+void* irq_handlers[16] = {0};
 
-// Note(Arman): This is nothing short of genius. We pass the stack pointer to
-// interrupt_dispatch in interrupt_stub. To make it easier to access the stack
-// contents, we create a struct which resembles the pushed content and thus we
-// can access the stack contents easily.
-struct interrupt_frame {
-    uint64_t rbp;
-    uint64_t r15;
-    uint64_t r14;
-    uint64_t r13;
-    uint64_t r12;
-    uint64_t r11;
-    uint64_t r10;
-    uint64_t r9;
-    uint64_t r8;
-    uint64_t rsi;
-    uint64_t rdi;
-    uint64_t rdx;
-    uint64_t rcx;
-    uint64_t rbx;
-    uint64_t rax;
-    uint64_t int_number; // this is pushed in the macro (Hopefully it's 8 bytes)
-    uint64_t error_code; // This is pushed by the cpu if the interrupt is an error interrupt.
-                         // If not, then we push a dummy value of 0(in the macro)
-    uint64_t iret_rip; // iret prefix means that the cpu pushed this automatically and we didn't
-    uint64_t iret_cs;
-    uint64_t iret_flags;
-    uint64_t iret_rsp;
-    uint64_t iret_ss;
+char* exception_messages[] = {
+    "Division By Zero",
+    "Debug",
+    "Non Maskable Interrupt",
+    "Breakpoint",
+    "Into Detected Overflow",
+    "Out of Bounds",
+    "Invalid Opcode",
+    "No Coprocessor",
+    "Double Fault",
+    "Coprocessor Segment Overrun",
+    "Bad TSS",
+    "Segment Not Present",
+    "Stack Fault",
+    "General Protection Fault",
+    "Page Fault",
+    "Unknown Interrupt",
+    "Coprocessor Fault",
+    "Alignment Check",
+    "Machine Check",
+    "SIMD floating-point exception",
+    "Virtualization exception",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Reserved",
+    "Timer",
+};
 
-} __attribute__ ((packed));
-
-// because we have the interrupt number, we can send all interrupts here and then call
-// the appropriate interrupt handler using the switch cases
-extern struct interrupt_frame* interrupt_dispatch(struct interrupt_frame *frame) {
-    // log_to_serial("running interrupt_dispatch\n");
-    switch (frame->int_number) {
-        case 0:
-            log_to_serial("Divide by zero error\n");
-            break;
-        case 1:
-            log_to_serial("Debug\n");
-            break;
-        case 2:
-            log_to_serial("Non-maskable interrupt\n");
-            break;
-        case 3:
-            log_to_serial("Breakpoint\n");
-            break;
-        case 4:
-            log_to_serial("Overflow\n");
-            break;
-        case 5:
-            log_to_serial("Bound range exceeded\n");
-            break;
-        case 6:
-            log_to_serial("Invalid opcode\n");
-            break;
-        case 7:
-            log_to_serial("Device not available\n");
-            break;
-        case 8:
-            log_to_serial("Double fault\n");
-            break;
-        case 9:
-            log_to_serial("Coprocessor segment overrun\n");
-            break;
-        case 10:
-            log_to_serial("Invalid TSS\n");
-            break;
-        case 11:
-            log_to_serial("Segment not present\n");
-            break;
-        case 12:
-            log_to_serial("Stack-segment fault\n");
-            break;
-        case 13:
-            log_to_serial("General protection fault\n");
-            break;
-        case 14:
-            log_to_serial("Page fault\n");
-            break;
-        case 15:
-            log_to_serial("Reserved\n");
-            break;
-        case 16:
-            log_to_serial("x87 floating-point exception\n");
-            break;
-        case 17:
-            log_to_serial("Alignment check\n");
-            break;
-        case 18:
-            log_to_serial("Machine check\n");
-            break;
-        case 19:
-            log_to_serial("SIMD floating-point exception\n");
-            break;
-        case 20:
-            log_to_serial("Virtualization exception\n");
-            break;
-        case 21:
-            log_to_serial("Reserved\n");
-            break;
-        case 22:
-            log_to_serial("Reserved\n");
-            // do something 
-            break;
-        case 23:
-            log_to_serial("TIMER\n");
-            // do something
-            break;
-        case 24:
-            log_to_serial("TIMER\n");
-            // do something
-            break;
-        case 25:
-            log_to_serial("TIMER\n");
-            // do something
-            break;
-        case 26:
-            log_to_serial("TIMER\n");
-            // do something
-            break;
-        case 27:
-            log_to_serial("TIMER\n");
-            // do something
-            break;
-        case 28:
-            log_to_serial("TIMER\n");
-            // do something
-        case 29:
-            log_to_serial("TIMER\n");
-            // do something
-            break;
-        case 30:
-            log_to_serial("TIMER\n");
-            // do something
-            break;
-        case 31:
-            log_to_serial("TIMER\n");
-            // do something
-            break;
-        case 32:
-            log_to_serial("TIMER\n");
-            break;
-        case 33:
-            log_to_serial("TIMER\n");
-            break;
-        case 34:
-            log_to_serial("TIMER\n");
-            break;
-        default:
-            log_to_serial("Unknown interrupt\n");
-            break;
+// ISRs
+interrupt_frame* isr_handler(interrupt_frame* frame) {
+    if(frame->int_number < 32) {
+        // log_to_serial(exception_messages[frame->int_number]);
+        limine_write(exception_messages[frame->int_number]);
     }
 
     return frame;
 }
 
+////////////////////////////////////////////////////////////////
+// IRQs
+interrupt_frame* irq_handler(interrupt_frame* frame) {
+    void (*handler)(interrupt_frame* frame);
+    handler = irq_handlers[frame->int_number - 32];
+    if(handler) {
+        handler(frame);
+        // NOTE: maybe I should add pic_eoi to the irq_stub in asm
+    }
+
+    pic_eoi(frame->int_number);
+
+    return frame;
+}
+
+void irq_install_handler (uint8_t offset, interrupt_frame* (*handler)(interrupt_frame *frame)){
+    irq_handlers[offset] = handler;
+}
+
+void irq_uninstall_handler(uint8_t offset){
+    irq_handlers[offset] = 0;
+}
+///////////////////////////////////////////////////////////////////
 // the handler parameter is the interrupt stub. The interrupt stub is a function
 // TODO: make handlers meaningful and actually do something.
 void set_interrupt_descriptor(uint8_t vector, void *handler, uint8_t dpl) {
@@ -208,11 +122,6 @@ void idt_load() {
 
 // populate the idt with the interrupt stubs (no need to populate all of the table)
 extern void idt_init() {
-    // NOTE(ARMAN): I hope this works
-    // 32 onwards are IRQs
-    // for (int i = 0; i < 256; i++) {
-    //     set_interrupt_descriptor(i, isr_stub_table[i], 0);
-    // }
     set_interrupt_descriptor(0, isr0, 0);
     set_interrupt_descriptor(1, isr1, 0);
     set_interrupt_descriptor(2, isr2, 0);
@@ -245,22 +154,29 @@ extern void idt_init() {
     set_interrupt_descriptor(29, isr29, 0);
     set_interrupt_descriptor(30, isr30, 0);
     set_interrupt_descriptor(31, isr31, 0);
-    set_interrupt_descriptor(32, isr32, 0); // here on would be IRQs
-    set_interrupt_descriptor(33, isr33, 0);
-    set_interrupt_descriptor(34, isr34, 0);
-    set_interrupt_descriptor(35, isr35, 0);
-    set_interrupt_descriptor(36, isr36, 0);
-    set_interrupt_descriptor(37, isr37, 0);
-    set_interrupt_descriptor(38, isr38, 0);
-    set_interrupt_descriptor(39, isr39, 0);
-    set_interrupt_descriptor(40, isr40, 0);
-    set_interrupt_descriptor(41, isr41, 0);
-    set_interrupt_descriptor(42, isr42, 0);
-    set_interrupt_descriptor(43, isr43, 0);
-    set_interrupt_descriptor(44, isr44, 0);
-    set_interrupt_descriptor(45, isr45, 0);
-    set_interrupt_descriptor(46, isr46, 0);
-    set_interrupt_descriptor(47, isr47, 0);
-
+    // here on would be IRQs
+    set_interrupt_descriptor(32, irq0, 0);
+    set_interrupt_descriptor(33, irq1, 0);
+    set_interrupt_descriptor(34, irq2, 0);
+    set_interrupt_descriptor(35, irq3, 0);
+    set_interrupt_descriptor(36, irq4, 0);
+    set_interrupt_descriptor(37, irq5, 0);
+    set_interrupt_descriptor(38, irq6, 0);
+    set_interrupt_descriptor(39, irq7, 0);
+    set_interrupt_descriptor(40, irq8, 0);
+    set_interrupt_descriptor(41, irq9, 0);
+    set_interrupt_descriptor(42, irq10, 0);
+    set_interrupt_descriptor(43, irq11, 0);
+    set_interrupt_descriptor(44, irq12, 0);
+    set_interrupt_descriptor(45, irq13, 0);
+    set_interrupt_descriptor(46, irq14, 0);
+    set_interrupt_descriptor(47, irq15, 0);
+    // used for system calls
+    set_interrupt_descriptor(128, isr128, 0);
+    set_interrupt_descriptor(177, isr177, 0);
+    
+    // don't know what order they should be initialized
     idt_load();
+
+    pic_init();
 }

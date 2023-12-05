@@ -1,4 +1,4 @@
-#include "limine_terminal.h"
+#include "limine_term.h"
 #include "limine.h"
 #include "cpu.h"
 #include <stddef.h>

@@ -1,3 +1,1 @@
-#include <stdint.h>
-
-void pit_periodic_init(uint16_t c);
+void timer_init();
