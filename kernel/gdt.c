@@ -10,8 +10,20 @@ struct gdt_descriptor {
     uint8_t  base_high8;
 };
 
+struct tss_descriptor {
+    uint16_t length;
+    uint16_t base_low16;
+    uint8_t  base_mid8;
+    uint8_t  flags1;
+    uint8_t  flags2;
+    uint8_t  base_high8;
+    uint32_t base_upper32;
+    uint32_t reserved;
+};
+
 struct gdt {
     struct gdt_descriptor descriptors[9];
+    struct tss_descriptor tss;
 };
 
 struct gdtr {
@@ -21,24 +33,6 @@ struct gdtr {
 
 static struct gdt gdt_instance;
 static struct gdtr gdtr_instance;
-
-// TODO: implement this later
-struct tss {
-    uint32_t unused0;
-    uint64_t rsp0;
-    uint64_t rsp1;
-    uint64_t rsp2;
-    uint64_t unused1;
-    uint64_t ist1;
-    uint64_t ist2;
-    uint64_t ist3;
-    uint64_t ist4;
-    uint64_t ist5;
-    uint64_t ist6;
-    uint64_t ist7;
-    uint64_t unused2;
-    uint32_t iopb;
-} __attribute__((packed));
 
 void gdt_load(void) {
     asm volatile (
@@ -56,6 +50,16 @@ void gdt_load(void) {
         "mov %%eax, %%ss\n\t"
         :
         : "m"(gdtr_instance)
+        : "rax", "memory"
+    );
+}
+
+void tss_load(void) {
+    asm volatile (
+        "mov $0x2b, %%ax\n\t"
+        "ltr %%ax\n\t"
+        :
+        :
         : "rax", "memory"
     );
 }
@@ -133,6 +137,16 @@ void gdt_init() {
     gdt_instance.descriptors[8].granularity = 0;
     gdt_instance.descriptors[8].base_high8  = 0;
 
+     // TSS.
+    gdt_instance.tss.length       = 104;
+    gdt_instance.tss.base_low16   = 0;
+    gdt_instance.tss.base_mid8    = 0;
+    gdt_instance.tss.flags1       = 0b10001001;
+    gdt_instance.tss.flags2       = 0;
+    gdt_instance.tss.base_high8   = 0;
+    gdt_instance.tss.base_upper32 = 0;
+    gdt_instance.tss.reserved     = 0;
+
     gdtr_instance.limit = sizeof(struct gdt) - 1;
     gdtr_instance.address = (uint64_t)&gdt_instance;
 
@@ -140,3 +154,7 @@ void gdt_init() {
     gdt_load();
 }
 
+// TODO: implement TSS
+void tss_init(void) {
+    tss_load();
+}
