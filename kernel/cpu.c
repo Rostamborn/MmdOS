@@ -10,12 +10,12 @@
 #define PIC_COMMAND_SLAVE 0xa0
 #define PIC_DATA_SLAVE 0xa1
 
-#define ICW_1 0x11
-#define ICW_2_MASTER 0x20
-#define ICW_2_SLAVE 0x28
-#define ICW_3_MASTER 0x4 // 0x04 ??
-#define ICW_3_SLAVE 0x2 // 0x02 ??
-#define ICW_4 0x1 // not sure
+// #define ICW_1 0x11
+// #define ICW_2_MASTER 0x20
+// #define ICW_2_SLAVE 0x28
+// #define ICW_3_MASTER 0x4
+// #define ICW_3_SLAVE 0x2
+// #define ICW_4 0x1
 
 
 // halt, catch fire
@@ -35,15 +35,16 @@ inline void disable_interrupts() {
 }
 
 // to communicate with ports(using inb & outb asm instructions)
-extern unsigned char inb(int portnum) {
+unsigned char inb(int portnum) {
     unsigned char data = 0;
     __asm__ __volatile__("inb %%dx, %%al" : "=a" (data) : "d" (portnum));
-    // "=a" is the output operand and "d" is the input operand
+
     return data;
 }
 
-extern unsigned char outb(int portnum, unsigned char value) {
+unsigned char outb(int portnum, unsigned char value) {
     __asm__ __volatile__("outb %%al, %%dx" : : "a" (value), "d" (portnum));
+
     return value;
 }
 
@@ -71,6 +72,7 @@ int init_serial() {
    // If serial is not faulty set it in normal operation mode
    // (not-loopback with IRQs enabled and OUT#1 and OUT#2 bits enabled)
    outb(PORT + 4, 0x0F);
+
    return 0;
 }
 
@@ -97,7 +99,6 @@ char* decimal_to_str(uint64_t digit) {
     return "0";
 }
 
-// NOTE(Arman): I made this in a hurry, so it's not the best
 void log_to_serial_digit(uint64_t digit) {
     uint8_t dig = digit;
     uint8_t len = 0;

@@ -18,7 +18,7 @@ void limine_write(const char *str) {
     while (str[len] != '\0') {
         len++;
     }
-    // struct limine_terminal *terminal = term_req.response->terminals[0];
+
     term_req.response->write(term_req.response->terminals[0], str, len);
 }
 

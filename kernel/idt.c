@@ -69,14 +69,12 @@ interrupt_frame* isr_handler(interrupt_frame* frame) {
     return frame;
 }
 
-////////////////////////////////////////////////////////////////
 // IRQs
 interrupt_frame* irq_handler(interrupt_frame* frame) {
     void (*handler)(interrupt_frame* frame);
     handler = irq_handlers[frame->int_number - 32];
     if(handler) {
         handler(frame);
-        // NOTE: maybe I should add pic_eoi to the irq_stub in asm
     }
 
     pic_eoi(frame->int_number);
@@ -91,15 +89,14 @@ void irq_install_handler (uint8_t offset, interrupt_frame* (*handler)(interrupt_
 void irq_uninstall_handler(uint8_t offset){
     irq_handlers[offset] = 0;
 }
-///////////////////////////////////////////////////////////////////
-// the handler parameter is the interrupt stub. The interrupt stub is a function
-// TODO: make handlers meaningful and actually do something.
+
 void set_interrupt_descriptor(uint8_t vector, void *handler, uint8_t dpl) {
     // dpl is the descriptor privilage level which determines the highest
     // cpu ring that can trigger this interrupt via software(default of 0 is fine as there is no user mode).
-    uint64_t handler_address = (uint64_t)handler;
 
+    uint64_t handler_address = (uint64_t)handler;
     struct interrupt_descriptor *entry = &idt[vector];
+
     entry->address_low = handler_address & 0xffff;
     entry->address_mid = (handler_address >> 16) & 0xffff;
     entry->address_high = (handler_address >> 32) & 0xffffffff;
@@ -153,6 +150,7 @@ extern void idt_init() {
     set_interrupt_descriptor(29, isr29, 0);
     set_interrupt_descriptor(30, isr30, 0);
     set_interrupt_descriptor(31, isr31, 0);
+
     // here on would be IRQs
     set_interrupt_descriptor(32, irq0, 0);
     set_interrupt_descriptor(33, irq1, 0);
@@ -170,12 +168,11 @@ extern void idt_init() {
     set_interrupt_descriptor(45, irq13, 0);
     set_interrupt_descriptor(46, irq14, 0);
     set_interrupt_descriptor(47, irq15, 0);
+
     // used for system calls
     set_interrupt_descriptor(128, isr128, 0);
     set_interrupt_descriptor(177, isr177, 0);
     
-    // don't know what order they should be initialized
-    idt_load();
-
     pic_init();
+    idt_load();
 }

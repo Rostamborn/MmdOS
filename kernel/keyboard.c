@@ -1,5 +1,6 @@
 #include "keyboard.h"
 #include "idt.h"
+#include "print.h"
 #include <stdint.h>
 #include "limine_term.h"
 
@@ -83,7 +84,7 @@ interrupt_frame* keyboard_handler(interrupt_frame* frame) {
     uint8_t scancode = inb(0x60) & 0x7f; // which key is pressed
     uint8_t pressed = inb(0x60) & 0x80; // is the key pressed or released
 
-    switch(scancode){
+    switch(scancode) {
         case 1: // esc
             break;
         case 29: // ctrl
@@ -122,9 +123,9 @@ interrupt_frame* keyboard_handler(interrupt_frame* frame) {
             }
             break;
         case 58: // caps lock
-            if (!keyboard.caps_lock && pressed == 0){
+            if(!keyboard.caps_lock && pressed == 0) {
                 keyboard.caps_lock = 1;
-            } else if (keyboard.caps_lock && pressed == 0){
+            } else if(keyboard.caps_lock && pressed == 0) {
                 keyboard.caps_lock = 0;
             }
             break;
@@ -132,19 +133,15 @@ interrupt_frame* keyboard_handler(interrupt_frame* frame) {
             if(pressed == 0) {
                 if(keyboard.shift && keyboard.caps_lock) {
                     // print lower case
-                    char str[2] = {lower_case[scancode], '\0'};
-                    limine_write(str);
-                } else if(keyboard.shift || keyboard.caps_lock){
+                    kernel_printf("%c", lower_case[scancode]);
+                } else if(keyboard.shift || keyboard.caps_lock) {
                     // print upper case
-                    char str[2] = {upper_case[scancode], '\0'};
-                    limine_write(str);
+                    kernel_printf("%c", upper_case[scancode]);
                 } else {
                     // print lower case
-                    char str[2] = {lower_case[scancode], '\0'};
-                    limine_write(str);
+                    kernel_printf("%c", lower_case[scancode]);
                 }
             }
-            
     }
 
     return frame;

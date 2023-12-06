@@ -2,7 +2,7 @@
 #include "cpu.h"
 
 extern void idt_init(void);
-// extern struct interrupt_frame *interrupt_dispatch(struct interrupt_frame *frame);
+
 interrupt_frame* isr_handler(interrupt_frame* frame);
 
 interrupt_frame* irq_handler(interrupt_frame* frame);
@@ -47,6 +47,7 @@ extern void isr31(void);
 extern void isr128(void);
 extern void isr177(void);
 
+// IRQs
 extern void irq0();
 extern void irq1();
 extern void irq2();

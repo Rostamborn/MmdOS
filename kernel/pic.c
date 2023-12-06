@@ -20,23 +20,21 @@
 #define IRQ14_HARD_DISK     0x0E
 #define IRQ15_RESERVED      0x0F
 
+
 #define PIC1            0x20  /* IO base address for master PIC */
 #define PIC2            0xA0  /* IO base address for slave PIC */
 #define PIC1_COMMAND    PIC1
 #define PIC1_DATA       (PIC1+1)    /* master data */
 #define PIC2_COMMAND    PIC2
 #define PIC2_DATA       (PIC2+1)    /* slave data */
-
 #define PIC_EOI         0x20   /* end of interrupt */
-
 #define ICW1            0x11    /* interrupt control command word PIC for initialization */
 #define ICW4       0x01    /* 8086/88 (MCS-80/85) mode */
 
 
 void pic_init() {
+    // save mask registers (for masking)
     // uint8_t a1, a2;
-
-    // save mask registers
     // a1 = inb(PIC1_DATA);
     // a2 = inb(PIC2_DATA);
 
@@ -61,6 +59,8 @@ void pic_init() {
     // restore the mask registers
     outb(PIC1_DATA, 0x0);
     outb(PIC2_DATA, 0x0);
+
+    // for Masking
     // outb(PIC1_DATA, a1);
     // outb(PIC2_DATA, a2);
 }
@@ -71,4 +71,3 @@ void pic_eoi(uint8_t offset) {
     }
     outb(PIC1_COMMAND, PIC_EOI);
 }
-

@@ -2,9 +2,9 @@
 
 #define PORT 0x3f8
 
-extern unsigned char inb(int portnum);
+unsigned char inb(int portnum);
 
-extern unsigned char outb(int portnum, unsigned char value);
+unsigned char outb(int portnum, unsigned char value);
 
 // extern inline void io_wait(void);
 
