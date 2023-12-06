@@ -25,9 +25,9 @@ which will build, run and clean.
 | PIT | works |
 
 #### TODO for the forseeable future
+*** In the future, rewrite the assignment to registers and etc. using Unions ***
 | Feature to be implemented |
 | ------- |
-| Keyboard |
 | Video Output |
 | Memory Management |
 | TSS and context switching |
