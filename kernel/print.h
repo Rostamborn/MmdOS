@@ -1,4 +1,7 @@
 #include <stdarg.h>
-#include "limine_term.h"
 
-void kernel_printf(const char *fmt, ... );
+// load args, then format and print
+void printf(const char *fmt, ...);
+
+// format and print
+void kernel_printf(const char *fmt, va_list args);
