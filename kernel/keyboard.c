@@ -1,8 +1,8 @@
 #include "keyboard.h"
 #include "idt.h"
+#include "limine_term.h"
 #include "print.h"
 #include <stdint.h>
-#include "limine_term.h"
 
 // typedef enum {
 //     None = 0,
@@ -55,98 +55,107 @@ typedef enum {
     NUMLCK = 0xFFFFFFFF - 32,
 } Special_Keys;
 
-
 const uint64_t lower_case[128] = {
-UNKNOWN,ESC,'1','2','3','4','5','6','7','8',
-'9','0','-','=','\b','\t','q','w','e','r',
-'t','y','u','i','o','p','[',']','\n',CTRL,
-'a','s','d','f','g','h','j','k','l',';',
-'\'','`',LSHFT,'\\','z','x','c','v','b','n','m',',',
-'.','/',RSHFT,'*',ALT,' ',CAPS,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,NUMLCK,SCRLCK,HOME,UP,PGUP,'-',LEFT,UNKNOWN,RIGHT,
-'+',END,DOWN,PGDOWN,INS,DEL,UNKNOWN,UNKNOWN,UNKNOWN,F11,F12,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,
-UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,
-UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,
-UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN
-};
+    UNKNOWN, ESC,     '1',     '2',     '3',     '4',     '5',     '6',
+    '7',     '8',     '9',     '0',     '-',     '=',     '\b',    '\t',
+    'q',     'w',     'e',     'r',     't',     'y',     'u',     'i',
+    'o',     'p',     '[',     ']',     '\n',    CTRL,    'a',     's',
+    'd',     'f',     'g',     'h',     'j',     'k',     'l',     ';',
+    '\'',    '`',     LSHFT,   '\\',    'z',     'x',     'c',     'v',
+    'b',     'n',     'm',     ',',     '.',     '/',     RSHFT,   '*',
+    ALT,     ' ',     CAPS,    F1,      F2,      F3,      F4,      F5,
+    F6,      F7,      F8,      F9,      F10,     NUMLCK,  SCRLCK,  HOME,
+    UP,      PGUP,    '-',     LEFT,    UNKNOWN, RIGHT,   '+',     END,
+    DOWN,    PGDOWN,  INS,     DEL,     UNKNOWN, UNKNOWN, UNKNOWN, F11,
+    F12,     UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
+    UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
+    UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
+    UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
+    UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN};
 
 const uint64_t upper_case[128] = {
-    UNKNOWN,ESC,'!','@','#','$','%','^','&','*','(',')','_','+','\b','\t','Q','W','E','R',
-'T','Y','U','I','O','P','{','}','\n',CTRL,'A','S','D','F','G','H','J','K','L',':','"','~',LSHFT,'|','Z','X','C',
-'V','B','N','M','<','>','?',RSHFT,'*',ALT,' ',CAPS,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,NUMLCK,SCRLCK,HOME,UP,PGUP,'-',
-LEFT,UNKNOWN,RIGHT,'+',END,DOWN,PGDOWN,INS,DEL,UNKNOWN,UNKNOWN,UNKNOWN,F11,F12,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,
-UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,
-UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,
-UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN
-};
+    UNKNOWN, ESC,     '!',     '@',     '#',     '$',     '%',     '^',
+    '&',     '*',     '(',     ')',     '_',     '+',     '\b',    '\t',
+    'Q',     'W',     'E',     'R',     'T',     'Y',     'U',     'I',
+    'O',     'P',     '{',     '}',     '\n',    CTRL,    'A',     'S',
+    'D',     'F',     'G',     'H',     'J',     'K',     'L',     ':',
+    '"',     '~',     LSHFT,   '|',     'Z',     'X',     'C',     'V',
+    'B',     'N',     'M',     '<',     '>',     '?',     RSHFT,   '*',
+    ALT,     ' ',     CAPS,    F1,      F2,      F3,      F4,      F5,
+    F6,      F7,      F8,      F9,      F10,     NUMLCK,  SCRLCK,  HOME,
+    UP,      PGUP,    '-',     LEFT,    UNKNOWN, RIGHT,   '+',     END,
+    DOWN,    PGDOWN,  INS,     DEL,     UNKNOWN, UNKNOWN, UNKNOWN, F11,
+    F12,     UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
+    UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
+    UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
+    UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
+    UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN};
 
-
-interrupt_frame* keyboard_handler(interrupt_frame* frame) {
+interrupt_frame *keyboard_handler(interrupt_frame *frame) {
     uint8_t scancode = inb(0x60) & 0x7f; // which key is pressed
-    uint8_t pressed = inb(0x60) & 0x80; // is the key pressed or released
+    uint8_t pressed = inb(0x60) & 0x80;  // is the key pressed or released
 
-    switch(scancode) {
-        case 1: // esc
-            break;
-        case 29: // ctrl
-            break;
-        case 56: // alt
-            break;
-        case 59: // f1
-            break;
-        case 60: // f2
-            break;
-        case 61: // f3
-            break;
-        case 62: // f4
-            break;
-        case 63: // f5
-            break;
-        case 64: // f6
-            break;
-        case 65: // f7
-            break;
-        case 66: // f8
-            break;
-        case 67: // f9
-            break;
-        case 68: // f10
-            break;
-        case 87: // f11
-            break;
-        case 88: // f12
-            break;
-        case 42: // left shift
-            if(pressed == 0) {
-                keyboard.shift = 1;
-            } else { // released = 128
-                keyboard.shift = 0;
+    switch (scancode) {
+    case 1: // esc
+        break;
+    case 29: // ctrl
+        break;
+    case 56: // alt
+        break;
+    case 59: // f1
+        break;
+    case 60: // f2
+        break;
+    case 61: // f3
+        break;
+    case 62: // f4
+        break;
+    case 63: // f5
+        break;
+    case 64: // f6
+        break;
+    case 65: // f7
+        break;
+    case 66: // f8
+        break;
+    case 67: // f9
+        break;
+    case 68: // f10
+        break;
+    case 87: // f11
+        break;
+    case 88: // f12
+        break;
+    case 42: // left shift
+        if (pressed == 0) {
+            keyboard.shift = 1;
+        } else { // released = 128
+            keyboard.shift = 0;
+        }
+        break;
+    case 58: // caps lock
+        if (!keyboard.caps_lock && pressed == 0) {
+            keyboard.caps_lock = 1;
+        } else if (keyboard.caps_lock && pressed == 0) {
+            keyboard.caps_lock = 0;
+        }
+        break;
+    default:
+        if (pressed == 0) {
+            if (keyboard.shift && keyboard.caps_lock) {
+                // print lower case
+                printf("%c", lower_case[scancode]);
+            } else if (keyboard.shift || keyboard.caps_lock) {
+                // print upper case
+                printf("%c", upper_case[scancode]);
+            } else {
+                // print lower case
+                printf("%c", lower_case[scancode]);
             }
-            break;
-        case 58: // caps lock
-            if(!keyboard.caps_lock && pressed == 0) {
-                keyboard.caps_lock = 1;
-            } else if(keyboard.caps_lock && pressed == 0) {
-                keyboard.caps_lock = 0;
-            }
-            break;
-        default:
-            if(pressed == 0) {
-                if(keyboard.shift && keyboard.caps_lock) {
-                    // print lower case
-                    kernel_printf("%c", lower_case[scancode]);
-                } else if(keyboard.shift || keyboard.caps_lock) {
-                    // print upper case
-                    kernel_printf("%c", upper_case[scancode]);
-                } else {
-                    // print lower case
-                    kernel_printf("%c", lower_case[scancode]);
-                }
-            }
+        }
     }
 
     return frame;
 }
 
-void keyboard_init() {
-    irq_install_handler(1, &keyboard_handler);
-}
+void keyboard_init() { irq_install_handler(1, &keyboard_handler); }
