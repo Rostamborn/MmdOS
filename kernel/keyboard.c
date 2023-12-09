@@ -2,6 +2,7 @@
 #include "idt.h"
 #include "limine_term.h"
 #include "print.h"
+#include "prompt.h"
 #include <stdint.h>
 
 // typedef enum {
@@ -96,7 +97,23 @@ interrupt_frame *keyboard_handler(interrupt_frame *frame) {
     uint8_t pressed = inb(0x60) & 0x80;  // is the key pressed or released
 
     switch (scancode) {
+
     case 1: // esc
+        break;
+    case 14: // backspace
+        if (pressed == 0) {
+            prompt_backspace_handler();
+        }
+
+        break;
+    case 28: // enter
+        if (pressed == 0) {
+            prompt_enter_handler();
+            printf("\n");
+            printf("$");
+            printf(":");
+            printf(" ");
+        }
         break;
     case 29: // ctrl
         break;
@@ -142,15 +159,19 @@ interrupt_frame *keyboard_handler(interrupt_frame *frame) {
         break;
     default:
         if (pressed == 0) {
+
             if (keyboard.shift && keyboard.caps_lock) {
                 // print lower case
                 printf("%c", lower_case[scancode]);
+                prompt_char_handler(lower_case[scancode]);
             } else if (keyboard.shift || keyboard.caps_lock) {
                 // print upper case
                 printf("%c", upper_case[scancode]);
+                prompt_char_handler(upper_case[scancode]);
             } else {
                 // print lower case
                 printf("%c", lower_case[scancode]);
+                prompt_char_handler(lower_case[scancode]);
             }
         }
     }
