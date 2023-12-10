@@ -117,8 +117,7 @@ void printf(const char *fmt, ...) {
 }
 
 void kernel_printf(const char *fmt, va_list args) {
-    char buffer[MAX_PRINTF_BUFFER_SIZE] = {[0 ... MAX_PRINTF_BUFFER_SIZE - 1] =
-                                               '\0'};
+    char buffer[MAX_PRINTF_BUFFER_SIZE] = {0};
 
     int i = 0;
     while (*fmt && i < MAX_PRINTF_BUFFER_SIZE) {
