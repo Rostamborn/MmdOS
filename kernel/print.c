@@ -1,8 +1,9 @@
+#include "print.h"
 #include "limine_term.h"
 #include <stdarg.h>
 
 int format_string(char *s, char buffer[], int buffer_offset) {
-    while (*s) {
+    while (*s && buffer_offset < MAX_PRINTF_BUFFER_SIZE) {
         buffer[buffer_offset] = *s;
         buffer_offset++;
         s++;
@@ -11,8 +12,10 @@ int format_string(char *s, char buffer[], int buffer_offset) {
 }
 
 int format_char(int c, char buffer[], int buffer_offset) {
-    buffer[buffer_offset] = c;
-    buffer_offset++;
+    if (buffer_offset < MAX_PRINTF_BUFFER_SIZE) {
+        buffer[buffer_offset] = c;
+        buffer_offset++;
+    }
     return buffer_offset;
 }
 
@@ -32,9 +35,12 @@ int format_int(int integer, char buffer[], int buffer_offset) {
     }
 
     for (int i = len - 1; i >= 0; i--) {
-
-        buffer[buffer_offset] = number[i];
-        buffer_offset++;
+        if (buffer_offset < MAX_PRINTF_BUFFER_SIZE) {
+            buffer[buffer_offset] = number[i];
+            buffer_offset++;
+        } else {
+            break;
+        }
     }
 
     return buffer_offset;
@@ -111,10 +117,11 @@ void printf(const char *fmt, ...) {
 }
 
 void kernel_printf(const char *fmt, va_list args) {
-    char buffer[1024];
+    char buffer[MAX_PRINTF_BUFFER_SIZE] = {[0 ... MAX_PRINTF_BUFFER_SIZE - 1] =
+                                               '\0'};
 
     int i = 0;
-    while (*fmt && i < 1024) {
+    while (*fmt && i < MAX_PRINTF_BUFFER_SIZE) {
         if (*fmt == '%') {
             fmt++;
             i = format_handle(*fmt, buffer, i, args);
