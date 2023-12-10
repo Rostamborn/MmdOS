@@ -109,11 +109,8 @@ interrupt_frame *keyboard_handler(interrupt_frame *frame) {
     case 28: // enter
         if (pressed == 0) {
             prompt_enter_handler();
-            printf("\n");
-            printf("$");
-            printf(":");
-            printf(" ");
-        }
+            printf("\n$: ");
+                }
         break;
     case 29: // ctrl
         break;
