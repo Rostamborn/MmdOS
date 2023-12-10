@@ -1,13 +1,17 @@
-#include <stdint.h>
+#ifndef KERNEL_IDT_DEF
+#define KERNEL_IDT_DEF
+
 #include "cpu.h"
+#include <stdint.h>
 
 extern void idt_init(void);
 
-interrupt_frame* isr_handler(interrupt_frame* frame);
+interrupt_frame *isr_handler(interrupt_frame *frame);
 
-interrupt_frame* irq_handler(interrupt_frame* frame);
+interrupt_frame *irq_handler(interrupt_frame *frame);
 
-void irq_install_handler (uint8_t offset, interrupt_frame* (*handler)(interrupt_frame *frame));
+void irq_install_handler(uint8_t offset,
+                         interrupt_frame *(*handler)(interrupt_frame *frame));
 
 void irq_uninstall_handler(uint8_t offset);
 
@@ -291,3 +295,4 @@ extern void irq15();
 // extern void isr253(void);
 // extern void isr254(void);
 // extern void isr255(void);
+#endif

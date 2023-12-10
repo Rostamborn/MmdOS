@@ -1,29 +1,32 @@
-#include <stdint.h>
+#include "idt.h"
+#include "cpu.h"
 #include "idt.h"
 #include "limine_term.h"
+#include "panic.h"
 #include "pic.h"
+#include <stdint.h>
 
 extern void *isr_stub_table[];
 
 struct interrupt_descriptor { // I think it's also called a gate descriptor
     uint16_t address_low;
     uint16_t selector; // this would be the base address of the code segment
-    uint8_t ist; // should have zero value
+    uint8_t ist;       // should have zero value
     uint8_t flags;
     uint16_t address_mid;
     uint32_t address_high;
     uint32_t reserved;
-} __attribute__ ((packed));
+} __attribute__((packed));
 
 struct idtr {
     uint16_t limit;
     uint64_t address;
-} __attribute__ ((packed));
+} __attribute__((packed));
 
 struct interrupt_descriptor idt[256]; // 256 interrupts
-void* irq_handlers[16] = {0};
+void *irq_handlers[16] = {0};
 
-char* exception_messages[] = {
+char *exception_messages[] = {
     "Division By Zero",
     "Debug",
     "Non Maskable Interrupt",
@@ -60,20 +63,20 @@ char* exception_messages[] = {
 };
 
 // ISRs
-interrupt_frame* isr_handler(interrupt_frame* frame) {
-    if(frame->int_number < 32) {
+interrupt_frame *isr_handler(interrupt_frame *frame) {
+    if (frame->int_number < 32) {
         // log_to_serial(exception_messages[frame->int_number]);
-        limine_write(exception_messages[frame->int_number]);
+        panic("\n %s", exception_messages[frame->int_number]);
     }
 
     return frame;
 }
 
 // IRQs
-interrupt_frame* irq_handler(interrupt_frame* frame) {
-    void (*handler)(interrupt_frame* frame);
+interrupt_frame *irq_handler(interrupt_frame *frame) {
+    void (*handler)(interrupt_frame *frame);
     handler = irq_handlers[frame->int_number - 32];
-    if(handler) {
+    if (handler) {
         handler(frame);
     }
 
@@ -82,41 +85,45 @@ interrupt_frame* irq_handler(interrupt_frame* frame) {
     return frame;
 }
 
-void irq_install_handler (uint8_t offset, interrupt_frame* (*handler)(interrupt_frame *frame)){
+void irq_install_handler(uint8_t offset,
+                         interrupt_frame *(*handler)(interrupt_frame *frame)) {
     irq_handlers[offset] = handler;
 }
 
-void irq_uninstall_handler(uint8_t offset){
-    irq_handlers[offset] = 0;
-}
+void irq_uninstall_handler(uint8_t offset) { irq_handlers[offset] = 0; }
 
 void set_interrupt_descriptor(uint8_t vector, void *handler, uint8_t dpl) {
     // dpl is the descriptor privilage level which determines the highest
-    // cpu ring that can trigger this interrupt via software(default of 0 is fine as there is no user mode).
+    // cpu ring that can trigger this interrupt via software(default of 0 is
+    // fine as there is no user mode).
 
-    uint64_t handler_address = (uint64_t)handler;
+    uint64_t handler_address = (uint64_t) handler;
     struct interrupt_descriptor *entry = &idt[vector];
 
     entry->address_low = handler_address & 0xffff;
     entry->address_mid = (handler_address >> 16) & 0xffff;
     entry->address_high = (handler_address >> 32) & 0xffffffff;
-    entry->selector = 0x28; // kernel code selector is 0x28 (refer to GDT). the base address of the code segment
+    entry->selector = 0x28; // kernel code selector is 0x28 (refer to GDT). the
+                            // base address of the code segment
     entry->flags = 0b1110 | ((dpl & 0b11) << 5) | (1 << 7);
     entry->ist = 0;
     entry->reserved = 0;
 }
 
 void idt_load() {
-    struct idtr idtr_instance; // it's ok to have it on stack as IDTR register will keep the copy.
-    idtr_instance.limit = 256 * sizeof(struct interrupt_descriptor) - 1; // the limit is added to the base address.
-                                                                         // the minus one is because we want
-                                                                         // point to the last byte of the table.
-    idtr_instance.address = (uint64_t)idt;
+    struct idtr idtr_instance; // it's ok to have it on stack as IDTR register
+                               // will keep the copy.
+    idtr_instance.limit = 256 * sizeof(struct interrupt_descriptor) -
+                          1; // the limit is added to the base address.
+                             // the minus one is because we want
+                             // point to the last byte of the table.
+    idtr_instance.address = (uint64_t) idt;
     asm volatile("lidt %0" : : "m"(idtr_instance) : "memory");
     asm volatile("sti");
 }
 
-// populate the idt with the interrupt stubs (no need to populate all of the table)
+// populate the idt with the interrupt stubs (no need to populate all of the
+// table)
 extern void idt_init() {
     set_interrupt_descriptor(0, isr0, 0);
     set_interrupt_descriptor(1, isr1, 0);
@@ -172,7 +179,7 @@ extern void idt_init() {
     // used for system calls
     set_interrupt_descriptor(128, isr128, 0);
     set_interrupt_descriptor(177, isr177, 0);
-    
+
     pic_init();
     idt_load();
 }

@@ -1,3 +1,6 @@
+#ifndef KERNEL_CPU_DEF
+#define KERNEL_CPU_DEF
+
 #include <stdint.h>
 
 #define PORT 0x3f8
@@ -47,14 +50,16 @@ typedef struct {
     uint64_t rbx;
     uint64_t rax;
     uint64_t int_number; // this is pushed in the macro (Hopefully it's 8 bytes)
-    uint64_t error_code; // This is pushed by the cpu if the interrupt is an error interrupt.
-                         // If not, then we push a dummy value of 0(in the macro)
-    uint64_t iret_rip; // iret prefix means that the cpu pushed this automatically and we didn't
+    uint64_t error_code; // This is pushed by the cpu if the interrupt is an
+                         // error interrupt. If not, then we push a dummy value
+                         // of 0(in the macro)
+    uint64_t iret_rip;   // iret prefix means that the cpu pushed this
+                         // automatically and we didn't
     uint64_t iret_cs;
     uint64_t iret_flags;
     uint64_t iret_rsp;
     uint64_t iret_ss;
-} __attribute__ ((packed)) interrupt_frame;
+} __attribute__((packed)) interrupt_frame;
 
 typedef struct {
     uint32_t unused0;
@@ -72,3 +77,4 @@ typedef struct {
     uint64_t unused2;
     uint32_t iopb;
 } __attribute__((packed)) tss_frame;
+#endif
