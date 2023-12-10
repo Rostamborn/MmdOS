@@ -98,5 +98,7 @@ build/%.asm.o: %.asm
 run: $(ISO_FILENAME)
 	qemu-system-x86_64 -serial stdio $(ISO_FILENAME)
 
+.PHONY: clean
+
 clean:
 	rm $(OBJECTS_DIR)/* $(ISO_FILENAME) $(TARGET)
