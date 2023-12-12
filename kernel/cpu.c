@@ -17,37 +17,6 @@
 // #define ICW_3_SLAVE 0x2
 // #define ICW_4 0x1
 
-
-// halt, catch fire
-void hcf(void) {
-    asm ("cli");
-    for (;;) {
-        asm ("hlt");
-    }
-}
-
-inline void enable_interrupts() {
-    asm volatile("sti");
-}
-
-inline void disable_interrupts() {
-    asm volatile("cli");
-}
-
-// to communicate with ports(using inb & outb asm instructions)
-unsigned char inb(int portnum) {
-    unsigned char data = 0;
-    __asm__ __volatile__("inb %%dx, %%al" : "=a" (data) : "d" (portnum));
-
-    return data;
-}
-
-unsigned char outb(int portnum, unsigned char value) {
-    __asm__ __volatile__("outb %%al, %%dx" : : "a" (value), "d" (portnum));
-
-    return value;
-}
-
 // extern inline void io_wait(void) {
 //     outb(0x80, 0);
 // }

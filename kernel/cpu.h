@@ -5,13 +5,29 @@
 
 #define PORT 0x3f8
 
-unsigned char inb(int portnum);
+// to communicate with ports(using inb & outb asm instructions)
+static inline uint8_t inb(int portnum) {
+    unsigned char data = 0;
+    __asm__ __volatile__("inb %%dx, %%al" : "=a" (data) : "d" (portnum));
 
-unsigned char outb(int portnum, unsigned char value);
+    return data;
+}
+
+static inline uint8_t outb(int portnum, unsigned char value) {
+    __asm__ __volatile__("outb %%al, %%dx" : : "a" (value), "d" (portnum));
+
+    return value;
+}
 
 // extern inline void io_wait(void);
 
-void hcf(void);
+// halt, catch fire
+static inline void hcf(void) {
+    asm ("cli");
+    for (;;) {
+        asm ("hlt");
+    }
+}
 
 int init_serial();
 
@@ -23,9 +39,13 @@ void disable_pic();
 
 uint64_t rdmsr(uint32_t msr);
 
-inline void enable_interrupts();
+static inline void enable_interrupts() {
+    asm volatile("sti");
+}
 
-inline void enable_interrupts();
+static inline void disable_interrupts() {
+    asm volatile("cli");
+}
 
 void memset_k(void *ptr, uint8_t value, uint64_t size);
 
