@@ -40,12 +40,17 @@ override XORRISOFLAGS += \
 
 LIMINE_DEPLOY := ./disk/limine/limine-deploy
 
-KERNEL_DIR := ./kernel
+SRC_DIRECTORY := ./
+KERNEL_DIR := ./src/kernel
+LIB_DIR := ./src/lib
 OBJECTS_DIR := ./obj
 # C_SRCS = $(wildcard *.c)
 # ASM_SRCS = $(wildcard *.asm)
 KERNEL_C_FILES :=  $(wildcard $(KERNEL_DIR)/*.c)
 KERNEL_ASSEMBLY_FILES := $(wildcard $(KERNEL_DIR)/*.asm)
+
+LIB_C_FILES :=  $(wildcard $(LIB_DIR)/*.c)
+LIB_ASSEMBLY_FILES := $(wildcard $(LIB_DIR)/*.asm)
 
 TARGET := disk/kernel.elf
 
@@ -62,9 +67,10 @@ all: $(OBJS)
 	@echo "deploying lemine"
 	make deploy-limine -B
 
-kernel: $(KERNEL_C_FILES, KERNEL_ASSEMBLY_FILES)
+
+kernel: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
 	@echo "compiling c files to objects"
-	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -c $(KERNEL_C_FILES)
+	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -c $(KERNEL_C_FILES) ${LIB_C_FILES}
 	mv *.o $(OBJECTS_DIR)
 
 	@echo "compiling assembly files to objects"

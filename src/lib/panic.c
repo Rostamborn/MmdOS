@@ -1,5 +1,5 @@
-#include "cpu.h"
-#include "print.h"
+#include "src/kernel/cpu.h"
+#include "src/lib/print.h"
 #include <stdarg.h>
 
 void panic(const char *fmt, ...) {

@@ -1,5 +1,5 @@
-#include "print.h"
-#include "limine_term.h"
+#include "src/lib/print.h"
+#include "src/kernel/limine_term.h"
 #include <stdarg.h>
 
 int format_string(char *s, char buffer[], int buffer_offset) {
