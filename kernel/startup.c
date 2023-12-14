@@ -1,16 +1,13 @@
-#include "fb.h"
 #include "gdt.h"
 #include "idt.h"
 #include "keyboard.h"
-#include "limine.h"
+#include "pmm.h"
 #include "limine_term.h"
 #include "pic.h"
 #include "print.h"
 #include "prompt.h"
 #include "timer.h"
 #include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own functions*
 
 void _start(void) {
@@ -19,6 +16,7 @@ void _start(void) {
     timer_init();
     prompt_init();
     keyboard_init();
+    pmm_init();
     // draw_line();
 
     init_serial();
