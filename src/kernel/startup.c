@@ -5,8 +5,8 @@
 #include "limine.h"
 #include "limine_term.h"
 #include "pic.h"
-#include "src/lib/print.h"
 #include "prompt.h"
+#include "src/lib/print.h"
 #include "timer.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -17,6 +17,14 @@ void _start(void) {
     gdt_init();
     idt_init();
     timer_init();
+
+    // testing hex output
+    printf("%x\n", 1000000000);
+    int x = 5;
+    int *y = &x;
+    printf("%p \n", y);
+    // ------
+
     prompt_init();
     keyboard_init();
     // draw_line();
