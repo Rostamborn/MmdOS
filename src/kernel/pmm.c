@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "limine.h"
 #include "cpu.h"
-#include "print.h"
+#include "src/lib/print.h"
 
 struct limine_memmap_request memmap_req = {
     .id = LIMINE_MEMMAP_REQUEST,

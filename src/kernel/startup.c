@@ -4,7 +4,7 @@
 #include "pmm.h"
 #include "limine_term.h"
 #include "pic.h"
-#include "print.h"
+#include "src/lib/print.h"
 #include "prompt.h"
 #include "timer.h"
 #include <stdbool.h>
