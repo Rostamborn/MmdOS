@@ -1,6 +1,34 @@
 #include "src/lib/print.h"
 #include "src/kernel/limine_term.h"
+#include "stdint.h"
 #include <stdarg.h>
+
+void int_to_hex(uint64_t i, char *buffer, int32_t buffer_size) {
+    char hex_chars[16] = "0123456789abcdef";
+    uint64_t num = i;
+    uint8_t rem = 0;
+
+    uint64_t index = 0;
+
+    while (num != 0 && index < buffer_size) {
+        rem = num % 16;
+        num /= 16;
+        buffer[index] = hex_chars[rem];
+        index++;
+    }
+
+    uint32_t k = 0;
+    uint32_t j = index - 1;
+    while (k < j) {
+        char temp = buffer[k];
+        buffer[k] = buffer[j];
+        buffer[j] = temp;
+        k++;
+        j--;
+    }
+
+    return;
+}
 
 int format_string(char *s, char buffer[], int buffer_offset) {
     while (*s && buffer_offset < MAX_PRINTF_BUFFER_SIZE) {
@@ -19,9 +47,9 @@ int format_char(int c, char buffer[], int buffer_offset) {
     return buffer_offset;
 }
 
-int format_int(int integer, char buffer[], int buffer_offset) {
-    int len = 0;
-    int remainder = integer;
+int format_int(int64_t integer, char buffer[], int buffer_offset) {
+    uint32_t len = 0;
+    int64_t remainder = integer;
     while (remainder != 0) {
         len++;
         remainder /= 10;
@@ -29,7 +57,7 @@ int format_int(int integer, char buffer[], int buffer_offset) {
 
     char number[len];
 
-    for (int i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++) {
         number[i] = (integer % 10) + '0';
         integer /= 10;
     }
@@ -46,12 +74,18 @@ int format_int(int integer, char buffer[], int buffer_offset) {
     return buffer_offset;
 }
 
+int format_hex(uint64_t hex_int, char buffer[], int buffer_offset) {
+    char hex_string[64] = {0};
+    int_to_hex(hex_int, hex_string, 64);
+    return format_string(hex_string, buffer, buffer_offset);
+}
+
 int format_handle(char format, char buffer[], int buffer_offset, va_list args) {
     switch (format) {
     // digit/int
     case 'd':
     case 'i':
-        int int_arg = va_arg(args, int);
+        int64_t int_arg = va_arg(args, int64_t);
         buffer_offset = format_int(int_arg, buffer, buffer_offset);
         break;
 
@@ -65,8 +99,14 @@ int format_handle(char format, char buffer[], int buffer_offset, va_list args) {
 
     // unsigned hexadecimal
     case 'X':
-        // parse to lowercase
+    // parse to lowercase
+    case 'p':
     case 'x':
+        buffer[buffer_offset] = '0';
+        buffer[buffer_offset + 1] = 'x';
+        buffer_offset += 2;
+        uint64_t hex_arg = va_arg(args, uint64_t);
+        buffer_offset = format_hex(hex_arg, buffer, buffer_offset);
         break;
 
     // decimal floating point
