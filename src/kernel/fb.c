@@ -1,6 +1,6 @@
 #include "fb.h"
 #include "limine.h"
-#include "panic.h"
+#include "src/lib/panic.h"
 #include <stddef.h>
 
 struct limine_framebuffer_request frame_buf_req = {

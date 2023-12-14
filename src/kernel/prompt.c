@@ -1,6 +1,6 @@
 #include "prompt.h"
 #include "limine_term.h"
-#include "print.h"
+#include "src/lib/print.h"
 #include <stdint.h>
 void prompt_init() {
     for (int i = 0; i < PROMPT_BUFFER_SIZE; i++) {

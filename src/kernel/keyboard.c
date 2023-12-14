@@ -1,7 +1,7 @@
 #include "keyboard.h"
 #include "idt.h"
 #include "limine_term.h"
-#include "print.h"
+#include "src/lib/print.h"
 #include "prompt.h"
 #include <stdint.h>
 
