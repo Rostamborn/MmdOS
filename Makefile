@@ -1,4 +1,4 @@
-ISO_FILENAME = mamadOS.iso
+ISO_FILENAME = MmdOS.iso
 override DEFAULT_CC := gcc
 override DEFAULT_LD := ld
 override DEFAULT_CFLAGS += \
