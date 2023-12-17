@@ -33,9 +33,7 @@ void pmm_init() {
 
     uint64_t highest_addr = 0;
 
-    printf("pmm: Memmap entry count: %d\n", memmap->entry_count);
-
-    for(int i = 0; i < memmap->entry_count; i++) {
+    for(uint8_t i = 0; i < memmap->entry_count; i++) {
         struct limine_memmap_entry* entry = entries[i];
 
         /* For some reason, entry->Type seems to be NULL */
@@ -63,12 +61,10 @@ void pmm_init() {
 
     printf("pmm: highest addr: %x\n", highest_addr);
     printf("pmm: bitmap size: %d\n", bitmap_size);
-    printf("pmm: memory size: %d\n", page_index_limit * PAGE_SIZE);
-    /////////////////////////
-    
 
     // Find a hole for the bitmap in the memory map.
-    for (uint64_t i = 0; i < memmap->entry_count; i++) {
+    // Find a place for the bitmap to reside in.
+    for (uint8_t i = 0; i < memmap->entry_count; i++) {
         struct limine_memmap_entry *entry = entries[i];
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
@@ -82,20 +78,26 @@ void pmm_init() {
             memset(bitmap, 0xff, bitmap_size);
 
             // *Not sure about this part*
-            entry->length -= bitmap_size; // we occupied the usable part of this etnry
-            entry->base += bitmap_size;
+            entry->length -= bitmap_size; // we occupied space for the btimap itself.
+            entry->base += bitmap_size;   // the start address of usable memory that will be allocated.
 
             break;
         }
     }
 
+    if (bitmap == 0) {
+        panic("pmm_init: no space for bitmap");
+    }
+
     // Populate free bitmap entries according to the memory map.
-    for (uint64_t i = 0; i < memmap->entry_count; i++) {
+    for (uint8_t i = 0; i < memmap->entry_count; i++) {
         struct limine_memmap_entry *entry = entries[i];
 
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
         }
+        
+        // The entry is now of Usable type
 
         for (uint64_t j = 0; j < entry->length; j += PAGE_SIZE) {
             bitmap_clear(bitmap, (entry->base + j) / PAGE_SIZE);
@@ -103,7 +105,6 @@ void pmm_init() {
     }
 
     printf("pmm: usable memory: %d Mib\n", (usable_pages * PAGE_SIZE) / 1024 / 1024);
-
 }
 
 void* physical_alloc(uint64_t n_pages, uint64_t limit) {
@@ -156,6 +157,10 @@ void* pmm_alloc(uint64_t n_pages) {
 }
 
 void pmm_free(void* addr, uint64_t n_pages) {
+    if (n_pages == 0) {
+        return;
+    }
+
     spinlock_acquire(&spin_lock);
 
     uint64_t page_index = (uint64_t)addr / PAGE_SIZE;
