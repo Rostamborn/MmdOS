@@ -114,11 +114,3 @@ uint64_t rdmsr(uint32_t msr) { // read model specific register insctruction
     asm volatile("rdmsr" : "=a" (low), "=d" (high) : "c" (msr) : "memory");
     return ((uint64_t)high << 32) | low; // return the 64-bit result
 }
-
-void memset(void *ptr, uint8_t value, uint64_t size) {
-    uint8_t *tmp = (uint8_t*)ptr;
-    for (; size > 0; size--) {
-        *tmp = value;
-        tmp++;
-    }
-}

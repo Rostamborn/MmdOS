@@ -47,8 +47,6 @@ static inline void disable_interrupts() {
     asm volatile("cli");
 }
 
-void memset_k(void *ptr, uint8_t value, uint64_t size);
-
 // Note(Arman): This is nothing short of genius. We pass the stack pointer to
 // interrupt_dispatch in interrupt_stub. To make it easier to access the stack
 // contents, we create a struct which resembles the pushed content and thus we
