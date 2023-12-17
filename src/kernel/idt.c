@@ -2,7 +2,7 @@
 #include "cpu.h"
 #include "idt.h"
 #include "limine_term.h"
-#include "src/lib/panic.h"
+#include "panic.h"
 #include "pic.h"
 #include <stdint.h>
 

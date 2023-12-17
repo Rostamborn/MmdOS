@@ -1,5 +1,5 @@
-#include "src/lib/print.h"
-#include "src/kernel/limine_term.h"
+#include "print.h"
+#include "limine_term.h"
 #include "stdint.h"
 #include <stdarg.h>
 
