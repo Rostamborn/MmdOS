@@ -33,6 +33,11 @@ void _start(void) {
 
     log_to_serial_digit(123);
 
+    void* ptr = pmm_alloc(1);
+    printf("ptr: %p\n", ptr);
+    void* ptr2 = pmm_alloc(1);
+    printf("ptr2: %p\n", ptr2);
+
     // uint8_t a = 1 / 0; // I can not belive the interrupt system works
 
     // hcf(); // halt, catch fire

@@ -19,6 +19,7 @@ struct limine_hhdm_request hhdm_req = {
 
 spinlock_t spin_lock = SPINLOCK_INIT;
 static uint8_t* bitmap = 0;
+static uint64_t* base_addr = 0;
 static uint64_t page_index_limit = 0;
 static uint64_t prev_page_index = 0;
 static uint64_t total_pages = 0;
@@ -80,6 +81,7 @@ void pmm_init() {
             // *Not sure about this part*
             entry->length -= bitmap_size; // we occupied space for the btimap itself.
             entry->base += bitmap_size;   // the start address of usable memory that will be allocated.
+            base_addr = (uint64_t *)entry->base;
 
             break;
         }
@@ -105,11 +107,14 @@ void pmm_init() {
     }
 
     printf("pmm: usable memory: %d Mib\n", (usable_pages * PAGE_SIZE) / 1024 / 1024);
+
+    printf("pmm: Base Address: %x\n", base_addr);
 }
 
 void* physical_alloc(uint64_t n_pages, uint64_t limit) {
     uint64_t consecutive_pages = 0;
 
+    // not sure about pre_index
     while (prev_page_index < limit) {
         if (bitmap_get(bitmap, prev_page_index)) {
             consecutive_pages = 0;
@@ -152,6 +157,10 @@ void* pmm_alloc(uint64_t n_pages) {
     }
 
     spinlock_release(&spin_lock);
+
+    printf("pmm: allocated %d pages\n", n_pages);
+    printf("pmm: used memory: %d MiB\n", (used_pages * PAGE_SIZE) / 1024 / 1024);
+    // printf("pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) / 1024 / 1024);
 
     return allocated;
 }
