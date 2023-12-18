@@ -8,8 +8,9 @@ void klog(const char *new_prefix, const char *fmt, ...) {
     // loading optional parameters
     va_list args;
     va_start(args, fmt);
-
-    vklog(new_prefix, fmt, args);
+    if (!PROD_MODE) {
+        vklog(new_prefix, fmt, args);
+    }
 
     va_end(args);
 }
