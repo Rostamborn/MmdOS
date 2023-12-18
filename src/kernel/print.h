@@ -3,8 +3,6 @@
 
 #include <stdarg.h>
 
-#define MAX_PRINTF_BUFFER_SIZE 1024
-
 // load args, then format and print
 void printf(const char *fmt, ...);
 
