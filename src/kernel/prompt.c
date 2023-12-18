@@ -6,14 +6,14 @@ void prompt_init() {
     for (int i = 0; i < PROMPT_BUFFER_SIZE; i++) {
         buffer[i] = '\0';
     }
-    printf("$: ");
+    kprintf("$: ");
 }
 
 void prompt_enter_handler() {
     if (line_len > 0) {
-        printf("\n");
+        kprintf("\n");
         line_num++;
-        printf("%s", buffer);
+        kprintf("%s", buffer);
     }
 
     for (int i = 0; buffer_pointer > 0; buffer_pointer--) {
@@ -38,5 +38,5 @@ void prompt_backspace_handler() {
     line_len--;
     buffer_pointer--;
     buffer[buffer_pointer] = '\0';
-    printf("\b \b");
+    kprintf("\b \b");
 }

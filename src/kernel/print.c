@@ -4,17 +4,17 @@
 #include "stdint.h"
 #include <stdarg.h>
 
-void printf(const char *fmt, ...) {
+void kprintf(const char *fmt, ...) {
     // loading optional parameters
     va_list args;
     va_start(args, fmt);
 
-    kernel_printf(fmt, args);
+    vkprintf(fmt, args);
 
     va_end(args);
 }
 
-void kernel_printf(const char *fmt, va_list args) {
+void vkprintf(const char *fmt, va_list args) {
     char buffer[MAX_STRING_FORMATTER_BUFFER_SIZE] = {0};
 
     int i = 0;

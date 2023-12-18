@@ -1,11 +1,11 @@
-#include <stdint.h>
-#include "limine.h"
+#include "bitmap.h"
 #include "cpu.h"
+#include "limine.h"
+#include "panic.h"
 #include "print.h"
 #include "spinlock.h"
 #include "util.h"
-#include "panic.h"
-#include "bitmap.h"
+#include <stdint.h>
 
 struct limine_memmap_request memmap_req = {
     .id = LIMINE_MEMMAP_REQUEST,
@@ -18,8 +18,8 @@ struct limine_hhdm_request hhdm_req = {
 };
 
 spinlock_t spin_lock = SPINLOCK_INIT;
-static uint8_t* bitmap = 0;
-static uint64_t* base_addr = 0;
+static uint8_t *bitmap = 0;
+static uint64_t *base_addr = 0;
 static uint64_t page_index_limit = 0;
 static uint64_t prev_page_index = 0;
 static uint64_t total_pages = 0;
@@ -28,40 +28,43 @@ static uint64_t used_pages = 0;
 static uint64_t reserved_pages = 0;
 
 void pmm_init() {
-    struct limine_memmap_response* memmap = memmap_req.response;
-    struct limine_hhdm_response* hhdm = hhdm_req.response;
-    struct limine_memmap_entry** entries = memmap->entries;
+    struct limine_memmap_response *memmap = memmap_req.response;
+    struct limine_hhdm_response *hhdm = hhdm_req.response;
+    struct limine_memmap_entry **entries = memmap->entries;
 
     uint64_t highest_addr = 0;
 
-    for(uint8_t i = 0; i < memmap->entry_count; i++) {
-        struct limine_memmap_entry* entry = entries[i];
+    for (uint8_t i = 0; i < memmap->entry_count; i++) {
+        struct limine_memmap_entry *entry = entries[i];
 
         /* For some reason, entry->Type seems to be NULL */
-        
-        printf("addr: %x, size: %d\n", entry->base, entry->length, entry->type);
+
+        kprintf("addr: %x, size: %d\n", entry->base, entry->length,
+                entry->type);
         // if(entry->type != 1) continue;
         switch (entry->type) {
-            case LIMINE_MEMMAP_USABLE:
-                usable_pages += div_round_up(entry->length, PAGE_SIZE);
-                highest_addr = max(highest_addr, entry->base + entry->length);
-                break;
-            case LIMINE_MEMMAP_RESERVED:
-            case LIMINE_MEMMAP_ACPI_RECLAIMABLE:
-            case LIMINE_MEMMAP_ACPI_NVS:
-            case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
-            case LIMINE_MEMMAP_KERNEL_AND_MODULES:
-                reserved_pages += div_round_up(entry->length, PAGE_SIZE);
-                break;
+        case LIMINE_MEMMAP_USABLE:
+            usable_pages += div_round_up(entry->length, PAGE_SIZE);
+            highest_addr = max(highest_addr, entry->base + entry->length);
+            break;
+        case LIMINE_MEMMAP_RESERVED:
+        case LIMINE_MEMMAP_ACPI_RECLAIMABLE:
+        case LIMINE_MEMMAP_ACPI_NVS:
+        case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
+        case LIMINE_MEMMAP_KERNEL_AND_MODULES:
+            reserved_pages += div_round_up(entry->length, PAGE_SIZE);
+            break;
         }
     }
 
     page_index_limit = highest_addr / PAGE_SIZE;
-    uint64_t bitmap_size = page_align_up(page_index_limit / 8); // becaue we use 1 bit per page
-    // uint64_t bitmap_size = div_round_up(page_index_limit , 8); // becaue we use 1 bit per page
+    uint64_t bitmap_size =
+        page_align_up(page_index_limit / 8); // becaue we use 1 bit per page
+    // uint64_t bitmap_size = div_round_up(page_index_limit , 8); // becaue we
+    // use 1 bit per page
 
-    printf("pmm: highest addr: %x\n", highest_addr);
-    printf("pmm: bitmap size: %d\n", bitmap_size);
+    kprintf("pmm: highest addr: %x\n", highest_addr);
+    kprintf("pmm: bitmap size: %d\n", bitmap_size);
 
     // Find a hole for the bitmap in the memory map.
     // Find a place for the bitmap to reside in.
@@ -73,15 +76,19 @@ void pmm_init() {
         }
 
         if (entry->length >= bitmap_size) {
-            bitmap = (uint8_t *)(entry->base + hhdm->offset); // offsetting the bitmap to the higher half of the memory
+            bitmap = (uint8_t *) (entry->base +
+                                  hhdm->offset); // offsetting the bitmap to the
+                                                 // higher half of the memory
 
             // Initialise entire bitmap to 1 (non-free)
             memset(bitmap, 0xff, bitmap_size);
 
             // *Not sure about this part*
-            entry->length -= bitmap_size; // we occupied space for the btimap itself.
-            entry->base += bitmap_size;   // the start address of usable memory that will be allocated.
-            base_addr = (uint64_t *)entry->base;
+            entry->length -=
+                bitmap_size; // we occupied space for the btimap itself.
+            entry->base += bitmap_size; // the start address of usable memory
+                                        // that will be allocated.
+            base_addr = (uint64_t *) entry->base;
 
             break;
         }
@@ -98,7 +105,7 @@ void pmm_init() {
         if (entry->type != LIMINE_MEMMAP_USABLE) {
             continue;
         }
-        
+
         // The entry is now of Usable type
 
         for (uint64_t j = 0; j < entry->length; j += PAGE_SIZE) {
@@ -106,12 +113,13 @@ void pmm_init() {
         }
     }
 
-    printf("pmm: usable memory: %d Mib\n", (usable_pages * PAGE_SIZE) / 1024 / 1024);
+    kprintf("pmm: usable memory: %d Mib\n",
+            (usable_pages * PAGE_SIZE) / 1024 / 1024);
 
-    printf("pmm: Base Address: %x\n", base_addr);
+    kprintf("pmm: Base Address: %x\n", base_addr);
 }
 
-void* physical_alloc(uint64_t n_pages, uint64_t limit) {
+void *physical_alloc(uint64_t n_pages, uint64_t limit) {
     uint64_t consecutive_pages = 0;
 
     // not sure about pre_index
@@ -128,7 +136,8 @@ void* physical_alloc(uint64_t n_pages, uint64_t limit) {
                     bitmap_set(bitmap, i);
                 }
                 // prev_page_index = page_index + n_pages;
-                return (void*)(page_index * PAGE_SIZE); // the base addr of allocated pages
+                return (void *) (page_index *
+                                 PAGE_SIZE); // the base addr of allocated pages
             }
         }
     }
@@ -136,15 +145,16 @@ void* physical_alloc(uint64_t n_pages, uint64_t limit) {
     return NULL;
 }
 
-void* pmm_alloc(uint64_t n_pages) {
+void *pmm_alloc(uint64_t n_pages) {
     spinlock_acquire(&spin_lock);
 
     uint64_t prev_index = prev_page_index;
-    void* allocated = physical_alloc(n_pages, page_index_limit);
+    void *allocated = physical_alloc(n_pages, page_index_limit);
 
-    if (allocated == NULL) { // for when we hit the page_index_limit or can't find enougth n_pages 
-                             // in the current range. so we wrap to the beginning of the bitmap till
-                             // the prev_page_index
+    if (allocated ==
+        NULL) { // for when we hit the page_index_limit or can't find enougth
+                // n_pages in the current range. so we wrap to the beginning of
+                // the bitmap till the prev_page_index
         prev_page_index = 0;
         allocated = physical_alloc(n_pages, prev_index);
     }
@@ -158,21 +168,23 @@ void* pmm_alloc(uint64_t n_pages) {
 
     spinlock_release(&spin_lock);
 
-    printf("pmm: allocated %d pages\n", n_pages);
-    printf("pmm: used memory: %d MiB\n", (used_pages * PAGE_SIZE) / 1024 / 1024);
-    // printf("pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) / 1024 / 1024);
+    kprintf("pmm: allocated %d pages\n", n_pages);
+    kprintf("pmm: used memory: %d MiB\n",
+            (used_pages * PAGE_SIZE) / 1024 / 1024);
+    // kprintf("pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
+    // 1024 / 1024);
 
     return allocated;
 }
 
-void pmm_free(void* addr, uint64_t n_pages) {
+void pmm_free(void *addr, uint64_t n_pages) {
     if (n_pages == 0) {
         return;
     }
 
     spinlock_acquire(&spin_lock);
 
-    uint64_t page_index = (uint64_t)addr / PAGE_SIZE;
+    uint64_t page_index = (uint64_t) addr / PAGE_SIZE;
     for (uint64_t i = page_index; i < page_index + n_pages; i++) {
         if (bitmap_get(bitmap, i)) {
             panic("pmm_free: page already free");
