@@ -6,7 +6,7 @@ void panic(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
-    kernel_printf(fmt, args);
+    vkprintf(fmt, args);
 
     va_end(args);
 

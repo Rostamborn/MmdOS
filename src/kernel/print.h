@@ -3,12 +3,10 @@
 
 #include <stdarg.h>
 
-#define MAX_PRINTF_BUFFER_SIZE 1024
+// kernel printf: load args, then call virtual kernel printf (vkprintf)
+void kprintf(const char *fmt, ...);
 
-// load args, then format and print
-void printf(const char *fmt, ...);
-
-// format and print
-void kernel_printf(const char *fmt, va_list args);
+// virtual kernel printf: format and print
+void vkprintf(const char *fmt, va_list args);
 
 #endif

@@ -109,8 +109,8 @@ interrupt_frame *keyboard_handler(interrupt_frame *frame) {
     case 28: // enter
         if (pressed == 0) {
             prompt_enter_handler();
-            printf("\n$: ");
-                }
+            kprintf("\n$: ");
+        }
         break;
     case 29: // ctrl
         break;
@@ -159,15 +159,15 @@ interrupt_frame *keyboard_handler(interrupt_frame *frame) {
 
             if (keyboard.shift && keyboard.caps_lock) {
                 // print lower case
-                printf("%c", lower_case[scancode]);
+                kprintf("%c", lower_case[scancode]);
                 prompt_char_handler(lower_case[scancode]);
             } else if (keyboard.shift || keyboard.caps_lock) {
                 // print upper case
-                printf("%c", upper_case[scancode]);
+                kprintf("%c", upper_case[scancode]);
                 prompt_char_handler(upper_case[scancode]);
             } else {
                 // print lower case
-                printf("%c", lower_case[scancode]);
+                kprintf("%c", lower_case[scancode]);
                 prompt_char_handler(lower_case[scancode]);
             }
         }
