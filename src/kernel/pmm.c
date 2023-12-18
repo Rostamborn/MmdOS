@@ -1,8 +1,8 @@
 #include "bitmap.h"
 #include "cpu.h"
 #include "limine.h"
+#include "logger.h"
 #include "panic.h"
-#include "print.h"
 #include "spinlock.h"
 #include "util.h"
 #include <stdint.h>
@@ -39,8 +39,8 @@ void pmm_init() {
 
         /* For some reason, entry->Type seems to be NULL */
 
-        kprintf("addr: %x, size: %d\n", entry->base, entry->length,
-                entry->type);
+        klog(0, "addr: %x, size: %d\n", entry->base, entry->length,
+             entry->type);
         // if(entry->type != 1) continue;
         switch (entry->type) {
         case LIMINE_MEMMAP_USABLE:
@@ -63,8 +63,8 @@ void pmm_init() {
     // uint64_t bitmap_size = div_round_up(page_index_limit , 8); // becaue we
     // use 1 bit per page
 
-    kprintf("pmm: highest addr: %x\n", highest_addr);
-    kprintf("pmm: bitmap size: %d\n", bitmap_size);
+    klog(0, "pmm: highest addr: %x\n", highest_addr);
+    klog(0, "pmm: bitmap size: %d\n", bitmap_size);
 
     // Find a hole for the bitmap in the memory map.
     // Find a place for the bitmap to reside in.
@@ -113,10 +113,10 @@ void pmm_init() {
         }
     }
 
-    kprintf("pmm: usable memory: %d Mib\n",
-            (usable_pages * PAGE_SIZE) / 1024 / 1024);
+    klog(0, "pmm: usable memory: %d Mib\n",
+         (usable_pages * PAGE_SIZE) / 1024 / 1024);
 
-    kprintf("pmm: Base Address: %x\n", base_addr);
+    klog(0, "pmm: Base Address: %x\n", base_addr);
 }
 
 void *physical_alloc(uint64_t n_pages, uint64_t limit) {
@@ -168,10 +168,10 @@ void *pmm_alloc(uint64_t n_pages) {
 
     spinlock_release(&spin_lock);
 
-    kprintf("pmm: allocated %d pages\n", n_pages);
-    kprintf("pmm: used memory: %d MiB\n",
-            (used_pages * PAGE_SIZE) / 1024 / 1024);
-    // kprintf("pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
+    klog(0, "pmm: allocated %d pages\n", n_pages);
+    klog(0, "pmm: used memory: %d MiB\n",
+         (used_pages * PAGE_SIZE) / 1024 / 1024);
+    // klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
     // 1024 / 1024);
 
     return allocated;

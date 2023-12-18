@@ -2,6 +2,7 @@
 #include "idt.h"
 #include "keyboard.h"
 #include "limine_term.h"
+#include "logger.h"
 #include "pic.h"
 #include "pmm.h"
 #include "print.h"
@@ -19,14 +20,11 @@ void _start(void) {
     pmm_init();
 
     init_serial();
-    log_to_serial("Hello, world!\n");
-
-    log_to_serial_digit(123);
 
     void *ptr = pmm_alloc(1);
-    kprintf("ptr: %p\n", ptr);
+    klog(0, "ptr: %p\n", ptr);
     void *ptr2 = pmm_alloc(1);
-    kprintf("ptr2: %p\n", ptr2);
+    klog(0, "ptr2: %p\n", ptr2);
 
     // uint8_t a = 1 / 0; // I can not belive the interrupt system works
 
