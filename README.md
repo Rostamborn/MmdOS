@@ -10,27 +10,25 @@ You need an [GCC compiler](https://gcc.gnu.org/), [ld linker](https://www.gnu.or
 which are usually pre-installed on UNIX-like systems. Also [qemu](https://www.qemu.org/), [nasm](https://www.nasm.us/),
 [xorriso](https://www.gnu.org/software/xorriso/) and [make](https://www.gnu.org/software/make/) must be available.
 
-Then run:
+We also use [clang-format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html) in the `make format` script, so make sure to have it installed in a development workspace.
+
+to compile and build in debug mode run:
 
 ```sh
 make
 ```
 
-to compile and build in debug mode or run:
+to compile and build in production mode run:
 
 ```sh
 make prod
 ```
 
-to compile and build in production mode.
-
-then execute:
+if you want to run the os using qemu, execute:
 
 ```sh
 make run
 ```
-
-if you want to run the os using qemu.
 
 #### Implemented features
 
