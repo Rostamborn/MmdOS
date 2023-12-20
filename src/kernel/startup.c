@@ -1,13 +1,13 @@
-#include "gdt.h"
-#include "idt.h"
-#include "keyboard.h"
-#include "limine_term.h"
-#include "logger.h"
-#include "pic.h"
-#include "pmm.h"
-#include "print.h"
-#include "prompt.h"
-#include "timer.h"
+#include "src/kernel/cpu/pic.h"
+#include "src/kernel/gdt.h"
+#include "src/kernel/interrupts/idt.h"
+#include "src/kernel/interrupts/keyboard.h"
+#include "src/kernel/interrupts/timer.h"
+#include "src/kernel/lib/logger.h"
+#include "src/kernel/lib/print.h"
+#include "src/kernel/mm/pmm.h"
+#include "src/kernel/terminal/limine_term.h"
+#include "src/kernel/terminal/prompt.h"
 #include <stdbool.h>
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own functions*
 
@@ -21,9 +21,9 @@ void _start(void) {
 
     init_serial();
 
-    void *ptr = pmm_alloc(1);
+    void* ptr = pmm_alloc(1);
     klog(0, "ptr: %p\n", ptr);
-    void *ptr2 = pmm_alloc(1);
+    void* ptr2 = pmm_alloc(1);
     klog(0, "ptr2: %p\n", ptr2);
 
     // uint8_t a = 1 / 0; // I can not belive the interrupt system works

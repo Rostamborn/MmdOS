@@ -1,1 +1,0 @@
-rm *.o my_iso.iso disk/kernel.elf

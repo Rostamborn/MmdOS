@@ -4,3 +4,6 @@ IndentWidth: 4
 ColumnLimit: 80
 # does (int) x instead of (int)x
 SpaceAfterCStyleCast: true
+
+AlignConsecutiveDeclarations: true
+PointerAlignment: Left

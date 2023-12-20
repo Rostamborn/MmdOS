@@ -46,8 +46,9 @@ LIB_DIR := ./src/lib
 OBJECTS_DIR := ./obj
 # C_SRCS = $(wildcard *.c)
 # ASM_SRCS = $(wildcard *.asm)
-KERNEL_C_FILES :=  $(wildcard $(KERNEL_DIR)/*.c)
-KERNEL_ASSEMBLY_FILES := $(wildcard $(KERNEL_DIR)/*.asm)
+KERNEL_C_FILES :=  $(shell find $(KERNEL_DIR) -name "*.c")
+KERNEL_HEADER_FILES :=  $(shell find $(KERNEL_DIR) -name "*.h")
+KERNEL_ASSEMBLY_FILES := $(shell find $(KERNEL_DIR) -name "*.asm")
 
 LIB_C_FILES :=  $(wildcard $(LIB_DIR)/*.c)
 LIB_ASSEMBLY_FILES := $(wildcard $(LIB_DIR)/*.asm)
@@ -131,3 +132,6 @@ run: $(ISO_FILENAME)
 
 clean:
 	rm $(OBJECTS_DIR)/* $(ISO_FILENAME) $(TARGET)
+
+format: $(KERNEL_C_FILES)
+	clang-format -i $(KERNEL_C_FILES) $(KERNEL_HEADER_FILES)
