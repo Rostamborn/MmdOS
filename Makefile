@@ -46,8 +46,9 @@ LIB_DIR := ./src/lib
 OBJECTS_DIR := ./obj
 # C_SRCS = $(wildcard *.c)
 # ASM_SRCS = $(wildcard *.asm)
-KERNEL_C_FILES :=  $(wildcard $(KERNEL_DIR)/*.c)
-KERNEL_ASSEMBLY_FILES := $(wildcard $(KERNEL_DIR)/*.asm)
+KERNEL_C_FILES :=  $(shell find $(KERNEL_DIR) -name "*.c")
+KERNEL_HEADER_FILES :=  $(shell find $(KERNEL_DIR) -name "*.h")
+KERNEL_ASSEMBLY_FILES := $(shell find $(KERNEL_DIR) -name "*.asm")
 
 LIB_C_FILES :=  $(wildcard $(LIB_DIR)/*.c)
 LIB_ASSEMBLY_FILES := $(wildcard $(LIB_DIR)/*.asm)
@@ -59,7 +60,7 @@ OBJS += $(pathsubst $(KERNEL_DIR)/%.asm)
 
 all: $(OBJS)
 	@echo "making kernel"
-	make kernel -B
+	make kernel/development -B
 
 	@echo "making iso"
 	make iso -B
@@ -67,10 +68,33 @@ all: $(OBJS)
 	@echo "deploying lemine"
 	make deploy-limine -B
 
+prod: $(OBJS)
+	@echo "making kernel"
+	make kernel/production -B
 
-kernel: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
+	@echo "making iso"
+	make iso -B
+
+	@echo "deploying lemine"
+	make deploy-limine -B
+
+kernel/development: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
 	@echo "compiling c files to objects"
-	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -c $(KERNEL_C_FILES) ${LIB_C_FILES}
+	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -D PROD_MODE=0 -c $(KERNEL_C_FILES) ${LIB_C_FILES}
+	mv *.o $(OBJECTS_DIR)
+
+	@echo "compiling assembly files to objects"
+	nasm ${KERNEL_ASSEMBLY_FILES} ${NASMFLAGS} -o $(OBJECTS_DIR)/interrupt_vector.o
+
+	@echo "linking..."
+	$(DEFAULT_LD) $(LDFLAGS) -o $(TARGET) \
+	$(OBJECTS_DIR)/*.o
+
+	@echo "created kernel"
+
+kernel/production: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
+	@echo "compiling c files to objects"
+	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -D PROD_MODE=1 -c $(KERNEL_C_FILES) ${LIB_C_FILES}
 	mv *.o $(OBJECTS_DIR)
 
 	@echo "compiling assembly files to objects"
@@ -108,3 +132,6 @@ run: $(ISO_FILENAME)
 
 clean:
 	rm $(OBJECTS_DIR)/* $(ISO_FILENAME) $(TARGET)
+
+format: $(KERNEL_C_FILES)
+	clang-format -i $(KERNEL_C_FILES) $(KERNEL_HEADER_FILES)
