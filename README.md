@@ -60,3 +60,8 @@ directory and then will be linked by the linker `ld` and the `linker.ld` script 
 appropriate flags and the linked result will be put in `disk` directory. here the `iso`
 will be created and `limine` will be installed on it and the result of the process would
 be a bootable `iso`.
+
+#### Credit
+
+Special thanks to the contributers of [Lyre-OS](https://github.com/Lyre-OS/Lyre) 
+for being one of the main references of ideas and implementation.

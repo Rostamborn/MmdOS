@@ -21,9 +21,9 @@ void _start(void) {
 
     init_serial();
 
-    void* ptr = pmm_alloc(1);
+    void* ptr = pmm_alloc(1000);
     klog(0, "ptr: %p", ptr);
-    void* ptr2 = pmm_alloc(1);
+    void* ptr2 = pmm_alloc(1000);
     klog(0, "ptr2: %p", ptr2);
 
     // uint8_t a = 1 / 0; // I can not belive the interrupt system works
