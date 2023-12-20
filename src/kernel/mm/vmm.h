@@ -20,11 +20,11 @@
 #define PTE_GET_ADDR(pte) ((pte) &PTE_ADDR_MASK)
 #define PTE_GET_FLAGS(pte) ((pte) & ~PTE_ADDR_MASK)
 
-typedef struct {
-    spinlock_t lock;
-    uint64_t*  top_lvl;
-    VEC_TYPE() mmap_ranges;
-
-} pagemap;
+// typedef struct {
+//     spinlock_t lock;
+//     uint64_t*  top_lvl;
+//     VEC_TYPE() mmap_ranges;
+//
+// } pagemap;
 
 #endif

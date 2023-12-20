@@ -4,7 +4,7 @@ extern struct limine_memmap_request memmap_req;
 
 extern struct limine_hhdm_request hhdm_req;
 
-#define HHDM_OFFSET hhdm_req.response->offset
+#define HHDM_OFFSET (hhdm_req.response->offset)
 
 void pmm_init();
 
