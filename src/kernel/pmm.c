@@ -79,6 +79,7 @@ void pmm_init() {
             memset(bitmap, 0xff, bitmap_size);
 
             // *Not sure about this part*
+            printf("pmm: entry->base: %x\n", entry->base);
             entry->length -= bitmap_size; // we occupied space for the btimap itself.
             entry->base += bitmap_size;   // the start address of usable memory that will be allocated.
             base_addr = (uint64_t *)entry->base;
@@ -102,6 +103,7 @@ void pmm_init() {
         // The entry is now of Usable type
 
         for (uint64_t j = 0; j < entry->length; j += PAGE_SIZE) {
+            /* this is where all the magic happens */
             bitmap_clear(bitmap, (entry->base + j) / PAGE_SIZE);
         }
     }
@@ -109,6 +111,7 @@ void pmm_init() {
     printf("pmm: usable memory: %d Mib\n", (usable_pages * PAGE_SIZE) / 1024 / 1024);
 
     printf("pmm: Base Address: %x\n", base_addr);
+
 }
 
 void* physical_alloc(uint64_t n_pages, uint64_t limit) {
