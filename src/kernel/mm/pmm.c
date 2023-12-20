@@ -1,3 +1,4 @@
+#include "src/kernel/mm/pmm.h"
 #include "src/kernel/cpu/cpu.h"
 #include "src/kernel/lib/logger.h"
 #include "src/kernel/lib/panic.h"
@@ -29,8 +30,8 @@ static uint64_t  reserved_pages = 0;
 
 void pmm_init() {
     struct limine_memmap_response* memmap = memmap_req.response;
-    struct limine_hhdm_response*   hhdm = hhdm_req.response;
-    struct limine_memmap_entry**   entries = memmap->entries;
+    // struct limine_hhdm_response*   hhdm = hhdm_req.response;
+    struct limine_memmap_entry** entries = memmap->entries;
 
     uint64_t highest_addr = 0;
 
@@ -39,27 +40,26 @@ void pmm_init() {
 
         /* For some reason, entry->Type seems to be NULL */
 
-        klog(0, "addr: %x, size: %d", entry->base, entry->length,
-             entry->type);
+        klog(0, "addr: %x, size: %d", entry->base, entry->length, entry->type);
         // if(entry->type != 1) continue;
         switch (entry->type) {
         case LIMINE_MEMMAP_USABLE:
-            usable_pages += div_round_up(entry->length, PAGE_SIZE);
-            highest_addr = max(highest_addr, entry->base + entry->length);
+            usable_pages += DIV_ROUNDUP(entry->length, PAGE_SIZE);
+            highest_addr = MAX(highest_addr, entry->base + entry->length);
             break;
         case LIMINE_MEMMAP_RESERVED:
         case LIMINE_MEMMAP_ACPI_RECLAIMABLE:
         case LIMINE_MEMMAP_ACPI_NVS:
         case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
         case LIMINE_MEMMAP_KERNEL_AND_MODULES:
-            reserved_pages += div_round_up(entry->length, PAGE_SIZE);
+            reserved_pages += DIV_ROUNDUP(entry->length, PAGE_SIZE);
             break;
         }
     }
 
     page_index_limit = highest_addr / PAGE_SIZE;
-    uint64_t bitmap_size =
-        page_align_up(page_index_limit / 8); // becaue we use 1 bit per page
+    uint64_t bitmap_size = ALIGN_UP(page_index_limit / 8, PAGE_SIZE);
+    // page_align_up(page_index_limit / 8); // becaue we use 1 bit per page
     // uint64_t bitmap_size = div_round_up(page_index_limit , 8); // becaue we
     // use 1 bit per page
 
@@ -76,14 +76,16 @@ void pmm_init() {
         }
 
         if (entry->length >= bitmap_size) {
-            // This is where we determine where the free space for allocation resides
+            // This is where we determine where the free space for allocation
+            // resides
             bitmap = (uint8_t*) (entry->base +
-                                 hhdm->offset); // offsetting the bitmap to the
-                                                // higher half of the memory
+                                 HHDM_OFFSET); // offsetting the bitmap to the
+                                               // higher half of the memory
             // Initialise entire bitmap to 1 (non-free)
             memset(bitmap, 0xff, bitmap_size);
 
-            entry->length -= bitmap_size; // we occupied space for the btimap itself.
+            entry->length -=
+                bitmap_size; // we occupied space for the btimap itself.
             entry->base += bitmap_size; // the start address of usable memory
                                         // that will be allocated.
             base_addr = (uint64_t*) entry->base;
@@ -168,8 +170,37 @@ void* pmm_alloc(uint64_t n_pages) {
     spinlock_release(&spin_lock);
 
     klog(0, "pmm: allocated %d pages", n_pages);
-    klog(0, "pmm: used memory: %d MiB",
-         (used_pages * PAGE_SIZE) / 1024 / 1024);
+    klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 / 1024);
+    // klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
+    // 1024 / 1024);
+
+    return allocated;
+}
+
+void* pmm_alloc_nozero(uint64_t n_pages) {
+    spinlock_acquire(&spin_lock);
+
+    uint64_t prev_index = prev_page_index;
+    void*    allocated = physical_alloc(n_pages, page_index_limit);
+
+    if (allocated ==
+        NULL) { // for when we hit the page_index_limit or can't find enougth
+                // n_pages in the current range. so we wrap to the beginning of
+                // the bitmap till the prev_page_index
+        prev_page_index = 0;
+        allocated = physical_alloc(n_pages, prev_index);
+    }
+
+    if (allocated != NULL) {
+        used_pages += n_pages;
+    } else {
+        panic("pmm_alloc_nozero: out of memory");
+    }
+
+    spinlock_release(&spin_lock);
+
+    klog(0, "pmm: allocated %d pages", n_pages);
+    klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 / 1024);
     // klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
     // 1024 / 1024);
 

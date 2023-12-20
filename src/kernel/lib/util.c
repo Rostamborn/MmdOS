@@ -24,3 +24,13 @@ void memset(void* ptr, uint8_t value, uint64_t size) {
         tmp++;
     }
 }
+
+void memcpy(void* restrict dest, const void* restrict src, uint64_t size) {
+    uint8_t* d = (uint8_t*) dest;
+    uint8_t* s = (uint8_t*) src;
+    for (; size > 0; size--) {
+        *d = *s;
+        d++;
+        s++;
+    }
+}
