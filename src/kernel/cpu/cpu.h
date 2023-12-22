@@ -29,7 +29,7 @@ static inline void hcf(void) {
     }
 }
 
-int init_serial();
+int serial_init();
 
 void log_to_serial(char* string);
 

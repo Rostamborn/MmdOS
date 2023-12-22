@@ -25,6 +25,7 @@ struct idtr {
 
 struct interrupt_descriptor idt[256]; // 256 interrupts
 void*                       irq_handlers[16] = {0};
+void*                       isr_handlers[32] = {0};
 
 char* exception_messages[] = {
     "Division By Zero",
@@ -64,6 +65,12 @@ char* exception_messages[] = {
 
 // ISRs
 interrupt_frame* isr_handler(interrupt_frame* frame) {
+    void (*handler)(interrupt_frame * frame);
+    handler = irq_handlers[frame->int_number];
+    if (handler) {
+        handler(frame);
+    }
+
     if (frame->int_number < 32) {
         // log_to_serial(exception_messages[frame->int_number]);
         panic("\n %s", exception_messages[frame->int_number]);
@@ -83,6 +90,11 @@ interrupt_frame* irq_handler(interrupt_frame* frame) {
     pic_eoi(frame->int_number);
 
     return frame;
+}
+
+void isr_install_handler(uint8_t offset,
+                         interrupt_frame* (*handler)(interrupt_frame* frame)) {
+    isr_handlers[offset] = handler;
 }
 
 void irq_install_handler(uint8_t offset,
