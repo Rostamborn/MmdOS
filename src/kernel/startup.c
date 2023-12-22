@@ -1,3 +1,4 @@
+#include "cpu/cpu.h"
 #include "mm/vmm.h"
 #include "src/kernel/cpu/pic.h"
 #include "src/kernel/gdt.h"
@@ -15,6 +16,7 @@
 
 void _start(void) {
     gdt_init();
+    serial_init();
     idt_init();
     timer_init();
     prompt_init();
@@ -22,7 +24,6 @@ void _start(void) {
     pmm_init();
     vmm_init();
 
-    init_serial();
 
     // void* ptr = pmm_alloc(1000);
     // klog(0, "ptr: %p", ptr);

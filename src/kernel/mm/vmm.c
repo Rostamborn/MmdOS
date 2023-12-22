@@ -116,32 +116,31 @@ bool vmm_unmap_page(PageMap* pagemap, uintptr_t virt, bool locked) {
     }
 
     bool ok = false;
+    uint64_t lvl4_offset = (virt & (0x1ffull << 39)) >> 39;
+    uint64_t lvl3_offset = (virt & (0x1ffull << 30)) >> 30;
+    uint64_t lvl2_offset = (virt & (0x1ffull << 21)) >> 21;
+    uint64_t lvl1_offset = (virt & (0x1ffull << 12)) >> 12;
 
-    uint64_t pml_entries[4] = {
-        (virt & (NINE_BITS << 39)) >> 39,
-        (virt & (NINE_BITS << 30)) >> 30,
-        (virt & (NINE_BITS << 21)) >> 21,
-        (virt & (NINE_BITS << 12)) >> 12,
-    };
+    uint64_t *lvl4 = pagemap->top_lvl;
+    uint64_t *lvl3 = lvl_get_next(lvl4, lvl4_offset, true);
+    if (lvl3 == NULL) {
+        goto cleanup;
+    }
+    uint64_t *lvl2 = lvl_get_next(lvl3, lvl3_offset, true);
+    if (lvl2 == NULL) {
+        goto cleanup;
+    }
+    uint64_t *lvl1 = lvl_get_next(lvl2, lvl2_offset, true);
+    if (lvl1 == NULL) {
+        goto cleanup;
+    }
 
-    uint64_t* pml1 = NULL;
-
-    for (uint16_t i = 0; i < 4; i++) {
-        uint64_t* next_lvl = lvl_get_next(pagemap->top_lvl, pml_entries[i], false);
-        if (next_lvl == NULL) {
-            goto cleanup;
-        }
-
-        if (i == 3) {
-            pml1 = next_lvl;
-            if (!(next_lvl[pml_entries[i]] & PTE_PRESENT)) {
-                goto cleanup;
-            }
-        }
+    if ((lvl1[lvl1_offset] & PTE_PRESENT) != 0) {
+        goto cleanup;
     }
 
     ok = true;
-    pml1[pml_entries[3]] = 0;
+    lvl1[lvl1_offset] = 0;
 
 cleanup:
     // TODO: do some TLB stuff here
@@ -153,28 +152,33 @@ cleanup:
 }
 
 uint64_t* vmm_virtual2pte(PageMap* pagemap, uintptr_t virt, bool alloc) {
-    uint64_t pml_entries[4] = {
-        (virt & (NINE_BITS << 39)) >> 39,
-        (virt & (NINE_BITS << 30)) >> 30,
-        (virt & (NINE_BITS << 21)) >> 21,
-        (virt & (NINE_BITS << 12)) >> 12,
-    };
+    uint64_t lvl4_offset = (virt & (0x1ffull << 39)) >> 39;
+    uint64_t lvl3_offset = (virt & (0x1ffull << 30)) >> 30;
+    uint64_t lvl2_offset = (virt & (0x1ffull << 21)) >> 21;
+    uint64_t lvl1_offset = (virt & (0x1ffull << 12)) >> 12;
 
-    for (uint16_t i = 0; i < 4; i++) {
-        uint64_t* next_lvl = lvl_get_next(pagemap->top_lvl, pml_entries[i], true);
-
-        if (i == 3) {
-            return &next_lvl[pml_entries[i]];
-        }
+    uint64_t *lvl4 = pagemap->top_lvl;
+    uint64_t *lvl3 = lvl_get_next(lvl4, lvl4_offset, true);
+    if (lvl3 == NULL) {
+        return NULL;
+    }
+    uint64_t *lvl2 = lvl_get_next(lvl3, lvl3_offset, true);
+    if (lvl2 == NULL) {
+        return  NULL;
+    }
+    uint64_t *lvl1 = lvl_get_next(lvl2, lvl2_offset, true);
+    if (lvl1 == NULL) {
+        return NULL;
     }
 
-    return NULL;
+    return &lvl1[lvl1_offset];
 }
 
 uint64_t vmm_virtual2physical(PageMap* pagemap, uintptr_t virt, bool alloc) {
     uint64_t* pte = vmm_virtual2pte(pagemap, virt, alloc);
     if (pte == NULL) {
         // invalid physical address
+        klog("VMM ::", "invalid physical address");
         return 0;
     }
 
@@ -230,9 +234,7 @@ void vmm_init() {
     for (uintptr_t i = rodata_start; i < rodata_end; i += PAGE_SIZE) {
         uintptr_t physical = i - kaddr->virtual_base + kaddr->physical_base;
         bool res = vmm_map_page(vmm_kernel_pagemap, i, physical, PTE_PRESENT | PTE_NO_EXECUTE);
-        if (!res) {
-            panic("Failed to map kernel rodata");
-        }
+        if (!res) { panic("Failed to map kernel rodata"); }
     }
     klog("VMM ::", "rodata mapped");
 
@@ -244,24 +246,25 @@ void vmm_init() {
     }
     klog("VMM ::", "data mapped");
 
-    for (uintptr_t i = 0x1000; i < 0x100000000; i += PAGE_SIZE) {
-        bool res1 = vmm_map_page(vmm_kernel_pagemap, i, i, PTE_PRESENT | PTE_WRITABLE);
-        if (!res1) {
-            panic("Failed to identity map the start of physical memory");
-        }
-
-        bool res2 = vmm_map_page(vmm_kernel_pagemap, i + HHDM_OFFSET, i, PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE);
-        if (!res2) {
-            panic("Failed to map 0x1000 + HHDM_OFFSET to 0x1000");
-        }
-    }
-    klog("VMM ::", "physical_start mapped");
+    // // *** Identity mapping all of physical memory ***
+    // for (uintptr_t i = 0x1000; i < 0x100000000; i += PAGE_SIZE) {
+    //     bool res1 = vmm_map_page(vmm_kernel_pagemap, i, i, PTE_PRESENT | PTE_WRITABLE);
+    //     if (!res1) {
+    //         panic("Failed to identity map the start of physical memory");
+    //     }
+    //
+    //     bool res2 = vmm_map_page(vmm_kernel_pagemap, i + HHDM_OFFSET, i, PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE);
+    //     if (!res2) {
+    //         panic("Failed to map 0x1000 + HHDM_OFFSET to 0x1000");
+    //     }
+    // }
+    // klog("VMM ::", "rest of memory mapped");
 
     struct limine_memmap_response *memmap = memmap_req.response;
     for (uint64_t i = 0; i < memmap->entry_count; i++) {
         struct limine_memmap_entry *entry = memmap->entries[i];
 
-        // identity map the rest of memory
+        // identity map the higher half
         uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
         uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
         if (top <= 0x100000000) {
@@ -284,7 +287,8 @@ void vmm_init() {
             }
         }
     }
-    klog("VMM ::", "rest of memory mapped");
+    klog("VMM ::", "limine_memmap higher half mapped");
 
     klog("VMM ::", "vmm init finished");
+    // klog("VMM :: ", "text: virtual %x -> physical %x", text_start, vmm_virtual2physical(vmm_kernel_pagemap, text_start, false));
 }
