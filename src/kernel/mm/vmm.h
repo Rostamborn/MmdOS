@@ -28,4 +28,23 @@ typedef struct {
 
 } PageMap;
 
+typedef struct {
+    uintptr_t address;
+    char* name;
+} symbol;
+
+void vmm_init();
+
+void vmm_destroy_pagemap(PageMap* pagemap);
+
+void vmm_switch_pml(PageMap* pagemap);
+
+bool vmm_map_page(PageMap* pagemap, uintptr_t virt, uintptr_t physical, uint64_t flags);
+
+bool vmm_unmap_page(PageMap* pagemap, uintptr_t virt, bool locked);
+
+uint64_t* vmm_virt2pte(PageMap* pagemap, uintptr_t virt, bool alloc);
+
+uint64_t vmm_virt2physical(PageMap* pagemap, uintptr_t virt, bool alloc);
+
 #endif

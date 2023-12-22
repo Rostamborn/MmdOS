@@ -21,20 +21,30 @@ SECTIONS
     /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
     /* that is the beginning of the region. */
     . = 0xffffffff80000000;
+
+    _text_start_addr = .;
  
     .text : {
         *(.text .text.*)
     } :text
  
+    _text_end_addr = .;
+
     /* Move to the next memory page for .rodata */
     . += CONSTANT(MAXPAGESIZE);
+
+    _rodata_start_addr = .;
  
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
+
+    _rodata_end_addr = .;
  
     /* Move to the next memory page for .data */
     . += CONSTANT(MAXPAGESIZE);
+
+    _data_start_addr = .;
  
     .data : {
         *(.data .data.*)
@@ -53,6 +63,8 @@ SECTIONS
         *(.bss .bss.*)
         *(COMMON)
     } :data
+
+    _data_end_addr = .;
  
     /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
     /DISCARD/ : {

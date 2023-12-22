@@ -40,7 +40,7 @@ void pmm_init() {
 
         /* For some reason, entry->Type seems to be NULL */
 
-        klog(0, "addr: %x, size: %d", entry->base, entry->length, entry->type);
+        klog("PMM :: ", "addr: %x, size: %d", entry->base, entry->length, entry->type);
         // if(entry->type != 1) continue;
         switch (entry->type) {
         case LIMINE_MEMMAP_USABLE:
@@ -63,8 +63,8 @@ void pmm_init() {
     // uint64_t bitmap_size = div_round_up(page_index_limit , 8); // becaue we
     // use 1 bit per page
 
-    klog(0, "pmm: highest addr: %x", highest_addr);
-    klog(0, "pmm: bitmap size: %d", bitmap_size);
+    klog("PMM ::", "highest addr: %x", highest_addr);
+    klog("PMM ::", "bitmap size: %d", bitmap_size);
 
     // Find a hole for the bitmap in the memory map.
     // Find a place for the bitmap to reside in.
@@ -114,10 +114,10 @@ void pmm_init() {
         }
     }
 
-    klog(0, "pmm: usable memory: %d Mib",
+    klog("PMM ::", "usable memory: %d Mib",
          (usable_pages * PAGE_SIZE) / 1024 / 1024);
 
-    klog(0, "pmm: Base Address: %x", base_addr);
+    klog("PMM ::", "Base Address: %x", base_addr);
 }
 
 void* physical_alloc(uint64_t n_pages, uint64_t limit) {
@@ -169,8 +169,8 @@ void* pmm_alloc(uint64_t n_pages) {
 
     spinlock_release(&spin_lock);
 
-    klog(0, "pmm: allocated %d pages", n_pages);
-    klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 / 1024);
+    // klog(0, "pmm: allocated %d pages", n_pages);
+    // klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 / 1024);
     // klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
     // 1024 / 1024);
 
@@ -199,8 +199,8 @@ void* pmm_alloc_nozero(uint64_t n_pages) {
 
     spinlock_release(&spin_lock);
 
-    klog(0, "pmm: allocated %d pages", n_pages);
-    klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 / 1024);
+    // klog(0, "pmm: allocated %d pages", n_pages);
+    // klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 / 1024);
     // klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
     // 1024 / 1024);
 

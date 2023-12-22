@@ -48,14 +48,14 @@ int init_serial() {
 
 // PORT + 5 is the transmit buffer
 void log_to_serial(char* string) {
-    char* log = LOG_PREFIX;
-    while (*log != '\0') {
-        while ((inb(PORT + 5) & 0x20) == 0)
-            ;             // *check if transmit buffer is empty*
-        outb(PORT, *log); // write char to serial port
-        log++;
-    }
-
+    // char* log = LOG_PREFIX;
+    // while (*log != '\0') {
+    //     while ((inb(PORT + 5) & 0x20) == 0)
+    //         ;             // *check if transmit buffer is empty*
+    //     outb(PORT, *log); // write char to serial port
+    //     log++;
+    // }
+    //
     while (*string != '\0') {
         while ((inb(PORT + 5) & 0x20) == 0)
             ;                // *check if transmit buffer is empty*
