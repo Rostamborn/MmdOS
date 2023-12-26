@@ -22,7 +22,7 @@
 // }
 
 // https://wiki.osdev.org/Serial_Ports
-int init_serial() {
+int serial_init() {
     outb(PORT + 1, 0x00); // Disable all interrupts
     outb(PORT + 3, 0x80); // Enable DLAB (set baud rate divisor)
     outb(PORT + 0, 0x03); // Set divisor to 3 (lo byte) 38400 baud
@@ -48,14 +48,14 @@ int init_serial() {
 
 // PORT + 5 is the transmit buffer
 void log_to_serial(char* string) {
-    char* log = LOG_PREFIX;
-    while (*log != '\0') {
-        while ((inb(PORT + 5) & 0x20) == 0)
-            ;             // *check if transmit buffer is empty*
-        outb(PORT, *log); // write char to serial port
-        log++;
-    }
-
+    // char* log = LOG_PREFIX;
+    // while (*log != '\0') {
+    //     while ((inb(PORT + 5) & 0x20) == 0)
+    //         ;             // *check if transmit buffer is empty*
+    //     outb(PORT, *log); // write char to serial port
+    //     log++;
+    // }
+    //
     while (*string != '\0') {
         while ((inb(PORT + 5) & 0x20) == 0)
             ;                // *check if transmit buffer is empty*
