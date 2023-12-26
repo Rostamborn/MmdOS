@@ -6,9 +6,11 @@
 #include "src/kernel/lib/logger.h"
 #include "src/kernel/lib/print.h"
 #include "src/kernel/mm/pmm.h"
+#include "src/kernel/scheduler/scheduler.h"
 #include "src/kernel/terminal/limine_term.h"
 #include "src/kernel/terminal/prompt.h"
 #include <stdbool.h>
+
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own functions*
 
 void _start(void) {
@@ -26,8 +28,7 @@ void _start(void) {
     void* ptr2 = pmm_alloc(1000);
     klog(0, "ptr2: %p", ptr2);
 
-    // uint8_t a = 1 / 0; // I can not belive the interrupt system works
-
+    scheduler_init();
     // hcf(); // halt, catch fire
     for (;;)
         ;
