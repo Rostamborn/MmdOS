@@ -1,4 +1,5 @@
 #include "cpu/cpu.h"
+#include "demo.h"
 #include "mm/vmm.h"
 #include "src/kernel/cpu/pic.h"
 #include "src/kernel/gdt.h"
@@ -8,10 +9,10 @@
 #include "src/kernel/lib/logger.h"
 #include "src/kernel/lib/print.h"
 #include "src/kernel/mm/pmm.h"
+#include "src/kernel/mm/vmm.h"
 #include "src/kernel/scheduler/scheduler.h"
 #include "src/kernel/terminal/limine_term.h"
 #include "src/kernel/terminal/prompt.h"
-#include "src/kernel/mm/vmm.h"
 #include <stdbool.h>
 
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own functions*
@@ -26,13 +27,13 @@ void _start(void) {
     pmm_init();
     vmm_init();
 
-
-    // void* ptr = pmm_alloc(1000);
-    // klog(0, "ptr: %p", ptr);
-    // void* ptr2 = pmm_alloc(1000);
-    // klog(0, "ptr2: %p", ptr2);
-
     scheduler_init();
+
+    // for demonstration ---
+    add_process(create_process("adder1", &add_one_to_x, NULL));
+    add_process(create_process("adder2", &add_one_to_y, NULL));
+    // ---------------------
+
     // hcf(); // halt, catch fire
     for (;;)
         ;

@@ -30,10 +30,10 @@ interrupt_frame* schedule(interrupt_frame* context) {
             return context;
         }
         current_process = processes_list;
-        return &(current_process->context);
+        return current_process->context;
     }
-    process_t* preempted_process;
-    current_process->context = *context;
+
+    current_process->context = context;
     current_process->status = READY;
 
     while (true) {
@@ -53,8 +53,7 @@ interrupt_frame* schedule(interrupt_frame* context) {
         }
     }
 
-    klog("TEST :: ", "name: %s | pid: %d | pc: %p", current_process->name,
-         current_process->pid, current_process->context.iret_rip);
-
-    return &(current_process->context);
+    klog("SCHEDULER::", "pid: %d | name: %s will run next.",
+         current_process->pid, current_process->name);
+    return current_process->context;
 }

@@ -5,7 +5,7 @@
 #include "src/kernel/lib/util.h"
 
 void idle_process() {
-    kprintf("from idle process");
+    klog("SCHEDULER::", "from idle process");
     while (true) {
         asm("hlt");
     }
@@ -19,21 +19,24 @@ uint64_t* alloc_stack() {
 
 // created pcb and allocates memory to process.
 // does not add it to queue yet.
-process_t* create_process(char* name, void* function, void* arg) {
-    process_t* process = kalloc(sizeof(process_t));
+process_t* create_process(char* name, void* function(void*), void* arg) {
+    interrupt_frame* context = kalloc(sizeof(interrupt_frame));
+    process_t*       process = kalloc(sizeof(process_t));
+
+    process->context = context;
 
     kstrcpy(process->name, name, PROCESS_NAME_MAX_LEN);
     process->pid = next_pid++;
     process->status = SPAWNED;
-    process->context.iret_ss = 0x30;
-    process->context.iret_rsp = alloc_stack();
-    process->context.iret_flags =
+    process->context->iret_ss = 0x30;
+    process->context->iret_rsp = alloc_stack();
+    process->context->iret_flags =
         0x202; // resets all bits but 2 and 9.
                // 2 for legacy reasons and 9 for interrupts.
-    process->context.iret_cs = 0x28;
-    process->context.iret_rip = (uint64_t) function;
-    process->context.rdi = (uint64_t) arg;
-    process->context.rbp = 0;
+    process->context->iret_cs = 0x28;
+    process->context->iret_rip = (uint64_t) function;
+    process->context->rdi = (uint64_t) arg;
+    process->context->rbp = 0;
 
     return process;
 }
