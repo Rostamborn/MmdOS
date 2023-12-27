@@ -1,7 +1,7 @@
 #include "src/kernel/interrupts/timer.h"
 #include "src/kernel/interrupts/idt.h"
+#include "src/kernel/scheduler/scheduler.h"
 #include <stdint.h>
-
 // I/O port     Usage
 // *** Channel 0 is directly connected to IRQ0 ***
 #define CH0_DATA 0x40 // Channel 0 data port (read/write)
@@ -10,7 +10,7 @@
 #define MODE_CMD 0x43 // Mode/Command register (write only, a read is ignored)
 
 interrupt_frame* timer_handler(interrupt_frame* frame) {
-    // log_to_serial("Tick");
+    frame = schedule(frame);
     return frame;
 }
 

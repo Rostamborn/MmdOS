@@ -40,7 +40,8 @@ void pmm_init() {
 
         /* For some reason, entry->Type seems to be NULL */
 
-        klog("PMM :: ", "addr: %x, size: %d", entry->base, entry->length, entry->type);
+        klog("PMM :: ", "addr: %x, size: %d", entry->base, entry->length,
+             entry->type);
         // if(entry->type != 1) continue;
         switch (entry->type) {
         case LIMINE_MEMMAP_USABLE:
@@ -170,9 +171,9 @@ void* pmm_alloc(uint64_t n_pages) {
     spinlock_release(&spin_lock);
 
     // klog(0, "pmm: allocated %d pages", n_pages);
-    // klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 / 1024);
-    // klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
-    // 1024 / 1024);
+    // klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 /
+    // 1024); klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages *
+    // PAGE_SIZE) / 1024 / 1024);
 
     return allocated;
 }
@@ -200,9 +201,9 @@ void* pmm_alloc_nozero(uint64_t n_pages) {
     spinlock_release(&spin_lock);
 
     // klog(0, "pmm: allocated %d pages", n_pages);
-    // klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 / 1024);
-    // klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages * PAGE_SIZE) /
-    // 1024 / 1024);
+    // klog(0, "pmm: used memory: %d MiB", (used_pages * PAGE_SIZE) / 1024 /
+    // 1024); klog(0,"pmm: remaining memory: %d MiB\n", (usable_pages *
+    // PAGE_SIZE) / 1024 / 1024);
 
     return allocated;
 }

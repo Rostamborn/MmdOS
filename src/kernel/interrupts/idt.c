@@ -5,7 +5,6 @@
 #include "src/kernel/lib/panic.h"
 #include "src/kernel/terminal/limine_term.h"
 #include <stdint.h>
-
 extern void* isr_stub_table[];
 
 struct interrupt_descriptor { // I think it's also called a gate descriptor
@@ -81,12 +80,15 @@ interrupt_frame* isr_handler(interrupt_frame* frame) {
 
 // IRQs
 interrupt_frame* irq_handler(interrupt_frame* frame) {
-    void (*handler)(interrupt_frame * frame);
+    interrupt_frame* (*handler)(interrupt_frame * frame);
     handler = irq_handlers[frame->int_number - 32];
     if (handler) {
-        handler(frame);
+        if (frame->int_number == 32) {
+            frame = handler(frame);
+        } else {
+            handler(frame);
+        }
     }
-
     pic_eoi(frame->int_number);
 
     return frame;
