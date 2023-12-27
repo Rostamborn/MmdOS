@@ -259,7 +259,7 @@ void vmm_init() {
     //     }
     // }
     // klog("VMM ::", "rest of memory mapped");
-
+    //
     struct limine_memmap_response *memmap = memmap_req.response;
     for (uint64_t i = 0; i < memmap->entry_count; i++) {
         struct limine_memmap_entry *entry = memmap->entries[i];
@@ -291,4 +291,5 @@ void vmm_init() {
 
     klog("VMM ::", "vmm init finished");
     // klog("VMM :: ", "text: virtual %x -> physical %x", text_start, vmm_virtual2physical(vmm_kernel_pagemap, text_start, false));
+
 }
