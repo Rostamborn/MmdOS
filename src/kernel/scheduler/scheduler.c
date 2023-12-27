@@ -2,7 +2,8 @@
 #include "src/kernel/cpu/cpu.h"
 #include "src/kernel/lib/logger.h"
 #include "stdbool.h"
-void add_process(process_t* process) {
+
+void process_add(process_t* restrict process) {
     process_t* iterator = processes_list;
 
     process->status = READY;
@@ -19,11 +20,12 @@ void add_process(process_t* process) {
 }
 
 void scheduler_init() {
-    process_t* idle_p = create_process("idle process", &idle_process, NULL);
-    add_process(idle_p);
+
+    process_t* idle_p = process_create("idle process", &process_idle, NULL);
+    process_add(idle_p);
 }
 
-interrupt_frame* schedule(interrupt_frame* context) {
+interrupt_frame* schedule(interrupt_frame* restrict context) {
     // making sure current_process and processes_list are valid
     if (current_process == NULL) {
         if (processes_list == NULL) {

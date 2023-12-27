@@ -28,9 +28,10 @@ static size_t next_pid = 1;
 
 // created pcb and allocates memory to process.
 // does not add it to queue yet.
-process_t* create_process(char* name, void* function(void*), void* arg);
+process_t* process_create(char* restrict name, void* restrict function(void*),
+                          void* restrict arg);
 
 // a dummy process for when cpu has nothing else to do
-void idle_process();
+void process_idle();
 
 #endif

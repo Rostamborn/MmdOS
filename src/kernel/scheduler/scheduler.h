@@ -8,10 +8,10 @@
 // TODO: BETTER ALGORITHM
 // TODO: ADD PRIORITY QUEUES
 // TODO: SUPPORT MULTIPLE CORES
-interrupt_frame* schedule(interrupt_frame* context);
+interrupt_frame* schedule(interrupt_frame* restrict context);
 
 void scheduler_init();
 
-void add_process(process_t* process);
+void process_add(process_t* restrict process);
 
 #endif

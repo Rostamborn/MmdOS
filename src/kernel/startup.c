@@ -30,8 +30,8 @@ void _start(void) {
     scheduler_init();
 
     // for demonstration ---
-    add_process(create_process("adder1", &add_one_to_x, NULL));
-    add_process(create_process("adder2", &add_one_to_y, NULL));
+    process_add(process_create("adder1", &add_one_to_x, NULL));
+    process_add(process_create("adder2", &add_one_to_y, NULL));
     // ---------------------
 
     // hcf(); // halt, catch fire

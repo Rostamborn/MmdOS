@@ -4,7 +4,7 @@
 #include "src/kernel/lib/print.h"
 #include "src/kernel/lib/util.h"
 
-void idle_process() {
+void process_idle() {
     klog("SCHEDULER::", "from idle process");
     while (true) {
         asm("hlt");
@@ -19,7 +19,8 @@ uint64_t* alloc_stack() {
 
 // created pcb and allocates memory to process.
 // does not add it to queue yet.
-process_t* create_process(char* name, void* function(void*), void* arg) {
+process_t* process_create(char* restrict name, void* restrict function(void*),
+                          void* restrict arg) {
     interrupt_frame* context = kalloc(sizeof(interrupt_frame));
     process_t*       process = kalloc(sizeof(process_t));
 
