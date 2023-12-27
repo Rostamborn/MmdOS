@@ -30,7 +30,7 @@ typedef struct {
 
 typedef struct {
     uintptr_t address;
-    char* name;
+    char*     name;
 } symbol;
 
 void vmm_init();
@@ -39,7 +39,8 @@ void vmm_destroy_pagemap(PageMap* pagemap);
 
 void vmm_switch_pml(PageMap* pagemap);
 
-bool vmm_map_page(PageMap* pagemap, uintptr_t virt, uintptr_t physical, uint64_t flags);
+bool vmm_map_page(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
+                  uint64_t flags);
 
 bool vmm_unmap_page(PageMap* pagemap, uintptr_t virt, bool locked);
 

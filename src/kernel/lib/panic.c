@@ -1,7 +1,7 @@
 #include "logger.h"
 #include "src/kernel/cpu/cpu.h"
-#include "src/kernel/lib/print.h"
 #include "src/kernel/lib/logger.h"
+#include "src/kernel/lib/print.h"
 #include <stdarg.h>
 
 void panic(const char* fmt, ...) {

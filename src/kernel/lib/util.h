@@ -59,3 +59,5 @@ uint64_t max(uint64_t a, uint64_t b);
 void memset(void* ptr, uint8_t value, uint64_t size);
 
 void memcpy(void* restrict dest, const void* restrict src, uint64_t size);
+
+void kstrcpy(char dest[], char* src, uint32_t size);
