@@ -46,13 +46,13 @@ make run
 | Memory Mapping    | works |
 | process           | half way done |
 | contest switching | works |
+| thread | works |
 
 #### TODO for the forseeable future
 
 **_ In the future, rewrite the assignment to registers and etc. using Unions _**
 | Feature to be implemented |
 | ------- |
-| Threads |
 | better memory map |
 | unique address spaces for processes |
 | more features for process management |

@@ -1,7 +1,7 @@
 #ifndef KERNEL_IDT_DEF
 #define KERNEL_IDT_DEF
 
-#include "src/kernel/cpu/cpu.h"
+#include "../cpu/cpu.h"
 #include <stdint.h>
 
 extern void idt_init(void);

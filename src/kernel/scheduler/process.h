@@ -1,8 +1,8 @@
 #ifndef KERNEL_PROCESS_DEF
 #define KERNEL_PROCESS_DEF
 
-#include "src/kernel/cpu/cpu.h"
-#include "src/kernel/scheduler/thread.h"
+#include "../cpu/cpu.h"
+#include "thread.h"
 #include "stddef.h"
 #include "stdint.h"
 

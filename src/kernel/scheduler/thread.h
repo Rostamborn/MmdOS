@@ -8,8 +8,8 @@
 typedef enum { SPAWNED, READY, RUNNING, SLEEPING, DEAD } status_t;
 #endif
 
-#include "src/kernel/cpu/cpu.h"
-#include "src/kernel/scheduler/process.h"
+#include "../cpu/cpu.h"
+#include "process.h"
 #include "stddef.h"
 #include "stdint.h"
 
