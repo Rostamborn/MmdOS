@@ -3,43 +3,82 @@
 #include "src/kernel/lib/logger.h"
 #include "stdbool.h"
 
-void process_add(process_t* restrict process) {
-    process_t* iterator = processes_list;
-
-    process->status = READY;
-
-    if (iterator == NULL) {
-        processes_list = process;
-        return;
-    }
-
-    while (iterator->next != NULL) {
-        iterator = iterator->next;
-    }
-    iterator->next = process;
-}
-
-void scheduler_init() {
-
-    process_t* idle_p = process_create("idle process", &process_idle, NULL);
-    process_add(idle_p);
-}
+void scheduler_init() { process_create("idle process", &process_idle, NULL); }
 
 interrupt_frame* schedule(interrupt_frame* restrict context) {
     // making sure current_process and processes_list are valid
+    process_t* processes_list = process_get_list();
+    process_t* current_process = process_get_current();
+
     if (current_process == NULL) {
         if (processes_list == NULL) {
             return context;
         }
         current_process = processes_list;
-        return current_process->context;
+        process_set_current(current_process);
+
+        current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
+        current_process->running_thread->remaining_quantum =
+            DEFAULT_THREAD_RUNNING_QUANTUM;
+        return current_process->running_thread->context;
+    }
+    current_process->remaining_quantum--;
+    current_process->running_thread->remaining_quantum--;
+    current_process->running_thread->context = context;
+
+    if (current_process->running_thread->remaining_quantum > 0) {
+        // continue running current thread
+        klog("SCHEDULER ::",
+             "thread with tid: %d from process with pid: %d will run next",
+             current_process->running_thread->tid, current_process->pid);
+        return current_process->running_thread->context;
     }
 
-    current_process->context = context;
+    if (current_process->remaining_quantum > 0) {
+        // switch thread
+        current_process->running_thread->status = READY;
+
+        for (int i = 0; i < current_process->threads_count; i++) {
+            if (current_process->running_thread->next != NULL) {
+                current_process->running_thread =
+                    current_process->running_thread->next;
+            } else {
+                current_process->running_thread = current_process->threads;
+            }
+
+            if (current_process->running_thread == NULL) {
+                // no thread left in process
+                // TODO: delete process
+                continue;
+            }
+
+            if (current_process->status == SLEEPING) {
+                // TODO: handle sleeping
+                continue;
+            }
+
+            if (current_process->running_thread->status == DEAD) {
+                // TODO: delete thread
+                continue;
+            }
+            current_process->running_thread->status = RUNNING;
+            current_process->running_thread->remaining_quantum =
+                DEFAULT_THREAD_RUNNING_QUANTUM;
+            klog("SCHEDULER ::",
+                 "thread with tid: %d from process with pid: %d will run next",
+                 current_process->running_thread->tid, current_process->pid);
+            return current_process->running_thread->context;
+        }
+    }
+
+    // switching process
+    current_process->running_thread->status = READY;
+
+    // TODO: in the future check if there is no other running thread,
+    // TODO: before setting status to READY
     current_process->status = READY;
 
     while (true) {
-        process_t* prev_process = current_process;
         if (current_process->next != NULL) {
             current_process = current_process->next;
         } else {
@@ -48,14 +87,18 @@ interrupt_frame* schedule(interrupt_frame* restrict context) {
 
         if (current_process != NULL && current_process->status == DEAD) {
             // delete process
-
-        } else {
-            current_process->status = RUNNING;
-            break;
+            continue;
         }
+        break;
     }
-
-    klog("SCHEDULER::", "pid: %d | name: %s will run next.",
-         current_process->pid, current_process->name);
-    return current_process->context;
+    process_set_current(current_process);
+    current_process->status = RUNNING;
+    current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
+    current_process->running_thread->status = RUNNING;
+    current_process->running_thread->remaining_quantum =
+        DEFAULT_THREAD_RUNNING_QUANTUM;
+    klog("SCHEDULER ::",
+         "thread with tid: %d from process with pid: %d will run next",
+         current_process->running_thread->tid, current_process->pid);
+    return current_process->running_thread->context;
 }

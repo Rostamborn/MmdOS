@@ -12,6 +12,4 @@ interrupt_frame* schedule(interrupt_frame* restrict context);
 
 void scheduler_init();
 
-void process_add(process_t* restrict process);
-
 #endif

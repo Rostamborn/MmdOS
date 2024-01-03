@@ -4,13 +4,18 @@
 #include <stdarg.h>
 #include <stdint.h>
 
+#define LOGGER_PREFIX_LENGTH 32
+char prefix[LOGGER_PREFIX_LENGTH] = {0};
+
 void klog(const char* new_prefix, const char* fmt, ...) {
+    if (PROD_MODE) {
+        return;
+    }
     // loading optional parameters
     va_list args;
     va_start(args, fmt);
-    if (!PROD_MODE) {
-        vklog(new_prefix, fmt, args);
-    }
+
+    vklog(new_prefix, fmt, args);
 
     va_end(args);
 }
