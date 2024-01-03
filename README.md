@@ -42,24 +42,29 @@ make run
 | PIT               | works |
 | Keyboard          | works |
 | printf            | works |
+| basic prompt      | works |
+| Memory Mapping    | works |
+| process           | half way done |
+| contest switching | works |
 
 #### TODO for the forseeable future
 
 **_ In the future, rewrite the assignment to registers and etc. using Unions _**
 | Feature to be implemented |
 | ------- |
-| Video Output |
-| Memory Management |
-| TSS and context switching |
-| Definition for CPUs and saving state |
+| Threads |
+| better memory map |
+| unique address spaces for processes |
+| more features for process management |
+| maybe implement ACPI to gain access to more advanced devices |
+| user space |
+| system calls |
+| file system |
 
 #### Description
 
-The `C` files and potential `asm` files are compiled into object files in the `bin`
-directory and then will be linked by the linker `ld` and the `linker.ld` script with
-appropriate flags and the linked result will be put in `disk` directory. here the `iso`
-will be created and `limine` will be installed on it and the result of the process would
-be a bootable `iso`.
+The goal is to implement a fully functional OS which would have basic tools and 
+perhaps support libc and some Unix-like programs and applications.
 
 #### Credit
 
