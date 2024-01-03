@@ -75,7 +75,6 @@ interrupt_frame* schedule(interrupt_frame* restrict context) {
     current_process->status = READY;
 
     while (true) {
-        process_t* prev_process = current_process;
         if (current_process->next != NULL) {
             current_process = current_process->next;
         } else {

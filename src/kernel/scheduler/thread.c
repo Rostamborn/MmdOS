@@ -31,7 +31,7 @@ void thread_sleep(thread_t* thread, size_t millis) {
     //  TODO: scheduler_yield();
 }
 
-thread_t* thread_add(struct process_t* restrict process, char* restrict name,
+thread_t* thread_add(process_t* restrict process, char* restrict name,
                      void* restrict function(void*), void* restrict arg) {
     interrupt_frame* context = kalloc(sizeof(interrupt_frame));
     thread_t*        thread = kalloc(sizeof(thread_t));
@@ -57,7 +57,7 @@ thread_t* thread_add(struct process_t* restrict process, char* restrict name,
     thread->status = READY;
     thread->next = NULL;
     thread->context->iret_ss = 0x30;
-    thread->context->iret_rsp = alloc_stack();
+    thread->context->iret_rsp = (uint64_t) alloc_stack();
     thread->context->iret_flags =
         0x202; // resets all bits but 2 and 9.
                // 2 for legacy reasons and 9 for interrupts.
