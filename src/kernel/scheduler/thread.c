@@ -41,8 +41,8 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     spinlock_t lock = SPINLOCK_INIT;
     spinlock_acquire(&lock);
 
-    interrupt_frame* context = kalloc(sizeof(interrupt_frame));
-    thread_t*        thread = kalloc(sizeof(thread_t));
+    execution_context* context = kalloc(sizeof(execution_context));
+    thread_t*          thread = kalloc(sizeof(thread_t));
 
     thread->context = context;
 

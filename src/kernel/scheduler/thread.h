@@ -17,13 +17,13 @@ typedef enum { SPAWNED, READY, RUNNING, SLEEPING, DEAD } status_t;
 #define DEFAULT_THREAD_RUNNING_QUANTUM 1
 
 typedef struct thread_t {
-    size_t           tid;
-    status_t         status;
-    interrupt_frame* context;
-    char             name[THREAD_NAME_MAX_LEN];
-    struct thread_t* next;
-    uint64_t         wake_time;
-    int16_t          remaining_quantum;
+    size_t             tid;
+    status_t           status;
+    execution_context* context;
+    char               name[THREAD_NAME_MAX_LEN];
+    struct thread_t*   next;
+    uint64_t           wake_time;
+    int16_t            remaining_quantum;
     // keeping pointer to stack so to free it easily later on
     void* stack;
 } thread_t;

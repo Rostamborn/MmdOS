@@ -73,7 +73,7 @@ typedef struct {
     uint64_t iret_flags;
     uint64_t iret_rsp;
     uint64_t iret_ss;
-} __attribute__((packed)) interrupt_frame;
+} __attribute__((packed)) execution_context;
 
 typedef struct {
     uint32_t unused0;

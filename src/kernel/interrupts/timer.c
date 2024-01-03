@@ -9,7 +9,7 @@
 #define CH2_DATA 0x42 // Channel 2 data port (read/write)
 #define MODE_CMD 0x43 // Mode/Command register (write only, a read is ignored)
 
-interrupt_frame* timer_handler(interrupt_frame* frame) {
+execution_context* timer_handler(execution_context* frame) {
     frame = schedule(frame);
     return frame;
 }

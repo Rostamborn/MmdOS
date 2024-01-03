@@ -10,7 +10,7 @@ void scheduler_init() { process_create("idle process", &process_idle, NULL); }
 // return control to scheduler by firing interrupt
 void scheduler_yield() { asm("int $0x20"); }
 
-interrupt_frame* schedule(interrupt_frame* restrict context) {
+execution_context* schedule(execution_context* restrict context) {
     // making sure current_process and processes_list are valid
     process_t* processes_list = process_get_list();
     process_t* current_process = process_get_current();

@@ -63,8 +63,8 @@ char* exception_messages[] = {
 };
 
 // ISRs
-interrupt_frame* isr_handler(interrupt_frame* frame) {
-    void (*handler)(interrupt_frame * frame);
+execution_context* isr_handler(execution_context* frame) {
+    void (*handler)(execution_context * frame);
     handler = irq_handlers[frame->int_number];
     if (handler) {
         handler(frame);
@@ -79,8 +79,8 @@ interrupt_frame* isr_handler(interrupt_frame* frame) {
 }
 
 // IRQs
-interrupt_frame* irq_handler(interrupt_frame* frame) {
-    interrupt_frame* (*handler)(interrupt_frame * frame);
+execution_context* irq_handler(execution_context* frame) {
+    execution_context* (*handler)(execution_context * frame);
     handler = irq_handlers[frame->int_number - 32];
     if (handler) {
         if (frame->int_number == 32) {
@@ -94,13 +94,13 @@ interrupt_frame* irq_handler(interrupt_frame* frame) {
     return frame;
 }
 
-void isr_install_handler(uint8_t offset,
-                         interrupt_frame* (*handler)(interrupt_frame* frame)) {
+void isr_install_handler(
+    uint8_t offset, execution_context* (*handler)(execution_context* frame)) {
     isr_handlers[offset] = handler;
 }
 
-void irq_install_handler(uint8_t offset,
-                         interrupt_frame* (*handler)(interrupt_frame* frame)) {
+void irq_install_handler(
+    uint8_t offset, execution_context* (*handler)(execution_context* frame)) {
     irq_handlers[offset] = handler;
 }
 
