@@ -1,4 +1,4 @@
-#include "src/kernel/lib/logger.h"
+#include "lib/logger.h"
 
 void add_one_to_x() {
     int x = 0;

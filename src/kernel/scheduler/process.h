@@ -1,10 +1,10 @@
 #ifndef KERNEL_PROCESS_DEF
 #define KERNEL_PROCESS_DEF
 
-#include "src/kernel/cpu/cpu.h"
-#include "src/kernel/scheduler/thread.h"
+#include "../cpu/cpu.h"
 #include "stddef.h"
 #include "stdint.h"
+#include "thread.h"
 
 #define PROCESS_NAME_MAX_LEN 64
 #define MAX_RESOURCE_IDS 255

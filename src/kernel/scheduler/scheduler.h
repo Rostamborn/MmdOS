@@ -1,8 +1,8 @@
 #ifndef KERNEL_SCHEDULER_DEF
 #define KERNEL_SCHEDULER_DEF
 
-#include "src/kernel/cpu/cpu.h"
-#include "src/kernel/scheduler/process.h"
+#include "../cpu/cpu.h"
+#include "process.h"
 
 // core function of the scheduler
 // TODO: BETTER ALGORITHM
