@@ -1,8 +1,8 @@
-#include "src/kernel/scheduler/scheduler.h"
-#include "src/kernel/cpu/cpu.h"
-#include "src/kernel/lib/logger.h"
-#include "src/kernel/lib/panic.h"
-#include "src/kernel/lib/spinlock.h"
+#include "scheduler.h"
+#include "../cpu/cpu.h"
+#include "../lib/logger.h"
+#include "../lib/panic.h"
+#include "../lib/spinlock.h"
 #include "stdbool.h"
 
 void scheduler_init() { process_create("idle process", &process_idle, NULL); }
