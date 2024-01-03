@@ -4,6 +4,8 @@
 #include "src/kernel/scheduler/process.h"
 #include "stdbool.h"
 
+size_t next_tid = 1;
+
 // allocate 32kB to thread Stack.
 uint64_t* alloc_stack() {
     uint64_t* stack = kalloc(32 * 1024);

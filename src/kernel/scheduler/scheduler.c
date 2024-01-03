@@ -7,12 +7,16 @@ void scheduler_init() { process_create("idle process", &process_idle, NULL); }
 
 interrupt_frame* schedule(interrupt_frame* restrict context) {
     // making sure current_process and processes_list are valid
-    process_t* list_of_processes = process_list();
+    process_t* processes_list = process_get_list();
+    process_t* current_process = process_get_current();
+
     if (current_process == NULL) {
-        if (list_of_processes == NULL) {
+        if (processes_list == NULL) {
             return context;
         }
-        current_process = list_of_processes;
+        current_process = processes_list;
+        process_set_current(current_process);
+
         current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
         current_process->running_thread->remaining_quantum =
             DEFAULT_THREAD_RUNNING_QUANTUM;
@@ -78,7 +82,7 @@ interrupt_frame* schedule(interrupt_frame* restrict context) {
         if (current_process->next != NULL) {
             current_process = current_process->next;
         } else {
-            current_process = list_of_processes;
+            current_process = processes_list;
         }
 
         if (current_process != NULL && current_process->status == DEAD) {
@@ -87,7 +91,7 @@ interrupt_frame* schedule(interrupt_frame* restrict context) {
         }
         break;
     }
-
+    process_set_current(current_process);
     current_process->status = RUNNING;
     current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
     current_process->running_thread->status = RUNNING;

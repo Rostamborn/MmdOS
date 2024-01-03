@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <stdint.h>
 
+#define LOGGER_PREFIX_LENGTH 32
+char prefix[LOGGER_PREFIX_LENGTH] = {0};
+
 void klog(const char* new_prefix, const char* fmt, ...) {
     if (PROD_MODE) {
         return;

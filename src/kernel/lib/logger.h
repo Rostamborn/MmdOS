@@ -3,10 +3,6 @@
 
 #include <stdarg.h>
 
-#define LOGGER_PREFIX_LENGTH 32
-
-static char prefix[LOGGER_PREFIX_LENGTH] = {0};
-
 // kernel log: load args, then call virtual kernel log (vklog)
 void klog(const char* prefix, const char* fmt, ...);
 

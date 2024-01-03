@@ -5,6 +5,10 @@
 #include "src/kernel/lib/util.h"
 #include "stdbool.h"
 
+process_t* processes_list;
+process_t* current_process;
+size_t     next_pid = 1;
+
 void process_idle() {
     klog("SCHEDULER::", "from idle process");
     while (true) {
@@ -53,4 +57,8 @@ void process_add(process_t* process) {
     return;
 }
 
-process_t* process_list() { return processes_list; }
+process_t* process_get_list() { return processes_list; }
+
+process_t* process_get_current() { return current_process; }
+
+void process_set_current(process_t* p) { current_process = p; }

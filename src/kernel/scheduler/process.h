@@ -24,11 +24,6 @@ typedef struct process_t {
     struct process_t* next;
 } process_t;
 
-static process_t* processes_list;
-static process_t* current_process;
-
-static size_t next_pid = 1;
-
 // created pcb and allocates memory to process.
 // does not add it to queue yet.
 process_t* process_create(char* restrict name, void* restrict function(void*),
@@ -40,6 +35,10 @@ void process_add(process_t* process);
 // a dummy process for when cpu has nothing else to do
 void process_idle();
 
-process_t* process_list();
+process_t* process_get_list();
+
+process_t* process_get_current();
+
+void process_set_current(process_t* p);
 
 #endif

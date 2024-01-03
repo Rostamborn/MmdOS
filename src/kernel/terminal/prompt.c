@@ -3,6 +3,13 @@
 #include "src/kernel/terminal/limine_term.h"
 #include <stdint.h>
 
+#define PROMPT_BUFFER_SIZE 1024
+
+uint8_t  line_len = 0;
+char     buffer[PROMPT_BUFFER_SIZE];
+uint16_t buffer_pointer = 0;
+uint8_t  line_num = 1;
+
 void prompt_init() {
     for (int i = 0; i < PROMPT_BUFFER_SIZE; i++) {
         buffer[i] = '\0';

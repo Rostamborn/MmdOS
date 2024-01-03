@@ -26,8 +26,6 @@ typedef struct thread_t {
     int16_t          remaining_quantum;
 } thread_t;
 
-static size_t next_tid = 1;
-
 // create a thread but will not add it to process yet
 thread_t* thread_add(struct process_t* restrict process, char* restrict name,
                      void* restrict function(void*), void* restrict arg);
