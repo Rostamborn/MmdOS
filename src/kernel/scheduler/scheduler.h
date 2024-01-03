@@ -12,4 +12,6 @@ interrupt_frame* schedule(interrupt_frame* restrict context);
 
 void scheduler_init();
 
+void scheduler_yield();
+
 #endif

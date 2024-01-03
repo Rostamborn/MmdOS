@@ -24,10 +24,14 @@ typedef struct thread_t {
     struct thread_t* next;
     uint64_t         wake_time;
     int16_t          remaining_quantum;
+    // keeping pointer to stack so to free it easily later on
+    void* stack;
 } thread_t;
 
 // create a thread but will not add it to process yet
 thread_t* thread_add(struct process_t* restrict process, char* restrict name,
                      void* restrict function(void*), void* restrict arg);
+
+void thread_delete(struct process_t* process, thread_t* thread);
 
 #endif

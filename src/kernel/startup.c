@@ -25,6 +25,7 @@ void _start(void) {
     keyboard_init();
     pmm_init();
     vmm_init();
+    slab_init();
     scheduler_init();
     timer_init();
     // for demonstration ---

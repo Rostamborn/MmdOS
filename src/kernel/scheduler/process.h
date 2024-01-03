@@ -41,4 +41,6 @@ process_t* process_get_current();
 
 void process_set_current(process_t* p);
 
+void process_delete(process_t* process);
+
 #endif

@@ -2,6 +2,7 @@
 #include "src/kernel/lib/alloc.h"
 #include "src/kernel/lib/logger.h"
 #include "src/kernel/lib/print.h"
+#include "src/kernel/lib/spinlock.h"
 #include "src/kernel/lib/util.h"
 #include "stdbool.h"
 
@@ -62,3 +63,50 @@ process_t* process_get_list() { return processes_list; }
 process_t* process_get_current() { return current_process; }
 
 void process_set_current(process_t* p) { current_process = p; }
+
+void process_delete(process_t* process) {
+    if (process == NULL) {
+        return;
+    }
+
+    spinlock_t lock = SPINLOCK_INIT;
+    spinlock_acquire(&lock);
+
+    // removing threads
+    thread_t* next;
+    for (thread_t* scan = process->threads; scan != NULL; scan = next) {
+        next = scan->next;
+        thread_delete(process, scan);
+    }
+
+    // removing process from queue
+    if (processes_list == process) {
+        processes_list = process->next;
+    } else {
+        process_t* scan = processes_list;
+        while (scan->next != process) {
+            scan = scan->next;
+            if (scan == NULL) {
+                panic("deleting a process with pid: %d that is not part of "
+                      "linked list",
+                      process->pid);
+            }
+        }
+        scan->next = process->next;
+    }
+
+    // setting current_process
+    if (current_process->next != NULL) {
+        current_process = current_process->next;
+    } else {
+        current_process = processes_list;
+    }
+
+    // freeing resources
+    // TODO: free process->resources
+    // TODO: free root page table if not used by other processes
+    kfree(process);
+
+    spinlock_release(&lock);
+    return;
+}
