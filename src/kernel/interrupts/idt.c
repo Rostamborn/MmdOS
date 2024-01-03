@@ -107,7 +107,7 @@ void irq_install_handler(uint8_t offset,
 void irq_uninstall_handler(uint8_t offset) { irq_handlers[offset] = 0; }
 
 void set_interrupt_descriptor(uint8_t vector, void* handler, uint8_t dpl) {
-    // dpl is the descriptor privilage level which determines the highest
+    // dpl is the descriptor privilege level which determines the highest
     // cpu ring that can trigger this interrupt via software(default of 0 is
     // fine as there is no user mode).
 
