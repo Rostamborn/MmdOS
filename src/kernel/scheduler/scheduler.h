@@ -8,8 +8,10 @@
 // TODO: BETTER ALGORITHM
 // TODO: ADD PRIORITY QUEUES
 // TODO: SUPPORT MULTIPLE CORES
-interrupt_frame* schedule(interrupt_frame* restrict context);
+execution_context* schedule(execution_context* restrict context);
 
 void scheduler_init();
+
+void scheduler_yield();
 
 #endif

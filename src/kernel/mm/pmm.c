@@ -217,7 +217,7 @@ void pmm_free(void* addr, uint64_t n_pages) {
 
     uint64_t page_index = (uint64_t) addr / PAGE_SIZE;
     for (uint64_t i = page_index; i < page_index + n_pages; i++) {
-        if (bitmap_get(bitmap, i)) {
+        if (!bitmap_get(bitmap, i)) {
             panic("pmm_free: page already free");
         }
         bitmap_clear(bitmap, i);

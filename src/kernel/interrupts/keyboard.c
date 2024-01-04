@@ -92,7 +92,7 @@ const uint64_t upper_case[128] = {
     UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN,
     UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN};
 
-interrupt_frame* keyboard_handler(interrupt_frame* frame) {
+execution_context* keyboard_handler(execution_context* frame) {
     uint8_t scancode = inb(0x60) & 0x7f; // which key is pressed
     uint8_t pressed = inb(0x60) & 0x80;  // is the key pressed or released
 

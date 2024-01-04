@@ -2,9 +2,9 @@
 #define KERNEL_PROCESS_DEF
 
 #include "../cpu/cpu.h"
-#include "thread.h"
 #include "stddef.h"
 #include "stdint.h"
+#include "thread.h"
 
 #define PROCESS_NAME_MAX_LEN 64
 #define MAX_RESOURCE_IDS 255
@@ -40,5 +40,7 @@ process_t* process_get_list();
 process_t* process_get_current();
 
 void process_set_current(process_t* p);
+
+void process_delete(process_t* process);
 
 #endif

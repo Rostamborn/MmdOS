@@ -1,13 +1,10 @@
 #include "cpu/cpu.h"
-#include "demo.h"
-#include "mm/vmm.h"
 #include "cpu/pic.h"
+#include "demo.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
 #include "interrupts/keyboard.h"
 #include "interrupts/timer.h"
-// #include "lib/logger.h"
-// #include "lib/print.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 #include "scheduler/scheduler.h"
@@ -25,6 +22,7 @@ void _start(void) {
     keyboard_init();
     pmm_init();
     vmm_init();
+    slab_init();
     scheduler_init();
     timer_init();
     // for demonstration ---
