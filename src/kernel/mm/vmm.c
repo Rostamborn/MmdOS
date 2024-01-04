@@ -20,8 +20,8 @@ extern uint64_t _rodata_start_addr, _rodata_end_addr;
 extern uint64_t _data_start_addr, _data_end_addr;
 
 static uint64_t* lvl_get_next(uint64_t* top_lvl, uint64_t offset, bool alloc) {
-    if (top_lvl[offset] & PTE_PRESENT) {
-        return (uint64_t*) (PTE_GET_ADDR(top_lvl[offset]));
+    if ((top_lvl[offset] & PTE_PRESENT) != 0) {
+        return (uint64_t*) (PTE_GET_ADDR(top_lvl[offset]) + HHDM_OFFSET);
     }
 
     if (!alloc) {
@@ -35,9 +35,8 @@ static uint64_t* lvl_get_next(uint64_t* top_lvl, uint64_t offset, bool alloc) {
     }
 
     // not sure bout the PTE_USER flag
-    top_lvl[offset] =
-        (uint64_t) next_lvl | PTE_PRESENT | PTE_WRITABLE | PTE_USER;
-    return next_lvl + HHDM_OFFSET; // HHDM_OFFSET is the higher half offset
+    top_lvl[offset] = (uint64_t)next_lvl | PTE_PRESENT | PTE_WRITABLE /* | PTE_USER */;
+    return (uint64_t*)(next_lvl + HHDM_OFFSET); // HHDM_OFFSET is the higher half offset
 }
 
 static void lvl_destroy(PageMap* pagemap, uint16_t start, uint16_t end,
@@ -67,11 +66,19 @@ void vmm_destroy_pagemap(PageMap* pagemap) {
     spinlock_release(&pagemap->lock);
 }
 
+// void vmm_switch_pml(PageMap* pagemap) {
+//     // not sure about the HHDM_OFFSET
+//     __asm__ volatile(
+//         "mov %0, %%cr3" ::"r"((uintptr_t) &pagemap->top_lvl - HHDM_OFFSET)
+//         : "memory");
+// }
 void vmm_switch_pml(PageMap* pagemap) {
-    // not sure about the HHDM_OFFSET
-    __asm__ volatile(
-        "mov %0, %%cr3" ::"r"((void*) pagemap->top_lvl - HHDM_OFFSET)
-        : "memory");
+    asm volatile (
+        "mov %0, %%cr3"
+        :
+        : "r" ((uint64_t)((void*)pagemap->top_lvl - HHDM_OFFSET))
+        : "memory"
+    );
 }
 
 bool vmm_map_page(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
@@ -198,6 +205,7 @@ void vmm_init() {
     if (vmm_kernel_pagemap->top_lvl == NULL) {
         panic("Failed to allocate top level page table");
     }
+    vmm_kernel_pagemap->top_lvl = (void*)vmm_kernel_pagemap->top_lvl + HHDM_OFFSET;
 
     // allocate the kernel page table(higher half)
     for (uint64_t i = 256; i < 512; i++) {
@@ -275,22 +283,28 @@ void vmm_init() {
     //     }
     // }
     // klog("VMM ::", "rest of memory mapped");
-    struct limine_memmap_response* memmap = memmap_req.response;
 
+    struct limine_memmap_response* memmap = memmap_req.response;
     for (uint64_t i = 0; i < memmap->entry_count; i++) {
         struct limine_memmap_entry* entry = memmap->entries[i];
 
         // identity map the higher half
         uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
         uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
-        if (top <= 0x100000000) {
+        klog("VMM", "MAPPING %x - %x", base, top);
+        // if (top <= 0x100000000) {
+        //     continue;
+        // }
+        klog("VMM", "TYPE: %d", entry->type);
+        if (entry->type != LIMINE_MEMMAP_USABLE || entry->type != LIMINE_MEMMAP_KERNEL_AND_MODULES) {
             continue;
         }
+        klog("VMM ::", "base and top set");
 
         for (uintptr_t j = base; j < top; j += PAGE_SIZE) {
-            if (j < 0x100000000) {
-                continue;
-            }
+            // if (j < 0x100000000) {
+            //     continue;
+            // }
 
             bool res1 = vmm_map_page(vmm_kernel_pagemap, j, j,
                                      PTE_PRESENT | PTE_WRITABLE);
@@ -298,18 +312,24 @@ void vmm_init() {
                 panic("Failed to identity map physical memory");
             }
 
+            klog("VMM ::", "res1 entry mapped");
+
             bool res2 =
                 vmm_map_page(vmm_kernel_pagemap, j + HHDM_OFFSET, j,
                              PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE);
             if (!res2) {
                 panic("Failed to map physical memory");
             }
+            klog("VMM ::", "res2 entry mapped");
         }
     }
     klog("VMM ::", "limine_memmap higher half mapped");
 
-    klog("VMM ::", "vmm init finished");
 
+    // vmm_switch_pml(vmm_kernel_pagemap);
+    klog("VMM ::", "switched pagemap");
+
+    klog("VMM ::", "vmm init finished");
     // klog("VMM :: ", "text: virtual %x -> physical %x", text_start,
     // vmm_virtual2physical(vmm_kernel_pagemap, text_start, false));
 }

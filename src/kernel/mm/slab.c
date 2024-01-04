@@ -1,6 +1,7 @@
 #include "../lib/logger.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
+#include "../lib/print.h"
 #include "../limine.h"
 #include "pmm.h"
 #include <stdbool.h>
