@@ -1,11 +1,10 @@
-#include "src/kernel/mm/pmm.h"
-#include "src/kernel/cpu/cpu.h"
-#include "src/kernel/lib/logger.h"
-#include "src/kernel/lib/panic.h"
-#include "src/kernel/lib/spinlock.h"
-#include "src/kernel/lib/util.h"
-#include "src/kernel/limine.h"
-#include "src/kernel/mm/bitmap.h"
+#include "pmm.h"
+#include "../lib/logger.h"
+#include "../lib/panic.h"
+#include "../lib/spinlock.h"
+#include "../lib/util.h"
+#include "../limine.h"
+#include "bitmap.h"
 #include <stdint.h>
 
 struct limine_memmap_request memmap_req = {
@@ -35,10 +34,8 @@ void pmm_init() {
 
     uint64_t highest_addr = 0;
 
-    for (uint8_t i = 0; i < memmap->entry_count; i++) {
+    for (uint64_t i = 0; i < memmap->entry_count; i++) {
         struct limine_memmap_entry* entry = entries[i];
-
-        /* For some reason, entry->Type seems to be NULL */
 
         klog("PMM :: ", "addr: %x, size: %d", entry->base, entry->length,
              entry->type);

@@ -3,7 +3,7 @@ OUTPUT_FORMAT(elf64-x86-64)
  
 /* We want the symbol _start to be our entry point */
 ENTRY(_start)
- 
+
 /* Define the program headers we want so the bootloader gives us the right */
 /* MMU permissions */
 PHDRS
@@ -13,7 +13,7 @@ PHDRS
     data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
     dynamic PT_DYNAMIC FLAGS((1 << 1) | (1 << 2)) ; /* Dynamic PHDR for relocations */
 }
- 
+
 SECTIONS
 {
     /* We wanna be placed in the topmost 2GiB of the address space, for optimisations */
@@ -23,38 +23,46 @@ SECTIONS
     . = 0xffffffff80000000;
 
     _text_start_addr = .;
- 
+
     .text : {
         *(.text .text.*)
     } :text
- 
+
     _text_end_addr = .;
 
     /* Move to the next memory page for .rodata */
     . += CONSTANT(MAXPAGESIZE);
 
     _rodata_start_addr = .;
- 
+
+    PROVIDE(symbol_table = 1);
+
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
 
+    .drivers : {
+        _drivers_start = .;
+        KEEP(*(.drivers*))
+        _drivers_end = .;
+    } :rodata
+
     _rodata_end_addr = .;
- 
+
     /* Move to the next memory page for .data */
     . += CONSTANT(MAXPAGESIZE);
 
     _data_start_addr = .;
- 
+
     .data : {
         *(.data .data.*)
     } :data
- 
+
     /* Dynamic section for relocations, both in its own PHDR and inside data PHDR */
     .dynamic : {
         *(.dynamic)
     } :data :dynamic
- 
+
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */
     /* If you need, for example, .init_array and .fini_array, those should be placed */
@@ -65,7 +73,7 @@ SECTIONS
     } :data
 
     _data_end_addr = .;
- 
+
     /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
     /DISCARD/ : {
         *(.eh_frame)

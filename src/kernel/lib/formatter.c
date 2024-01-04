@@ -48,6 +48,9 @@ int format_char(int c, char buffer[], int buffer_offset) {
 int format_int(int64_t integer, char buffer[], int buffer_offset) {
     uint32_t len = 0;
     int64_t  remainder = integer;
+    if (integer == 0) {
+        buffer[buffer_offset] = '0';
+    }
     while (remainder != 0) {
         len++;
         remainder /= 10;
