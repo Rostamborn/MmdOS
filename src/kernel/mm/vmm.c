@@ -15,9 +15,10 @@ static volatile struct limine_kernel_address_request kaddr_req = {
 
 PageMap* vmm_kernel = NULL;
 
-extern uint64_t _text_start_addr, _text_end_addr;
-extern uint64_t _rodata_start_addr, _rodata_end_addr;
-extern uint64_t _data_start_addr, _data_end_addr;
+typedef char linker_addr[];
+extern linker_addr _text_start_addr, _text_end_addr;
+extern linker_addr _rodata_start_addr, _rodata_end_addr;
+extern linker_addr _data_start_addr, _data_end_addr;
 
 static uint64_t* pagemap_next(uint64_t* lower_lvl, uint64_t offset, bool alloc) {
     if (lower_lvl[offset] & PTE_PRESENT) {
@@ -275,6 +276,13 @@ void vmm_init() {
     klog("VMM ::", "Allocated kernel PML entries");
 
     struct limine_kernel_address_response* kaddr = kaddr_req.response;
+    klog("VMM ::", "_text_start_addr: %x", _text_start_addr);
+    klog("VMM ::", "_text_end_addr: %x", _text_end_addr);
+    klog("VMM ::", "_rodata_start_addr: %x", _rodata_start_addr);
+    klog("VMM ::", "_rodata_end_addr: %x", _rodata_end_addr);
+    klog("VMM ::", "_data_start_addr: %x", _data_start_addr);
+    klog("VMM ::", "_data_end_addr: %x", _data_end_addr);
+
     uintptr_t text_start =
                   ALIGN_DOWN((uintptr_t)_text_start_addr, PAGE_SIZE),
               rodata_start = ALIGN_DOWN((uintptr_t)_rodata_start_addr,
@@ -293,7 +301,7 @@ void vmm_init() {
     klog("VMM ::", "rodata_start: %x", rodata_start);
     klog("VMM ::", "data_start: %x", data_start);
 
-    // I don't know why physical addresses are like this
+
     for (uintptr_t i = text_start; i < text_end; i += PAGE_SIZE) {
         uintptr_t physical = i - kaddr->virtual_base + kaddr->physical_base;
         if (!vmm_map(vmm_kernel, i, physical, PTE_PRESENT)) {
@@ -317,6 +325,15 @@ void vmm_init() {
         }
     }
     klog("VMM ::", "data mapped");
+
+    for(uintptr_t i = 0x1000; i < 0x100000000; i += PAGE_SIZE) {
+        if (!vmm_map(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
+            panic("Failed to map kernel data");
+        }
+        if (!vmm_map(vmm_kernel, i + HHDM_OFFSET, i, PTE_PRESENT | PTE_WRITABLE)) {
+            panic("Failed to map kernel data");
+        }
+    }
 
     struct limine_memmap_response* memmap = memmap_req.response;
     for (uint64_t i = 0; i < memmap->entry_count; i++) {
