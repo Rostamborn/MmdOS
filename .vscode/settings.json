@@ -1,17 +1,39 @@
 {
   "cSpell.words": [
     "apic",
-    "APIC",
+    "Arman",
     "CMCI",
     "CURCNT",
+    "idtr",
     "INITCNT",
     "ioapic",
     "IOAPIC",
     "IOREGSEL",
     "IOWIN",
     "iret",
+    "kfree",
+    "klog",
+    "kstrcpy",
     "lapic",
-    "LAPIC",
+    "lidt",
     "MADT"
-  ]
+  ],
+  "files.associations": {
+    "cpu.h": "c",
+    "limine_term.h": "c",
+    "stdarg.h": "c",
+    "formatter.h": "c",
+    "spinlock.h": "c",
+    "logger.h": "c",
+    "stdint.h": "c",
+    "idt.h": "c",
+    "stddef.h": "c",
+    "print.h": "c",
+    "keyboard.h": "c",
+    "pic.h": "c",
+    "panic.h": "c",
+    "scheduler.h": "c",
+    "alloc.h": "c",
+    "process.h": "c"
+  }
 }

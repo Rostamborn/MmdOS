@@ -2,37 +2,26 @@
 
 void add_one_to_x() {
     int x = 0;
-    int i = 0;
-    while (1) {
-        if (i == 10000) {
-            i = 0;
-            klog("DEMO::", "x is now %d", x);
-        }
+
+    while (x < 5000000) {
         x++;
-        i++;
     }
+    klog("DEMO::", "x  will now exit");
 }
 void add_one_to_y() {
     int y = 0;
-    int i = 0;
-    while (1) {
-        if (i == 10000) {
-            i = 0;
-            klog("DEMO::", "y is now %d", y);
-        }
+
+    while (y < 6000000) {
         y++;
-        i++;
     }
+    klog("DEMO::", "y  will now exit");
 }
 void add_one_to_z() {
     int z = 0;
-    int i = 0;
-    while (1) {
-        if (i == 10000) {
-            i = 0;
-            klog("DEMO::", "z is now %d", z);
-        }
+
+    while (z < 7000000) {
         z++;
-        i++;
     }
+
+    klog("DEMO::", "z  will now exit");
 }

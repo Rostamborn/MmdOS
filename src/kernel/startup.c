@@ -1,13 +1,10 @@
 #include "cpu/cpu.h"
-#include "demo.h"
-#include "mm/vmm.h"
 #include "cpu/pic.h"
+#include "demo.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
 #include "interrupts/keyboard.h"
 #include "interrupts/timer.h"
-// #include "lib/logger.h"
-// #include "lib/print.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 #include "mm/slab.h"
@@ -36,7 +33,7 @@ void _start(void) {
     // process_create("adder2", &add_one_to_y, NULL);
     // thread_add(p, "second thread of adder1", &add_one_to_z, NULL);
     // ---------------------
-    void* ptr = kalloc(sizeof(interrupt_frame));
+    void* ptr = kalloc(sizeof(execution_context));
     void* ptr2 = kalloc(1);
     kprintf("ptr1: %p\n", ptr);
     kprintf("ptr2: %p\n", ptr2);
