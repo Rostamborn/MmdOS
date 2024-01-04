@@ -40,33 +40,35 @@ static uint64_t* pagemap_next(uint64_t* lower_lvl, uint64_t offset, bool alloc) 
     return (uint64_t*) (next_lvl + HHDM_OFFSET); // HHDM_OFFSET is the higher half offset
 }
 
-// static void lvl_destroy(PageMap* pagemap, uint16_t start, uint16_t end,
-//                         uint16_t lvl) {
-//     // Base of Recursion
-//     if (lvl == 0) {
-//         return;
-//     }
-//
-//     for (uint16_t i = start; i < end; i++) {
-//         uint64_t* next_lvl = lvl_get_next(pagemap->top_lvl, i, false);
-//         if (next_lvl == NULL) {
-//             continue;
-//         }
-//
-//         lvl_destroy(pagemap, 0, 512, lvl - 1);
-//     }
-//     pmm_free((void*) pagemap - HHDM_OFFSET, 1);
-// }
-//
-// void vmm_destroy_pagemap(PageMap* pagemap) {
-//
-//     // maybe unmap first
-//
-//     spinlock_acquire(&pagemap->lock);
-//     lvl_destroy(pagemap, 0, 512, 3);
-//     spinlock_release(&pagemap->lock);
-// }
-//
+static void lvl_destroy(PageMap* pagemap, uint16_t start, uint16_t end,
+                        uint16_t lvl) {
+    // Base of Recursion
+    if (lvl == 0) {
+        return;
+    }
+
+    for (uint16_t i = start; i < end; i++) {
+        uint64_t* next_lvl = pagemap_next(pagemap->lower_lvl, i, false);
+        if (next_lvl == NULL) {
+            continue;
+        }
+
+        lvl_destroy(pagemap, 0, 512, lvl - 1);
+    }
+    pmm_free((void*) pagemap - HHDM_OFFSET, 1);
+}
+
+void vmm_destroy_pagemap(PageMap* pagemap) {
+
+    if (!vmm_unmap(pagemap, (uintptr_t)pagemap->lower_lvl + HHDM_OFFSET, false)) {
+        panic("failed to unmap pagemap");
+    }
+    // maybe unmap first
+    spinlock_acquire(&pagemap->lock);
+    lvl_destroy(pagemap, 0, 512, 3);
+    spinlock_release(&pagemap->lock);
+}
+
 void vmm_switch_pml(PageMap* pagemap) {
     asm volatile("mov %0, %%cr3"
                  :
@@ -236,6 +238,7 @@ PageMap* vmm_new_pagemap() {
         return NULL;
     }
 
+    pagemap->obj_count = 0;
     pagemap->lock = (spinlock_t) SPINLOCK_INIT;
     pagemap->lower_lvl = pmm_alloc(1);
     if (pagemap->lower_lvl == NULL) {
@@ -243,6 +246,10 @@ PageMap* vmm_new_pagemap() {
         return NULL;
     }
     pagemap->lower_lvl = (void*)pagemap->lower_lvl + HHDM_OFFSET;
+    if (!vmm_map(vmm_kernel, (uintptr_t)pagemap->lower_lvl + HHDM_OFFSET, (uintptr_t)pagemap->lower_lvl, PTE_PRESENT | PTE_WRITABLE)) {
+        kfree(pagemap);
+        return NULL;
+    }
 
     // shared kernel mappings for all processes
     for (uint64_t i = 256; i < 512; i++) {
@@ -251,6 +258,78 @@ PageMap* vmm_new_pagemap() {
 
     return pagemap;
 }
+
+void* vmm_alloc(PageMap* pagemap, uint64_t size, uint64_t flags, void* arg) {
+    vm_obj* current = pagemap->objs;
+    for (;current != NULL;) {
+        if (current->size >= size) {
+            // found a free block
+        }
+        current = current->next;
+    }
+    // couldn't find a free object
+    void* new_alloc = pmm_alloc(DIV_ROUNDUP(size, PAGE_SIZE) + 1); // +1 because vm_obj
+    if (new_alloc == NULL) {
+        return NULL;
+    }
+    vm_obj* new_obj = (vm_obj*) new_alloc;
+    new_obj->size = size;
+    new_obj->base = (uintptr_t)((void*) new_obj + PAGE_SIZE);
+    new_obj->flags = flags;
+    new_obj->next = NULL;
+
+    uint64_t counter = 0;
+    current = pagemap->objs;
+    for (;current != NULL;) {
+        if (current->next == NULL) {
+            current->next = new_obj;
+            pagemap->obj_count = counter + 1;
+            break;
+        }
+        current = current->next;
+        counter++;
+    }
+    if (!vmm_map(pagemap, (uintptr_t)new_obj->base + 0x8ull, (uintptr_t) ((void*)new_obj + PAGE_SIZE), flags)) {
+        panic("Failed to map new object");
+    }
+
+    return (void*) new_obj->base + 0x8ull;
+}
+
+void vmm_free(PageMap* pagemap, void* addr) {
+    vm_obj* current = pagemap->objs;
+    for (;current != NULL;) {
+        if (current->base == (uintptr_t)addr) {
+            spinlock_acquire(&pagemap->lock);
+            // found the object
+            if (!vmm_unmap(pagemap, (uintptr_t)addr, true)) {
+                panic("Failed to unmap object");
+            }
+            current->flags &= ~PTE_PRESENT;
+
+            if (pagemap->obj_count >= MAXIMUM_VM_OBJECT) {
+                // TODO: free the object in linked list
+            }
+            spinlock_release(&pagemap->lock);
+            break;
+        }
+        current = current->next;
+    }
+}
+
+// uint64_t convert_flags(uint64_t flags) {
+//     uint64_t new_flags = 0;
+//     if (flags & VM_WRITABLE) {
+//         new_flags |= PTE_WRITABLE;
+//     }
+//     if (!(flags & VM_EXEC)) {
+//         new_flags |= PTE_NO_EXECUTE;
+//     }
+//     if (flags & VM_USER) {
+//         new_flags |= PTE_USER;
+//     }
+//     return new_flags;
+// }
 
 void vmm_init() {
     bool ok = false;
@@ -338,14 +417,22 @@ void vmm_init() {
     struct limine_memmap_response* memmap = memmap_req.response;
     for (uint64_t i = 0; i < memmap->entry_count; i++) {
         struct limine_memmap_entry* entry = memmap->entries[i];
-        if (entry->type != LIMINE_MEMMAP_USABLE) {
-            continue;
-        }
+        // if (entry->type != LIMINE_MEMMAP_USABLE) {
+        //     continue;
+        // }
 
         uintptr_t start = ALIGN_UP(entry->base, PAGE_SIZE),
                   end = ALIGN_DOWN(entry->base + entry->length, PAGE_SIZE);
 
+        if (end <= 0x100000000) {
+            continue;
+        }
+
         for (uintptr_t i = start; i < end; i += PAGE_SIZE) {
+            if (i < 0x100000000) {
+                continue;
+            }
+
             if (!vmm_map(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
                 panic("Failed to map usable memory");
             }
