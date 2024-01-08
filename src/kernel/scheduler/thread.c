@@ -62,6 +62,7 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
 
     kstrcpy(thread->name, name, THREAD_NAME_MAX_LEN);
     thread->tid = next_tid++;
+    // TODO check if process should move to ready or blocked state
     thread->status = READY;
     thread->next = NULL;
     thread->stack = alloc_stack();
@@ -81,6 +82,9 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
 }
 
 void thread_delete(process_t* process, thread_t* thread) {
+    if (thread == NULL) {
+        return;
+    }
     spinlock_t lock = SPINLOCK_INIT;
     spinlock_acquire(&lock);
     // remove thread from linked list
@@ -102,11 +106,17 @@ void thread_delete(process_t* process, thread_t* thread) {
         }
         scan->next = thread->next;
     }
+    if (thread->next == NULL) {
+        process->running_thread = process->threads;
+    } else {
+        process->running_thread = thread->next;
+    }
+
     // release resources
     kfree(&thread->stack);
     kfree(&thread->context);
     kfree(thread);
-    // process->threads_count--;
+    process->threads_count--;
     spinlock_release(&lock);
 
     return;

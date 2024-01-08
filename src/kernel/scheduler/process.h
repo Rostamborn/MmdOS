@@ -21,6 +21,7 @@ typedef struct process_t {
     struct thread_t*  running_thread;
     int16_t           remaining_quantum;
     int8_t            threads_count;
+    uint64_t          wake_time;
     struct process_t* next;
 } process_t;
 
