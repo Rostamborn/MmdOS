@@ -81,6 +81,9 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
 }
 
 void thread_delete(process_t* process, thread_t* thread) {
+    if (thread == NULL) {
+        return;
+    }
     spinlock_t lock = SPINLOCK_INIT;
     spinlock_acquire(&lock);
     // remove thread from linked list
@@ -102,6 +105,12 @@ void thread_delete(process_t* process, thread_t* thread) {
         }
         scan->next = thread->next;
     }
+    if (thread->next == NULL) {
+        process->running_thread = process->threads;
+    } else {
+        process->running_thread = thread->next;
+    }
+
     // release resources
     kfree(&thread->stack);
     kfree(&thread->context);

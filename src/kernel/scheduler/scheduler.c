@@ -10,133 +10,180 @@ void scheduler_init() { process_create("idle process", &process_idle, NULL); }
 // return control to scheduler by firing interrupt
 void scheduler_yield() { asm("int $0x20"); }
 
+// private method for schedule
+bool switch_threads(process_t* process) {
+
+    for (int i = 0; i < process->threads_count + 1; i++) {
+
+        if (process->threads == NULL) {
+            process->status = DEAD;
+            return false;
+        }
+
+        switch (process->running_thread->status) {
+        case READY:
+            return true;
+
+        case RUNNING:
+            process->running_thread->status = READY;
+            break;
+
+        case SLEEPING:
+            // TODO: handle sleeping
+            break;
+
+        case DEAD:
+            thread_delete(process, process->running_thread);
+            continue;
+
+        default:
+            panic("SCHEDULER ::",
+                  "unhandled status when switching thread! tid: %d, status: %d",
+                  process->running_thread->tid,
+                  process->running_thread->status);
+            break;
+        }
+
+        if (process->running_thread->next != NULL) {
+            process->running_thread = process->running_thread->next;
+        } else {
+            process->running_thread = process->threads;
+        }
+    }
+    return false;
+}
+
 execution_context* schedule(execution_context* restrict context) {
-    // making sure current_process and processes_list are valid
+    // making sure there are processes in the list
     process_t* processes_list = process_get_list();
+    if (processes_list == NULL) {
+        return context;
+    }
+
+    // making sure current_process is not NULL
     process_t* current_process = process_get_current();
     if (current_process == NULL) {
-        if (processes_list == NULL) {
-            return context;
-        }
         current_process = processes_list;
         process_set_current(current_process);
-
-        current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
-        current_process->running_thread->remaining_quantum =
-            DEFAULT_THREAD_RUNNING_QUANTUM;
-        return current_process->running_thread->context;
-    }
-    current_process->remaining_quantum--;
-    current_process->running_thread->remaining_quantum--;
-    current_process->running_thread->context = context;
-
-    if (current_process->running_thread->status == DEAD) {
-        thread_delete(current_process, current_process->running_thread);
     }
 
-    if (current_process->status == DEAD) {
-        process_delete(current_process);
-        current_process = process_get_current();
-        processes_list = process_get_list();
-    }
+    bool still_scheduling = true;
+    bool process_switched = false;
+    bool thread_switched = false;
 
-    if (current_process->running_thread->remaining_quantum > 0 &&
-        (current_process->running_thread->status == RUNNING)) {
-        // continue running current thread
-        klog("SCHEDULER ::",
-             "thread with tid: %d from process with pid: %d will run next",
-             current_process->running_thread->tid, current_process->pid);
-        return current_process->running_thread->context;
-    }
+    while (still_scheduling) {
 
-    if (current_process->remaining_quantum > 0) {
-        // switch thread
-        if (current_process->running_thread->status == RUNNING) {
-            current_process->running_thread->status = READY;
+        if (processes_list == NULL) {
+            panic("SCHEDULER ::", "no process found");
         }
 
-        for (int i = 0; i < current_process->threads_count; i++) {
-            if (current_process->running_thread->next != NULL) {
-                current_process->running_thread =
-                    current_process->running_thread->next;
-            } else {
-                current_process->running_thread = current_process->threads;
-            }
+        switch (current_process->status) {
+        case SPAWNED:
+            // TODO check if it should be moved to blocked queue
+            current_process->status = READY;
+            still_scheduling = false;
+            process_switched = true;
+            break;
 
-            if (current_process->running_thread == NULL) {
-                // no thread left in process
-                process_delete(current_process);
-                processes_list = process_get_list();
-                current_process = process_get_current();
-                break;
-            }
+        case READY:
+            still_scheduling = false;
+            process_switched = true;
+            break;
 
-            if (current_process->status == SLEEPING) {
-                // TODO: handle sleeping
-                continue;
-            }
+        case RUNNING:
+            current_process->remaining_quantum--;
+            current_process->running_thread->remaining_quantum--;
+            current_process->running_thread->context = context;
 
             if (current_process->running_thread->status == DEAD) {
                 thread_delete(current_process, current_process->running_thread);
-                continue;
+                thread_switched = true;
             }
-            current_process->running_thread->status = RUNNING;
-            current_process->running_thread->remaining_quantum =
-                DEFAULT_THREAD_RUNNING_QUANTUM;
-            klog("SCHEDULER ::",
-                 "thread with tid: %d from process with pid: %d will run next",
-                 current_process->running_thread->tid, current_process->pid);
-            return current_process->running_thread->context;
-        }
-    }
 
-    // switching process
-    if (current_process->running_thread != NULL &&
-        current_process->running_thread->status == RUNNING) {
-        current_process->running_thread->status = READY;
-    }
+            if (current_process->status == DEAD) {
+                // let the next iteration of loop handle dead
+                break;
+            }
 
-    // TODO: in the future check if there is no other running thread,
-    // TODO: before setting status to READY
-    if (current_process->status == RUNNING) {
-        current_process->status = READY;
-    }
+            // check if current thread should keep running
+            if (current_process->running_thread->remaining_quantum > 0) {
+                still_scheduling = false;
+                break;
+            }
 
-    if (current_process->status == DEAD) {
-        process_delete(current_process);
-        current_process = process_get_current();
-        processes_list = process_get_list();
-    }
+            // check if current process should keep running
+            if (current_process->remaining_quantum > 0) {
+                bool success = switch_threads(current_process);
+                thread_switched = true;
+                if (success) {
+                    still_scheduling = false;
+                    break;
+                }
+            }
 
-    while (true) {
-        if (current_process->next != NULL) {
-            current_process = current_process->next;
-        } else {
-            current_process = processes_list;
-        }
+            current_process->status = READY;
+            process_switched = true;
+            break;
 
-        if (current_process == NULL) {
-            panic("no process in queue");
-        }
+        case SLEEPING:
+            /* code */
+            break;
 
-        if (current_process->status == DEAD ||
-            current_process->threads == NULL) {
+        case DEAD:
             process_delete(current_process);
             current_process = process_get_current();
             processes_list = process_get_list();
+            process_switched = true;
             continue;
+
+        default:
+            panic(
+                "SCHEDULER ::",
+                "unhandled status when switching process! pid: %d, status: %d",
+                current_process->pid, current_process->status);
+            break;
         }
 
-        break;
+        if (!still_scheduling) {
+            if (current_process->threads == NULL) {
+                current_process->status = DEAD;
+                still_scheduling = true;
+                continue;
+            }
+
+            if ((current_process->pid == 1) &&
+                (current_process->next != NULL)) {
+                still_scheduling = true;
+            }
+        }
+
+        if (still_scheduling) {
+            if (current_process->next != NULL) {
+                current_process = current_process->next;
+            } else {
+                current_process = processes_list;
+            }
+        }
     }
+
     process_set_current(current_process);
     current_process->status = RUNNING;
-    current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
     current_process->running_thread->status = RUNNING;
-    current_process->running_thread->remaining_quantum =
-        DEFAULT_THREAD_RUNNING_QUANTUM;
-    klog("SCHEDULER ::",
-         "thread with tid: %d from process with pid: %d will run next",
-         current_process->running_thread->tid, current_process->pid);
+
+    if (process_switched) {
+        current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
+        current_process->running_thread->remaining_quantum =
+            DEFAULT_THREAD_RUNNING_QUANTUM;
+    } else if (thread_switched) {
+        current_process->running_thread->remaining_quantum =
+            DEFAULT_THREAD_RUNNING_QUANTUM;
+    }
+
+    if (current_process->pid != 1) {
+        klog("SCHEDULER ::",
+             "thread with tid: %d from process with pid: %d will run next",
+             current_process->running_thread->tid, current_process->pid);
+    }
+
     return current_process->running_thread->context;
 }
