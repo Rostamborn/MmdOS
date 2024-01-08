@@ -33,10 +33,12 @@
 #define VM_USER (1ull << 2ull)
 
 typedef struct vm_arena {
+    uint64_t id;
     uintptr_t base;
     uint64_t size;
     uint64_t flags;
     uint64_t offset;
+    uint64_t allocated;
     struct vm_arena* next;
 } vm_arena;
 

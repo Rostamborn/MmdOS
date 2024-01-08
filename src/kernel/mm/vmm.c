@@ -221,15 +221,15 @@ uint64_t* vmm_virt2pte(PageMap* pagemap, uintptr_t virt, bool alloc) {
     uint64_t lvl1_offset = (virt & (0x1ffull << 12)) >> 12;
 
     uint64_t* lvl4 = pagemap->lower_lvl;
-    uint64_t* lvl3 = pagemap_next(lvl4, lvl4_offset, true);
+    uint64_t* lvl3 = pagemap_next(lvl4, lvl4_offset, alloc);
     if (lvl3 == NULL) {
         return NULL;
     }
-    uint64_t* lvl2 = pagemap_next(lvl3, lvl3_offset, true);
+    uint64_t* lvl2 = pagemap_next(lvl3, lvl3_offset, alloc);
     if (lvl2 == NULL) {
         return NULL;
     }
-    uint64_t* lvl1 = pagemap_next(lvl2, lvl2_offset, true);
+    uint64_t* lvl1 = pagemap_next(lvl2, lvl2_offset, alloc);
     if (lvl1 == NULL) {
         return NULL;
     }
@@ -249,7 +249,9 @@ uint64_t vmm_virt2phys(PageMap* pagemap, uintptr_t virt, bool alloc) {
 }
 
 PageMap* vmm_new_pagemap() {
-    PageMap* pagemap = slab_alloc(sizeof(PageMap));
+    // PageMap* pagemap = slab_alloc(sizeof(PageMap));
+    // I'm not sure whether I should use kalloc or something else
+    PageMap* pagemap = kalloc(PAGE_SIZE);
     if (pagemap == NULL) {
         goto cleanup;
     }
@@ -257,120 +259,30 @@ PageMap* vmm_new_pagemap() {
     pagemap->arena_count = 0;
     pagemap->lock = (spinlock_t) SPINLOCK_INIT;
     pagemap->arenas = NULL;
-    pagemap->lower_lvl = pmm_alloc(1);
+    pagemap->lower_lvl = kalloc(PAGE_SIZE);
     if (pagemap->lower_lvl == NULL) {
         goto cleanup;
     }
 
     if (!vmm_map(vmm_kernel, (uintptr_t)pagemap->lower_lvl + HHDM_OFFSET, (uintptr_t)pagemap->lower_lvl, PTE_PRESENT | PTE_WRITABLE)) {
-        pmm_free(pagemap->lower_lvl, 1);
-        slab_free(pagemap);
         panic("Failed to map pagemap");
     }
-    pagemap->lower_lvl = (void*)pagemap->lower_lvl + HHDM_OFFSET;
+    // pagemap->lower_lvl = (void*)pagemap->lower_lvl + HHDM_OFFSET;
 
     // shared kernel mappings for all processes
     for (uint64_t i = 256; i < 512; i++) {
-        // if (pagemap_next(vmm_kernel->lower_lvl, i, true) == NULL) {
-        //     panic("Failed to allocate kernel page table");
-        // }
         pagemap->lower_lvl[i] = vmm_kernel->lower_lvl[i];
     }
 
     return pagemap;
 
 cleanup:
-    if (pagemap != NULL) {
-        slab_free(pagemap);
-    } else {
-        panic("Failed to allocate pagemap");
-    }
+    kfree(pagemap->lower_lvl);
+    kfree(pagemap);
 
     return NULL;
 }
 
-// void* vmm_alloc(PageMap* pagemap, uint64_t size, uint64_t flags, void* arg) {
-//     klog("VMM ::", "Start of vmm_alloc");
-//     // vm_arena* current = pagemap->arenas;
-//     // for (;current != NULL;) {
-//     //     if (current->size >= size) {
-//     //         // found a free block
-//     //         return (void*) current->base;
-//     //     }
-//     //     current = current->next;
-//     // }
-//     // couldn't find a free object
-//     void* new_alloc = pmm_alloc(DIV_ROUNDUP(size, PAGE_SIZE) + 1); // +1 because vm_arena
-//     if (new_alloc == NULL) {
-//         return NULL;
-//     }
-//     vm_arena* new_arena = (vm_arena*) new_alloc;
-//     new_arena->size = ALIGN_UP(size, PAGE_SIZE); // size without the meta data page
-//     new_arena->base = (uintptr_t)((void*) new_arena + PAGE_SIZE + HHDM_OFFSET);
-//     new_arena->flags = flags;
-//     new_arena->next = NULL;
-//
-//     spinlock_acquire(&pagemap->lock);
-//     uint64_t counter = 0;
-//     vm_arena* current = pagemap->arenas;
-//     if (current != NULL) {
-//         for (;current != NULL;) {
-//             if (current->next == NULL) {
-//                 current->next = new_arena;
-//                 pagemap->arena_count = counter + 1;
-//                 break;
-//             }
-//             current = current->next;
-//             counter++;
-//         }
-//     } else {
-//         pagemap->arenas = new_arena;
-//         pagemap->arena_count = 1;
-//     }
-//     spinlock_release(&pagemap->lock); 
-//     
-//     if (!vmm_map(pagemap, new_arena->base, (uintptr_t)((void*)new_arena + PAGE_SIZE), flags)) {
-//         panic("Failed to map new object");
-//     }
-//
-//     klog("VMM ::", "End of vmm_alloc");
-//     return (void*) new_arena->base;
-// }
-
-// void vmm_free(PageMap* pagemap, void* addr) {
-//     vm_arena* current = pagemap->arenas;
-//     for (;current != NULL;) {
-//         if (current->base == (uintptr_t)addr) {
-//             spinlock_acquire(&pagemap->lock);
-//             // found the object
-//             if (!vmm_unmap(pagemap, (uintptr_t)addr, true)) {
-//                 panic("Failed to unmap object");
-//             }
-//             current->flags &= ~PTE_PRESENT;
-//
-//             if (pagemap->arena_count >= MAXIMUM_VM_OBJECT) {
-//                 // TODO: free the object in linked list
-//             }
-//             spinlock_release(&pagemap->lock);
-//             break;
-//         }
-//         current = current->next;
-//     }
-// }
-
-// uint64_t convert_flags(uint64_t flags) {
-//     uint64_t new_flags = 0;
-//     if (flags & VM_WRITABLE) {
-//         new_flags |= PTE_WRITABLE;
-//     }
-//     if (!(flags & VM_EXEC)) {
-//         new_flags |= PTE_NO_EXECUTE;
-//     }
-//     if (flags & VM_USER) {
-//         new_flags |= PTE_USER;
-//     }
-//     return new_flags;
-// }
 
 void vmm_init() {
     bool ok = false;
