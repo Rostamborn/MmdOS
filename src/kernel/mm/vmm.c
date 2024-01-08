@@ -5,6 +5,7 @@
 #include "../lib/util.h"
 #include "../limine.h"
 #include "pmm.h"
+#include "slab.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -19,6 +20,10 @@ typedef char linker_addr[];
 extern linker_addr _text_start_addr, _text_end_addr;
 extern linker_addr _rodata_start_addr, _rodata_end_addr;
 extern linker_addr _data_start_addr, _data_end_addr;
+
+PageMap* vmm_get_pagemap() {
+    return vmm_kernel;
+}
 
 static uint64_t* pagemap_next(uint64_t* lower_lvl, uint64_t offset, bool alloc) {
     if (lower_lvl[offset] & PTE_PRESENT) {
@@ -70,10 +75,14 @@ void vmm_destroy_pagemap(PageMap* pagemap) {
 }
 
 void vmm_switch_pml(PageMap* pagemap) {
+    for (uint64_t i = 256; i < 512; i++) {
+        pagemap->lower_lvl[i] = vmm_kernel->lower_lvl[i];
+    }
     asm volatile("mov %0, %%cr3"
                  :
-                 : "r"((uint64_t) ((void*) pagemap->lower_lvl - HHDM_OFFSET)) // getting phys addr by subracting HHDM_OFFSET
+                 : "r"((void*) pagemap->lower_lvl - HHDM_OFFSET) // getting phys addr by subracting HHDM_OFFSET
                  : "memory");
+    klog("VMM ::", "Switched to PML: %p", pagemap);
 }
 
 bool vmm_map(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
@@ -87,23 +96,30 @@ bool vmm_map(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
     uint64_t lvl1_offset = (virt & (0x1ffull << 12)) >> 12;
 
     uint64_t* lvl4 = pagemap->lower_lvl;
+    if (lvl4 == NULL) {
+        klog("VMM ::", "lvl4 is NULL");
+    }
     uint64_t* lvl3 = pagemap_next(lvl4, lvl4_offset, true);
     if (lvl3 == NULL) {
+        klog("VMM ::", "lvl3 is NULL");
         goto cleanup;
     }
     uint64_t* lvl2 = pagemap_next(lvl3, lvl3_offset, true);
     if (lvl2 == NULL) {
+        klog("VMM ::", "lvl2 is NULL");
         goto cleanup;
     }
     uint64_t* lvl1 = pagemap_next(lvl2, lvl2_offset, true);
     if (lvl1 == NULL) {
+        klog("VMM ::", "lvl1 is NULL");
         goto cleanup;
     }
 
     // if it is present, we don't do anything
-    if (lvl1[lvl1_offset] & PTE_PRESENT) {
-        goto cleanup;
-    }
+    // if (lvl1[lvl1_offset] & PTE_PRESENT) {
+    //     klog("VMM ::", "lvl1 is present");
+    //     goto cleanup;
+    // }
 
     ok = true;
     lvl1[lvl1_offset] = physical | flags;
@@ -233,89 +249,114 @@ uint64_t vmm_virt2phys(PageMap* pagemap, uintptr_t virt, bool alloc) {
 }
 
 PageMap* vmm_new_pagemap() {
-    PageMap* pagemap = KALLOC(PageMap);
+    PageMap* pagemap = slab_alloc(sizeof(PageMap));
     if (pagemap == NULL) {
-        return NULL;
+        goto cleanup;
     }
 
-    pagemap->obj_count = 0;
+    pagemap->arena_count = 0;
     pagemap->lock = (spinlock_t) SPINLOCK_INIT;
+    pagemap->arenas = NULL;
     pagemap->lower_lvl = pmm_alloc(1);
     if (pagemap->lower_lvl == NULL) {
-        kfree(pagemap);
-        return NULL;
+        goto cleanup;
+    }
+
+    if (!vmm_map(vmm_kernel, (uintptr_t)pagemap->lower_lvl + HHDM_OFFSET, (uintptr_t)pagemap->lower_lvl, PTE_PRESENT | PTE_WRITABLE)) {
+        pmm_free(pagemap->lower_lvl, 1);
+        slab_free(pagemap);
+        panic("Failed to map pagemap");
     }
     pagemap->lower_lvl = (void*)pagemap->lower_lvl + HHDM_OFFSET;
-    if (!vmm_map(vmm_kernel, (uintptr_t)pagemap->lower_lvl + HHDM_OFFSET, (uintptr_t)pagemap->lower_lvl, PTE_PRESENT | PTE_WRITABLE)) {
-        kfree(pagemap);
-        return NULL;
-    }
 
     // shared kernel mappings for all processes
     for (uint64_t i = 256; i < 512; i++) {
+        // if (pagemap_next(vmm_kernel->lower_lvl, i, true) == NULL) {
+        //     panic("Failed to allocate kernel page table");
+        // }
         pagemap->lower_lvl[i] = vmm_kernel->lower_lvl[i];
     }
 
     return pagemap;
+
+cleanup:
+    if (pagemap != NULL) {
+        slab_free(pagemap);
+    } else {
+        panic("Failed to allocate pagemap");
+    }
+
+    return NULL;
 }
 
-void* vmm_alloc(PageMap* pagemap, uint64_t size, uint64_t flags, void* arg) {
-    vm_obj* current = pagemap->objs;
-    for (;current != NULL;) {
-        if (current->size >= size) {
-            // found a free block
-        }
-        current = current->next;
-    }
-    // couldn't find a free object
-    void* new_alloc = pmm_alloc(DIV_ROUNDUP(size, PAGE_SIZE) + 1); // +1 because vm_obj
-    if (new_alloc == NULL) {
-        return NULL;
-    }
-    vm_obj* new_obj = (vm_obj*) new_alloc;
-    new_obj->size = size;
-    new_obj->base = (uintptr_t)((void*) new_obj + PAGE_SIZE);
-    new_obj->flags = flags;
-    new_obj->next = NULL;
+// void* vmm_alloc(PageMap* pagemap, uint64_t size, uint64_t flags, void* arg) {
+//     klog("VMM ::", "Start of vmm_alloc");
+//     // vm_arena* current = pagemap->arenas;
+//     // for (;current != NULL;) {
+//     //     if (current->size >= size) {
+//     //         // found a free block
+//     //         return (void*) current->base;
+//     //     }
+//     //     current = current->next;
+//     // }
+//     // couldn't find a free object
+//     void* new_alloc = pmm_alloc(DIV_ROUNDUP(size, PAGE_SIZE) + 1); // +1 because vm_arena
+//     if (new_alloc == NULL) {
+//         return NULL;
+//     }
+//     vm_arena* new_arena = (vm_arena*) new_alloc;
+//     new_arena->size = ALIGN_UP(size, PAGE_SIZE); // size without the meta data page
+//     new_arena->base = (uintptr_t)((void*) new_arena + PAGE_SIZE + HHDM_OFFSET);
+//     new_arena->flags = flags;
+//     new_arena->next = NULL;
+//
+//     spinlock_acquire(&pagemap->lock);
+//     uint64_t counter = 0;
+//     vm_arena* current = pagemap->arenas;
+//     if (current != NULL) {
+//         for (;current != NULL;) {
+//             if (current->next == NULL) {
+//                 current->next = new_arena;
+//                 pagemap->arena_count = counter + 1;
+//                 break;
+//             }
+//             current = current->next;
+//             counter++;
+//         }
+//     } else {
+//         pagemap->arenas = new_arena;
+//         pagemap->arena_count = 1;
+//     }
+//     spinlock_release(&pagemap->lock); 
+//     
+//     if (!vmm_map(pagemap, new_arena->base, (uintptr_t)((void*)new_arena + PAGE_SIZE), flags)) {
+//         panic("Failed to map new object");
+//     }
+//
+//     klog("VMM ::", "End of vmm_alloc");
+//     return (void*) new_arena->base;
+// }
 
-    uint64_t counter = 0;
-    current = pagemap->objs;
-    for (;current != NULL;) {
-        if (current->next == NULL) {
-            current->next = new_obj;
-            pagemap->obj_count = counter + 1;
-            break;
-        }
-        current = current->next;
-        counter++;
-    }
-    if (!vmm_map(pagemap, (uintptr_t)new_obj->base + 0x8ull, (uintptr_t) ((void*)new_obj + PAGE_SIZE), flags)) {
-        panic("Failed to map new object");
-    }
-
-    return (void*) new_obj->base + 0x8ull;
-}
-
-void vmm_free(PageMap* pagemap, void* addr) {
-    vm_obj* current = pagemap->objs;
-    for (;current != NULL;) {
-        if (current->base == (uintptr_t)addr) {
-            spinlock_acquire(&pagemap->lock);
-            // found the object
-            if (!vmm_unmap(pagemap, (uintptr_t)addr, true)) {
-                panic("Failed to unmap object");
-            }
-            current->flags &= ~PTE_PRESENT;
-
-            if (pagemap->obj_count >= MAXIMUM_VM_OBJECT) {
-                // TODO: free the object in linked list
-            }
-            spinlock_release(&pagemap->lock);
-            break;
-        }
-        current = current->next;
-    }
-}
+// void vmm_free(PageMap* pagemap, void* addr) {
+//     vm_arena* current = pagemap->arenas;
+//     for (;current != NULL;) {
+//         if (current->base == (uintptr_t)addr) {
+//             spinlock_acquire(&pagemap->lock);
+//             // found the object
+//             if (!vmm_unmap(pagemap, (uintptr_t)addr, true)) {
+//                 panic("Failed to unmap object");
+//             }
+//             current->flags &= ~PTE_PRESENT;
+//
+//             if (pagemap->arena_count >= MAXIMUM_VM_OBJECT) {
+//                 // TODO: free the object in linked list
+//             }
+//             spinlock_release(&pagemap->lock);
+//             break;
+//         }
+//         current = current->next;
+//     }
+// }
 
 // uint64_t convert_flags(uint64_t flags) {
 //     uint64_t new_flags = 0;
@@ -333,7 +374,7 @@ void vmm_free(PageMap* pagemap, void* addr) {
 
 void vmm_init() {
     bool ok = false;
-    vmm_kernel = KALLOC(PageMap);
+    vmm_kernel = slab_alloc(sizeof(PageMap));
     if (vmm_kernel == NULL) {
         panic("Failed to allocate kernel root pagemap");
     }
@@ -341,7 +382,7 @@ void vmm_init() {
     vmm_kernel->lock = (spinlock_t) SPINLOCK_INIT;
     vmm_kernel->lower_lvl = pmm_alloc(1);
     if (vmm_kernel->lower_lvl == NULL) {
-        kfree(vmm_kernel);
+        slab_free(vmm_kernel);
         panic("Failed to allocate kernel pml4");
     }
     vmm_kernel->lower_lvl = (void*)vmm_kernel->lower_lvl + HHDM_OFFSET;
@@ -405,7 +446,7 @@ void vmm_init() {
     }
     klog("VMM ::", "data mapped");
 
-    for(uintptr_t i = 0x1000; i < 0x100000000; i += PAGE_SIZE) {
+    for(uintptr_t i = 0x1000; i < INITIAL_MAPPING_COUNT; i += PAGE_SIZE) {
         if (!vmm_map(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
             panic("Failed to map kernel data");
         }
@@ -424,12 +465,12 @@ void vmm_init() {
         uintptr_t start = ALIGN_UP(entry->base, PAGE_SIZE),
                   end = ALIGN_DOWN(entry->base + entry->length, PAGE_SIZE);
 
-        if (end <= 0x100000000) {
+        if (end <= INITIAL_MAPPING_COUNT) {
             continue;
         }
 
         for (uintptr_t i = start; i < end; i += PAGE_SIZE) {
-            if (i < 0x100000000) {
+            if (i < INITIAL_MAPPING_COUNT) {
                 continue;
             }
 
@@ -444,7 +485,6 @@ void vmm_init() {
     }
 
     vmm_switch_pml(vmm_kernel);
-    klog("VMM ::", "Switched to kernel PML");
 
     klog("VMM ::", "Initialized VMM");
 }

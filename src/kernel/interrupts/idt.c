@@ -64,7 +64,7 @@ char* exception_messages[] = {
 
 // ISRs
 execution_context* isr_handler(execution_context* frame) {
-    void (*handler)(execution_context * frame);
+    execution_context* (*handler)(execution_context * frame);
     handler = irq_handlers[frame->int_number];
     if (handler) {
         handler(frame);
@@ -94,8 +94,7 @@ execution_context* irq_handler(execution_context* frame) {
     return frame;
 }
 
-void isr_install_handler(
-    uint8_t offset, execution_context* (*handler)(execution_context* frame)) {
+void isr_install_handler(uint8_t offset, execution_context* (*handler)(execution_context* frame)) {
     isr_handlers[offset] = handler;
 }
 

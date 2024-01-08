@@ -4,6 +4,7 @@
 #include "../lib/print.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
+#include "../mm/vmm.h"
 #include "../scheduler/process.h"
 #include "stdbool.h"
 
@@ -33,7 +34,7 @@ process_t* process_create(char* restrict name, void* restrict function(void*),
     thread_t* thread = thread_add(process, name, &(*function), arg);
 
     // TODO: vmm_create()
-    process->root_page_table = NULL;
+    process->pagemap = vmm_new_pagemap();
 
     process_add(process);
     enable_interrupts();
@@ -62,6 +63,8 @@ void process_add(process_t* process) {
 process_t* process_get_list() { return processes_list; }
 
 process_t* process_get_current() { return current_process; }
+
+PageMap* process_get_pagemap() { return process_get_current()->pagemap; }
 
 void process_set_current(process_t* p) { current_process = p; }
 

@@ -15,6 +15,8 @@ void irq_install_handler(
 
 void irq_uninstall_handler(uint8_t offset);
 
+void isr_install_handler(uint8_t offset, execution_context* (*handler)(execution_context* frame));
+
 // CPU exceptions
 extern void isr0(void);
 extern void isr1(void);

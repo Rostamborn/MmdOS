@@ -1,4 +1,7 @@
+#ifndef KERNEL_PMM_H
+#define KERNEL_PMM_H
 #include <stdint.h>
+#include "../limine.h"
 
 extern struct limine_memmap_request memmap_req;
 
@@ -13,3 +16,5 @@ void* pmm_alloc(uint64_t n_pages);
 void* pmm_alloc_nozero(uint64_t n_pages);
 
 void pmm_free(void* addr, uint64_t n_pages);
+
+#endif

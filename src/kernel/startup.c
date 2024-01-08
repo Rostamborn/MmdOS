@@ -5,13 +5,16 @@
 #include "interrupts/idt.h"
 #include "interrupts/keyboard.h"
 #include "interrupts/timer.h"
-#include "mm/pmm.h"
-#include "mm/vmm.h"
-#include "mm/slab.h"
 #include "lib/print.h"
+#include "mm/kheap.h"
+#include "mm/pmm.h"
+#include "mm/slab.h"
+#include "mm/vmm.h"
+#include "lib/alloc.h"
 #include "terminal/limine_term.h"
 #include "terminal/prompt.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own functions*
 
@@ -22,8 +25,8 @@ void _start(void) {
     prompt_init();
     keyboard_init();
     pmm_init();
-    vmm_init();
     slab_init();
+    vmm_init();
     // scheduler_init();
     timer_init();
     // for demonstration ---
@@ -31,21 +34,15 @@ void _start(void) {
     // process_create("adder2", &add_one_to_y, NULL);
     // thread_add(p, "second thread of adder1", &add_one_to_z, NULL);
     // ---------------------
-    PageMap* pagemap = vmm_new_pagemap();
-    execution_context* ptr = (execution_context*)vmm_alloc(pagemap, sizeof(execution_context), PTE_PRESENT | PTE_WRITABLE, NULL);
-    if (ptr == NULL) {
-        kprintf("ptr is null\n");
-    }
-    kprintf("ptr: %p\n", ptr);
-    ptr->int_number = 22; 
-    kprintf("ptr number: %d\n", ptr->int_number);
-    vmm_free(pagemap, ptr);
-
-    int* ptr2 = (int*)vmm_alloc(pagemap, sizeof(int), PTE_PRESENT | PTE_WRITABLE, NULL);
-    kprintf("ptr2: %p\n", ptr2);
-    *ptr2 = 1234321;
-    kprintf("ptr2 number: %d\n", *ptr2);
-    vmm_free(pagemap, ptr2);
+    //
+    uint8_t* ptr = (uint8_t*) kalloc(sizeof(uint8_t) * 5000);
+    ptr[0] = 0x12;
+    kprintf("addr %p = %x\n", ptr, ptr[0]);
+    kprintf("number of arenas: %d\n", vmm_kernel->arena_count);
+    uint8_t* ptr1 = (uint8_t*) kalloc(sizeof(uint8_t) * 6000);
+    ptr1[0] = 0x12;
+    kprintf("addr %p = %x\n", ptr1, ptr1[0]);
+    kprintf("number of arenas: %d\n", vmm_kernel->arena_count);
 
     // hcf(); // halt, catch fire
     for (;;)

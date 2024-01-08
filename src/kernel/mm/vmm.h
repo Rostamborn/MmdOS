@@ -10,6 +10,7 @@
 #endif
 
 #define MAXIMUM_VM_OBJECT 64
+#define INITIAL_MAPPING_COUNT 0x100000
 
 #define NINE_BITS 0x1ffull
 // Page Table Entry
@@ -31,21 +32,26 @@
 #define VM_EXEC (1ull << 1ull)
 #define VM_USER (1ull << 2ull)
 
-typedef struct vm_obj {
+typedef struct vm_arena {
     uintptr_t base;
     uint64_t size;
     uint64_t flags;
-    struct vm_obj* next;
-} vm_obj;
+    uint64_t offset;
+    struct vm_arena* next;
+} vm_arena;
 
 typedef struct {
     spinlock_t lock;
-    uint64_t obj_count;
+    uint64_t arena_count;
     uint64_t*  lower_lvl;
-    vm_obj* objs;
+    vm_arena* arenas;
 } PageMap;
 
+extern PageMap* vmm_kernel;
+
 void vmm_init();
+
+PageMap* vmm_get_pagemap();
 
 void vmm_destroy_pagemap(PageMap* pagemap);
 
@@ -56,9 +62,9 @@ bool vmm_map(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
 
 bool vmm_unmap(PageMap* pagemap, uintptr_t virt, bool locked);
 
-void* vmm_alloc(PageMap* pagemap, uint64_t size, uint64_t flags, void* arg);
+// void* vmm_alloc(PageMap* pagemap, uint64_t size, uint64_t flags, void* arg);
 
-void vmm_free(PageMap* pagemap, void* addr);
+// void vmm_free(PageMap* pagemap, void* addr);
 
 bool vmm_set_page_flag(PageMap* pagemap, uintptr_t virt, uint64_t flag, bool locked);
 

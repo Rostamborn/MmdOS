@@ -29,6 +29,22 @@ static inline void hcf(void) {
     }
 }
 
+static inline uint64_t read_cr3() {
+    uint64_t val;
+    asm volatile("mov %%cr3, %0\n\t" : "=r"(val));
+    return val;
+}
+
+static inline void write_cr3(uint64_t val) {
+    asm volatile("mov %0, %%cr3\n\t" ::"r"(val));
+}
+
+static inline void flush_tlb_cache() {
+    // asm volatile("mov %%cr3, %%rax\n\t"
+    //              "mov %%rax, %%cr3\n\t" :::"rax");
+    write_cr3(read_cr3());
+}
+
 int serial_init();
 
 void log_to_serial(char* string);
