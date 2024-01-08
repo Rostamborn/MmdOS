@@ -36,7 +36,7 @@ bool switch_threads(process_t* process) {
                 process->running_thread->wake_time = 0;
 
                 // TODO: in future check if it should be blocked
-                process->status = READY;
+                process->running_thread->status = READY;
                 return true;
             }
             break;
@@ -152,7 +152,15 @@ execution_context* schedule(execution_context* restrict context) {
             break;
 
         case SLEEPING:
-            /* code */
+            uint64_t uptime = timer_get_uptime();
+
+            if (uptime > current_process->wake_time) {
+                current_process->wake_time = 0;
+
+                // TODO: in future check if it should be blocked
+                current_process->status = READY;
+                still_scheduling = false;
+            }
             break;
 
         case DEAD:
