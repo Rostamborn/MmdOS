@@ -1,5 +1,6 @@
 #include "scheduler.h"
 #include "../cpu/cpu.h"
+#include "../interrupts/timer.h"
 #include "../lib/logger.h"
 #include "../lib/panic.h"
 #include "../lib/spinlock.h"
@@ -29,7 +30,15 @@ bool switch_threads(process_t* process) {
             break;
 
         case SLEEPING:
-            // TODO: handle sleeping
+            uint64_t uptime = timer_get_uptime();
+
+            if (uptime > process->running_thread->wake_time) {
+                process->running_thread->wake_time = 0;
+
+                // TODO: in future check if it should be blocked
+                process->status = READY;
+                return true;
+            }
             break;
 
         case DEAD:
@@ -51,6 +60,23 @@ bool switch_threads(process_t* process) {
         }
     }
     return false;
+}
+
+bool stay_idle(process_t* process) {
+    process = process->next;
+    while (process != NULL) {
+        if (process->status != SLEEPING) {
+            return false;
+        }
+        for (thread_t* scan = process->threads; scan != NULL;
+             scan = scan->next) {
+            if (scan->status != SLEEPING) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 execution_context* schedule(execution_context* restrict context) {
@@ -151,9 +177,17 @@ execution_context* schedule(execution_context* restrict context) {
                 continue;
             }
 
-            if ((current_process->pid == 1) &&
-                (current_process->next != NULL)) {
-                still_scheduling = true;
+            if ((current_process->pid == 1) && stay_idle(current_process)) {
+                still_scheduling = false;
+            }
+
+            if (current_process->running_thread->status == DEAD ||
+                current_process->running_thread->status == SLEEPING) {
+                bool success = switch_threads(current_process);
+                thread_switched = true;
+                if (!success) {
+                    still_scheduling = true;
+                }
             }
         }
 

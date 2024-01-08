@@ -28,7 +28,10 @@ void _start(void) {
     // for demonstration ---
     process_t* p = process_create("adder1", &add_one_to_x, NULL);
     process_create("adder2", &add_one_to_y, NULL);
-    thread_add(p, "second thread of adder1", &add_one_to_z, NULL);
+    thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z, NULL);
+    // set thread to sleep 10 seconds
+    t->status = SLEEPING;
+    t->wake_time = timer_get_uptime() + (10 * 1000);
     // ---------------------
 
     // hcf(); // halt, catch fire
