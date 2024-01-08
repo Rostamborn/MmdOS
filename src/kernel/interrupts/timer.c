@@ -1,7 +1,7 @@
 #include "src/kernel/interrupts/timer.h"
 #include "src/kernel/interrupts/idt.h"
 #include "src/kernel/scheduler/scheduler.h"
-#include <stdint.h>
+
 // I/O port     Usage
 // *** Channel 0 is directly connected to IRQ0 ***
 #define CH0_DATA 0x40 // Channel 0 data port (read/write)
@@ -9,10 +9,20 @@
 #define CH2_DATA 0x42 // Channel 2 data port (read/write)
 #define MODE_CMD 0x43 // Mode/Command register (write only, a read is ignored)
 
+// the amount of time the system has been running in milli-seconds.
+// TODO curent algorithm has severe problems, find a better way!
+uint64_t uptime = 0;
+
+// amount of time between interrupts in milli-seconds
+uint64_t quantum = 10;
+
 execution_context* timer_handler(execution_context* frame) {
+    uptime += quantum;
     frame = schedule(frame);
     return frame;
 }
+
+uint64_t timer_get_uptime() { return uptime; }
 
 void timer_init() {
     irq_install_handler(0, &timer_handler);

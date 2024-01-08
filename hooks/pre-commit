@@ -1,33 +1,3 @@
 #!/bin/bash
 
-RED='\033[0;31m'
-NC='\033[0m' # No Color
-
-echo "checking files format ..."
-
-#changes=$(git diff HEAD --staged | grep ^+ | grep -Ev '^(\+\+\+|---)' | cut -c 2-) 
-files=$(git diff --staged --name-only | grep ".*\.[c|h]$") 
-
-echo "file to check are: "
-echo $files
-
-for file in $files
-do 
-  echo "checking $file"
-
-  content=$(git show :$file)
-  clang-format --dry-run --Werror -style=file <<< $content
-  exit_code=$?
-  if [ $exit_code -ne 0 ]; then
-  echo -e "${RED}there are staged file(s) with wrong format!${NC}"
-  echo -e "${RED}please run \"make format\"!${NC}"
-  echo -e "${RED}or stage fomatted files if you have already formatted${NC}"
-  exit 1
-  fi
-  
-done
-
-echo "file(s) formatting check passed!"
-
-
-
+make format

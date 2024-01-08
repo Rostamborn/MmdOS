@@ -45,6 +45,7 @@ process_t* process_create(char* restrict name, void* restrict function(void*),
 void process_add(process_t* process) {
     process_t* iterator = processes_list;
 
+    // TODO check if process should move to ready or blocked state
     process->status = READY;
 
     if (iterator == NULL) {
