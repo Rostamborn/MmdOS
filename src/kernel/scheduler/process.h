@@ -2,10 +2,10 @@
 #define KERNEL_PROCESS_DEF
 
 #include "../cpu/cpu.h"
+#include "../mm/vmm.h"
 #include "stddef.h"
 #include "stdint.h"
 #include "thread.h"
-#include "../mm/vmm.h"
 
 #define PROCESS_NAME_MAX_LEN 64
 #define MAX_RESOURCE_IDS 255
@@ -14,7 +14,7 @@
 typedef struct process_t {
     size_t   pid;
     status_t status;
-    PageMap*    pagemap;
+    PageMap* pagemap;
     // stores system-wide ids to keep track of resources
     size_t            resources[MAX_RESOURCE_IDS];
     char              name[PROCESS_NAME_MAX_LEN];

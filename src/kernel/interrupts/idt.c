@@ -94,7 +94,8 @@ execution_context* irq_handler(execution_context* frame) {
     return frame;
 }
 
-void isr_install_handler(uint8_t offset, execution_context* (*handler)(execution_context* frame)) {
+void isr_install_handler(
+    uint8_t offset, execution_context* (*handler)(execution_context* frame)) {
     isr_handlers[offset] = handler;
 }
 

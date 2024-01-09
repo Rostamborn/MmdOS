@@ -16,18 +16,17 @@ static volatile struct limine_kernel_address_request kaddr_req = {
 
 PageMap* vmm_kernel = NULL;
 
-typedef char linker_addr[];
+typedef char       linker_addr[];
 extern linker_addr _text_start_addr, _text_end_addr;
 extern linker_addr _rodata_start_addr, _rodata_end_addr;
 extern linker_addr _data_start_addr, _data_end_addr;
 
-PageMap* vmm_get_pagemap() {
-    return vmm_kernel;
-}
+PageMap* vmm_get_pagemap() { return vmm_kernel; }
 
-static uint64_t* pagemap_next(uint64_t* lower_lvl, uint64_t offset, bool alloc) {
+static uint64_t* pagemap_next(uint64_t* lower_lvl, uint64_t offset,
+                              bool alloc) {
     if (lower_lvl[offset] & PTE_PRESENT) {
-        return (uint64_t*)(PTE_GET_ADDR(lower_lvl[offset]) + HHDM_OFFSET);
+        return (uint64_t*) (PTE_GET_ADDR(lower_lvl[offset]) + HHDM_OFFSET);
     }
 
     if (!alloc) {
@@ -41,8 +40,10 @@ static uint64_t* pagemap_next(uint64_t* lower_lvl, uint64_t offset, bool alloc) 
     }
 
     // not sure bout the PTE_USER flag
-    lower_lvl[offset] = (uint64_t) next_lvl | PTE_PRESENT | PTE_WRITABLE /* | PTE_USER */;
-    return (uint64_t*) (next_lvl + HHDM_OFFSET); // HHDM_OFFSET is the higher half offset
+    lower_lvl[offset] =
+        (uint64_t) next_lvl | PTE_PRESENT | PTE_WRITABLE /* | PTE_USER */;
+    return (uint64_t*) (next_lvl +
+                        HHDM_OFFSET); // HHDM_OFFSET is the higher half offset
 }
 
 static void lvl_destroy(PageMap* pagemap, uint16_t start, uint16_t end,
@@ -65,7 +66,8 @@ static void lvl_destroy(PageMap* pagemap, uint16_t start, uint16_t end,
 
 void vmm_destroy_pagemap(PageMap* pagemap) {
 
-    if (!vmm_unmap(pagemap, (uintptr_t)pagemap->lower_lvl + HHDM_OFFSET, false)) {
+    if (!vmm_unmap(pagemap, (uintptr_t) pagemap->lower_lvl + HHDM_OFFSET,
+                   false)) {
         panic("failed to unmap pagemap");
     }
     // maybe unmap first
@@ -78,15 +80,17 @@ void vmm_switch_pml(PageMap* pagemap) {
     for (uint64_t i = 256; i < 512; i++) {
         pagemap->lower_lvl[i] = vmm_kernel->lower_lvl[i];
     }
-    asm volatile("mov %0, %%cr3"
-                 :
-                 : "r"((void*) pagemap->lower_lvl - HHDM_OFFSET) // getting phys addr by subracting HHDM_OFFSET
-                 : "memory");
+    asm volatile(
+        "mov %0, %%cr3"
+        :
+        : "r"((void*) pagemap->lower_lvl -
+              HHDM_OFFSET) // getting phys addr by subracting HHDM_OFFSET
+        : "memory");
     klog("VMM ::", "Switched to PML: %p", pagemap);
 }
 
 bool vmm_map(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
-                  uint64_t flags) {
+             uint64_t flags) {
     spinlock_acquire(&pagemap->lock);
 
     bool     ok = false;
@@ -130,6 +134,7 @@ cleanup:
     // if (ok) {
     //     klog("VMM ::", "vmm_map_page: %p -> %p", virt, physical);
     // }
+
     spinlock_release(&pagemap->lock);
     return ok;
 }
@@ -175,7 +180,8 @@ cleanup:
     return ok;
 }
 
-bool vmm_set_page_flag(PageMap* pagemap, uintptr_t virt, uint64_t flag, bool locked) {
+bool vmm_set_page_flag(PageMap* pagemap, uintptr_t virt, uint64_t flag,
+                       bool locked) {
     if (!locked) {
         spinlock_acquire(&pagemap->lock);
     }
@@ -264,7 +270,8 @@ PageMap* vmm_new_pagemap() {
         goto cleanup;
     }
 
-    if (!vmm_map(vmm_kernel, (uintptr_t)pagemap->lower_lvl + HHDM_OFFSET, (uintptr_t)pagemap->lower_lvl, PTE_PRESENT | PTE_WRITABLE)) {
+    if (!vmm_map(vmm_kernel, (uintptr_t) pagemap->lower_lvl + HHDM_OFFSET,
+                 (uintptr_t) pagemap->lower_lvl, PTE_PRESENT | PTE_WRITABLE)) {
         panic("Failed to map pagemap");
     }
     // pagemap->lower_lvl = (void*)pagemap->lower_lvl + HHDM_OFFSET;
@@ -283,7 +290,6 @@ cleanup:
     return NULL;
 }
 
-
 void vmm_init() {
     bool ok = false;
     vmm_kernel = slab_alloc(sizeof(PageMap));
@@ -297,7 +303,7 @@ void vmm_init() {
         slab_free(vmm_kernel);
         panic("Failed to allocate kernel pml4");
     }
-    vmm_kernel->lower_lvl = (void*)vmm_kernel->lower_lvl + HHDM_OFFSET;
+    vmm_kernel->lower_lvl = (void*) vmm_kernel->lower_lvl + HHDM_OFFSET;
 
     // allocate the kernel page table(higher half)
     for (uint64_t i = 256; i < 512; i++) {
@@ -315,24 +321,18 @@ void vmm_init() {
     klog("VMM ::", "_data_start_addr: %x", _data_start_addr);
     klog("VMM ::", "_data_end_addr: %x", _data_end_addr);
 
-    uintptr_t text_start =
-                  ALIGN_DOWN((uintptr_t)_text_start_addr, PAGE_SIZE),
-              rodata_start = ALIGN_DOWN((uintptr_t)_rodata_start_addr,
-                                        PAGE_SIZE),
-              data_start =
-                  ALIGN_DOWN((uintptr_t)_data_start_addr, PAGE_SIZE),
-              text_end =
-                  ALIGN_UP((uintptr_t)_text_end_addr, PAGE_SIZE),
-              rodata_end =
-                  ALIGN_UP((uintptr_t)_rodata_end_addr, PAGE_SIZE),
-              data_end =
-                  ALIGN_UP((uintptr_t)_data_end_addr, PAGE_SIZE);
+    uintptr_t text_start = ALIGN_DOWN((uintptr_t) _text_start_addr, PAGE_SIZE),
+              rodata_start =
+                  ALIGN_DOWN((uintptr_t) _rodata_start_addr, PAGE_SIZE),
+              data_start = ALIGN_DOWN((uintptr_t) _data_start_addr, PAGE_SIZE),
+              text_end = ALIGN_UP((uintptr_t) _text_end_addr, PAGE_SIZE),
+              rodata_end = ALIGN_UP((uintptr_t) _rodata_end_addr, PAGE_SIZE),
+              data_end = ALIGN_UP((uintptr_t) _data_end_addr, PAGE_SIZE);
 
     klog("VMM ::", "text_start: %x", text_start);
     klog("VMM ::", "text_end: %x", text_end);
     klog("VMM ::", "rodata_start: %x", rodata_start);
     klog("VMM ::", "data_start: %x", data_start);
-
 
     for (uintptr_t i = text_start; i < text_end; i += PAGE_SIZE) {
         uintptr_t physical = i - kaddr->virtual_base + kaddr->physical_base;
@@ -352,17 +352,19 @@ void vmm_init() {
 
     for (uintptr_t i = data_start; i < data_end; i += PAGE_SIZE) {
         uintptr_t physical = i - kaddr->virtual_base + kaddr->physical_base;
-        if (!vmm_map(vmm_kernel, i, physical, PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE)) {
+        if (!vmm_map(vmm_kernel, i, physical,
+                     PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE)) {
             panic("Failed to map kernel data");
         }
     }
     klog("VMM ::", "data mapped");
 
-    for(uintptr_t i = 0x1000; i < INITIAL_MAPPING_COUNT; i += PAGE_SIZE) {
+    for (uintptr_t i = 0x1000; i < INITIAL_MAPPING_COUNT; i += PAGE_SIZE) {
         if (!vmm_map(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
             panic("Failed to map kernel data");
         }
-        if (!vmm_map(vmm_kernel, i + HHDM_OFFSET, i, PTE_PRESENT | PTE_WRITABLE)) {
+        if (!vmm_map(vmm_kernel, i + HHDM_OFFSET, i,
+                     PTE_PRESENT | PTE_WRITABLE)) {
             panic("Failed to map kernel data");
         }
     }
@@ -390,7 +392,8 @@ void vmm_init() {
                 panic("Failed to map usable memory");
             }
 
-            if (!vmm_map(vmm_kernel, i + HHDM_OFFSET, i, PTE_PRESENT | PTE_WRITABLE)) {
+            if (!vmm_map(vmm_kernel, i + HHDM_OFFSET, i,
+                         PTE_PRESENT | PTE_WRITABLE)) {
                 panic("Failed to map usable memory");
             }
         }

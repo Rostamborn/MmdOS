@@ -1,8 +1,8 @@
 #ifndef KHEAP_H
 #define KHEAP_H
 
-#include <stdint.h>
 #include "vmm.h"
+#include <stdint.h>
 
 typedef struct {
     vm_arena* arena;

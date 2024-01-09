@@ -1,5 +1,5 @@
-#include "lib/logger.h"
 #include "demo.h"
+#include "lib/logger.h"
 
 void add_one_to_x(void* dummy) {
     int x = 0;

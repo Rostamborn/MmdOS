@@ -10,10 +10,9 @@
 #include "mm/kheap.h"
 #include "mm/pmm.h"
 #include "mm/slab.h"
-#include "demo.h"
 #include "mm/vmm.h"
-#include "scheduler/scheduler.h"
 #include "scheduler/process.h"
+#include "scheduler/scheduler.h"
 #include "terminal/limine_term.h"
 #include "terminal/prompt.h"
 #include <stdbool.h>
