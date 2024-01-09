@@ -10,7 +10,7 @@
 #endif
 
 #define MAXIMUM_VM_OBJECT 64
-#define INITIAL_MAPPING_COUNT 0x100000
+#define INITIAL_MAPPING_COUNT 0x100000000/* 0x100000 */
 
 #define NINE_BITS 0x1ffull
 // Page Table Entry

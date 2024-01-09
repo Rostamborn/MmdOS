@@ -41,8 +41,8 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     spinlock_t lock = SPINLOCK_INIT;
     spinlock_acquire(&lock);
 
-    execution_context* context = kalloc(sizeof(execution_context));
-    thread_t*          thread = kalloc(sizeof(thread_t));
+    execution_context* context = (execution_context*)kalloc(sizeof(execution_context));
+    thread_t*          thread = (thread_t*)kalloc(sizeof(thread_t));
 
     thread->context = context;
 
@@ -72,7 +72,7 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
         0x202; // resets all bits but 2 and 9.
                // 2 for legacy reasons and 9 for interrupts.
     thread->context->iret_cs = 0x28;
-    thread->context->iret_rip = (uint64_t) thread_execution_wrapper;
+    thread->context->iret_rip = (uint64_t)thread_execution_wrapper;
     thread->context->rdi = (uint64_t) function;
     thread->context->rsi = (uint64_t) arg;
     thread->context->rbp = 0;

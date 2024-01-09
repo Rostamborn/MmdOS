@@ -31,7 +31,7 @@ void _start(void) {
     pmm_init();
     // slab_init();
     vmm_init();
-    // scheduler_init();
+    scheduler_init();
     timer_init();
 
     // for demonstration ---
@@ -46,19 +46,34 @@ void _start(void) {
     // p2->status = SLEEPING;
     // p2->wake_time = timer_get_uptime() + (10 * 1000);
     // ---------------------
+    execution_context* context = (execution_context*)kalloc(sizeof(execution_context));
+    context->iret_cs = 0x20;
+    context->iret_ss = 0x30;
+    context->iret_rip = 0x40;
+    thread_t*          thread = (thread_t*)kalloc(sizeof(thread_t));
+    kprintf("context addr: %p\n", context);
+    kprintf("cs: %x, ss: %x, rip: %x\n", context->iret_cs, context->iret_ss, context->iret_rip);
+    thread->context = context;
+    kprintf("thread addr: %p\n", thread);
+    kprintf("cs: %x, ss: %x, rip: %x\n", thread->context->iret_cs, thread->context->iret_ss, thread->context->iret_rip);
 
-    uint8_t* ptr = (uint8_t*) kalloc(sizeof(uint8_t) * 5000);
-    ptr[0] = 12;
-    kprintf("addr %p = %d\n", ptr, ptr[0]);
-    kprintf("number of arenas: %d\n", vmm_kernel->arena_count);
-    kfree(ptr);
-    kprintf("going to allocate 6000 bytes\n");
-    uint8_t* ptr1 = (uint8_t*) kalloc(sizeof(uint8_t) * 6000);
-    ptr1[0] = 18;
-    kprintf("addr %p = %d\n", ptr1, ptr1[0]);
-    kprintf("number of arenas: %d\n", vmm_kernel->arena_count);
-    kfree(ptr1);
-
+    // execution_context* context = (execution_context*) kalloc(sizeof(execution_context));
+    // kprintf("context addr: %p\n", context);
+    // context->iret_cs = 0x28;
+    // kprintf("context->iret_cs: %x\n", context->iret_cs);
+    // kprintf("context addr: %p\n", context);
+    // uint8_t* ptr = (uint8_t*) kalloc(sizeof(uint8_t) * 5000);
+    // ptr[0] = 12;
+    // kprintf("addr %p = %d\n", ptr, ptr[0]);
+    // kprintf("number of arenas: %d\n", vmm_kernel->arena_count);
+    // kfree(ptr);
+    // kprintf("going to allocate 6000 bytes\n");
+    // uint8_t* ptr1 = (uint8_t*) kalloc(sizeof(uint8_t) * 6000);
+    // ptr1[0] = 18;
+    // kprintf("addr %p = %d\n", ptr1, ptr1[0]);
+    // kprintf("number of arenas: %d\n", vmm_kernel->arena_count);
+    // kfree(ptr1);
+    //
     // hcf(); // halt, catch fire
     for (;;)
         ;

@@ -127,9 +127,9 @@ bool vmm_map(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
 cleanup:
     // TODO: do some TLB stuff
 
-    if (ok) {
-        klog("VMM ::", "vmm_map_page: %p -> %p", virt, physical);
-    }
+    // if (ok) {
+    //     klog("VMM ::", "vmm_map_page: %p -> %p", virt, physical);
+    // }
     spinlock_release(&pagemap->lock);
     return ok;
 }
