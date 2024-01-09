@@ -35,7 +35,7 @@ void memcpy(void* restrict dest, const void* restrict src, uint64_t size) {
     }
 }
 
-void kstrcpy(char dest[], char* src, uint32_t size) {
+void kstrcpy(char*restrict dest, char*restrict src, uint32_t size) {
     for (uint32_t i = 0; i < size; i++) {
         dest[i] = *src;
         src++;

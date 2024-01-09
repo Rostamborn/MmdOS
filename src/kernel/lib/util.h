@@ -60,4 +60,4 @@ void memset(void* ptr, uint8_t value, uint64_t size);
 
 void memcpy(void* restrict dest, const void* restrict src, uint64_t size);
 
-void kstrcpy(char dest[], char* src, uint32_t size);
+void kstrcpy(char*restrict dest, char*restrict src, uint32_t size);

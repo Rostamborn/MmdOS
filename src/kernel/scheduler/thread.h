@@ -29,8 +29,8 @@ typedef struct thread_t {
 } thread_t;
 
 // create a thread but will not add it to process yet
-thread_t* thread_add(struct process_t* restrict process, char* restrict name,
-                     void* restrict function(void*), void* restrict arg);
+thread_t* thread_add(struct process_t* process, char* name,
+                     void* function(void*), void* arg);
 
 void thread_delete(struct process_t* process, thread_t* thread);
 
