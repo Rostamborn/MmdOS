@@ -1,7 +1,7 @@
 #ifndef KERNEL_PMM_H
 #define KERNEL_PMM_H
-#include <stdint.h>
 #include "../limine.h"
+#include <stdint.h>
 
 extern struct limine_memmap_request memmap_req;
 

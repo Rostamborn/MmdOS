@@ -41,10 +41,25 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     spinlock_t lock = SPINLOCK_INIT;
     spinlock_acquire(&lock);
 
-    execution_context* context = kalloc(sizeof(execution_context));
-    thread_t*          thread = kalloc(sizeof(thread_t));
+    execution_context* context =
+        (execution_context*) kalloc(sizeof(execution_context));
+    thread_t* thread = (thread_t*) kalloc(sizeof(thread_t));
 
+    thread->stack = alloc_stack();
+    context->iret_ss = 0x30;
+    context->iret_rsp = (uint64_t) thread->stack;
+    context->iret_flags = 0x202; // resets all bits but 2 and 9.
+                                 // 2 for legacy reasons and 9 for interrupts.
+    context->iret_cs = 0x28;
+    context->iret_rip = (uint64_t) thread_execution_wrapper;
+    context->rdi = (uint64_t) function;
+    context->rsi = (uint64_t) arg;
+    context->rbp = 0;
+    klog("THREAD ::", "cs: %x, ss: %x, ip: %x", context->iret_cs,
+         context->iret_ss, context->iret_rip);
     thread->context = context;
+    klog("THREAD ::", "cs: %x, ss: %x, ip: %x", thread->context->iret_cs,
+         thread->context->iret_ss, thread->context->iret_rip);
 
     if (process->threads == NULL) {
         process->threads = thread;
@@ -65,17 +80,6 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     // TODO check if process should move to ready or blocked state
     thread->status = READY;
     thread->next = NULL;
-    thread->stack = alloc_stack();
-    thread->context->iret_ss = 0x30;
-    thread->context->iret_rsp = (uint64_t) thread->stack;
-    thread->context->iret_flags =
-        0x202; // resets all bits but 2 and 9.
-               // 2 for legacy reasons and 9 for interrupts.
-    thread->context->iret_cs = 0x28;
-    thread->context->iret_rip = (uint64_t) thread_execution_wrapper;
-    thread->context->rdi = (uint64_t) function;
-    thread->context->rsi = (uint64_t) arg;
-    thread->context->rbp = 0;
 
     spinlock_release(&lock);
     return thread;

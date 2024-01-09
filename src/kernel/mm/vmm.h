@@ -16,7 +16,7 @@
 // Page Table Entry
 #define PTE_PRESENT (1ull << 0ull)
 #define PTE_WRITABLE (1ull << 1ull) // everything is always readable
-#define PTE_USER (1ull << 2ull) // if set, user can access
+#define PTE_USER (1ull << 2ull)     // if set, user can access
 // #define PTE_WRITETHROUGH (1ull << 3ull) // these are related to PAT
 // #define PTE_CACHE_DISABLED (1ull << 4ull)
 // #define PTE_PAT (1ull << 7ull)
@@ -33,20 +33,20 @@
 #define VM_USER (1ull << 2ull)
 
 typedef struct vm_arena {
-    uint64_t id;
-    uintptr_t base;
-    uint64_t size;
-    uint64_t flags;
-    uint64_t offset;
-    uint64_t allocated;
+    uint64_t         id;
+    uintptr_t        base;
+    uint64_t         size;
+    uint64_t         flags;
+    uint64_t         offset;
+    uint64_t         allocated;
     struct vm_arena* next;
 } vm_arena;
 
 typedef struct {
     spinlock_t lock;
-    uint64_t arena_count;
+    uint64_t   arena_count;
     uint64_t*  lower_lvl;
-    vm_arena* arenas;
+    vm_arena*  arenas;
 } PageMap;
 
 extern PageMap* vmm_kernel;
@@ -60,7 +60,7 @@ void vmm_destroy_pagemap(PageMap* pagemap);
 void vmm_switch_pml(PageMap* pagemap);
 
 bool vmm_map(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
-                  uint64_t flags);
+             uint64_t flags);
 
 bool vmm_unmap(PageMap* pagemap, uintptr_t virt, bool locked);
 
@@ -68,7 +68,8 @@ bool vmm_unmap(PageMap* pagemap, uintptr_t virt, bool locked);
 
 // void vmm_free(PageMap* pagemap, void* addr);
 
-bool vmm_set_page_flag(PageMap* pagemap, uintptr_t virt, uint64_t flag, bool locked);
+bool vmm_set_page_flag(PageMap* pagemap, uintptr_t virt, uint64_t flag,
+                       bool locked);
 
 uint64_t* vmm_virt2pte(PageMap* pagemap, uintptr_t virt, bool alloc);
 
