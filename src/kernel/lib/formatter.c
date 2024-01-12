@@ -2,6 +2,10 @@
 #include <stdint.h>
 
 void int_to_hex(uint64_t i, char* buffer) {
+    if (i == 0) {
+        buffer[0] = '0';
+        return;
+    }
     char     hex_chars[16] = "0123456789abcdef";
     uint64_t num = i;
     uint8_t  rem = 0;
@@ -46,6 +50,13 @@ int format_char(int c, char buffer[], int buffer_offset) {
 }
 
 int format_int(int64_t integer, char buffer[], int buffer_offset) {
+    if (integer == 0) {
+        if (buffer_offset < MAX_STRING_FORMATTER_BUFFER_SIZE) {
+            buffer[buffer_offset] = '0';
+            buffer_offset++;
+        }
+        return buffer_offset;
+    }
     uint32_t len = 0;
     int64_t  remainder = integer;
     while (remainder != 0) {
