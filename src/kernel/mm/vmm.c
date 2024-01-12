@@ -19,6 +19,8 @@ extern uint64_t _text_start_addr, _text_end_addr;
 extern uint64_t _rodata_start_addr, _rodata_end_addr;
 extern uint64_t _data_start_addr, _data_end_addr;
 
+extern char _kernel_code_end[];
+
 static uint64_t* lvl_get_next(uint64_t* top_lvl, uint64_t offset, bool alloc) {
     if (top_lvl[offset] & PTE_PRESENT) {
         return (uint64_t*) (PTE_GET_ADDR(top_lvl[offset]));
