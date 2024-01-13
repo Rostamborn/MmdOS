@@ -23,10 +23,8 @@
 
 typedef struct {
     spinlock_t lock;
-    uint64_t*  top_lvl;
-    // VEC_TYPE() mmap_ranges;
-
-} PageMap;
+    uint64_t* pml;
+} vmm_t;
 
 typedef struct {
     uintptr_t address;
@@ -35,17 +33,17 @@ typedef struct {
 
 void vmm_init();
 
-void vmm_destroy_pagemap(PageMap* pagemap);
+void vmm_destroy_pagemap(vmm_t* pagemap);
 
-void vmm_switch_pml(PageMap* pagemap);
+void vmm_switch_pml(vmm_t* pagemap);
 
-bool vmm_map_page(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
+bool vmm_map_page(vmm_t* pagemap, uintptr_t virt, uintptr_t physical,
                   uint64_t flags);
 
-bool vmm_unmap_page(PageMap* pagemap, uintptr_t virt, bool locked);
+bool vmm_unmap_page(vmm_t* pagemap, uintptr_t virt, bool locked);
 
-uint64_t* vmm_virt2pte(PageMap* pagemap, uintptr_t virt, bool alloc);
+uint64_t* vmm_virt2pte(vmm_t* pagemap, uintptr_t virt, bool alloc);
 
-uint64_t vmm_virt2physical(PageMap* pagemap, uintptr_t virt, bool alloc);
+uint64_t vmm_virt2physical(vmm_t* pagemap, uintptr_t virt, bool alloc);
 
 #endif

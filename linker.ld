@@ -22,6 +22,8 @@ SECTIONS
     /* that is the beginning of the region. */
     . = 0xffffffff80000000;
 
+    _kernel_start = .;
+    
     _text_start_addr = .;
  
     .text : {
@@ -66,7 +68,7 @@ SECTIONS
 
     _data_end_addr = .;
 
-    _kernel_code_end = .;
+    _kernel_end = .;
  
     /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
     /DISCARD/ : {

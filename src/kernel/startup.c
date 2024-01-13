@@ -6,15 +6,17 @@
 #include "interrupts/keyboard.h"
 // #include "interrupts/timer.h"
 #include "mm/pmm.h"
-// #include "mm/vmm.h"
+#include "mm/vmm.h"
 // #include "scheduler/scheduler.h"
 #include "lib/print.h"
 #include "terminal/limine_term.h"
 #include "terminal/prompt.h"
+// #include "limine.h"
 #include <stdbool.h>
-#include <stdint.h>
+// #include <stdint.h>
 
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own functions*
+
 
 void _start(void) {
 
@@ -24,34 +26,36 @@ void _start(void) {
     prompt_init();
     keyboard_init();
     pmm_init();
-    // vmm_init();
+    vmm_init();
+
+    kprintf("cr3 content %x\n", read_cr3());
     // slab_init();
     // scheduler_init();
     // timer_init();
     // ---------------------------------------------------------
-    uint64_t* ptr = pmm_alloc(1);
-    kprintf("allocated a page at: %p\n", ptr);
-    *ptr = 234; 
-    kprintf("value at page: %d\n", *ptr);
-
-    uint8_t cond = pmm_check_alloc(ptr);
-    kprintf("check alloc ptr: %d\n", cond);
-
-    uint64_t* ptr2 = pmm_alloc(2);
-    kprintf("allocated a page at: %p\n", ptr2);
-    *ptr2 = 567; 
-    kprintf("value at page: %d\n", *ptr2);
-    pmm_free(ptr2, 2);
-    cond = pmm_check_alloc(ptr2);
-    kprintf("check alloc ptr2: %d\n", cond);
-
-    kprintf("freed 2 pages at: %p\n", ptr2);
-    uint64_t* ptr3 = pmm_alloc(1);
-    kprintf("allocated a page at: %p\n", ptr3);
-    *ptr3 = 8910; 
-    kprintf("value at page: %d\n", *ptr3);
-
-    kprintf("%x\n", 0x0);
+    // uint64_t* ptr = pmm_alloc(1);
+    // kprintf("allocated a page at: %p\n", ptr);
+    // *ptr = 234; 
+    // kprintf("value at page: %d\n", *ptr);
+    //
+    // uint8_t cond = pmm_check_alloc(ptr);
+    // kprintf("check alloc ptr: %d\n", cond);
+    //
+    // uint64_t* ptr2 = pmm_alloc(2);
+    // kprintf("allocated a page at: %p\n", ptr2);
+    // *ptr2 = 567; 
+    // kprintf("value at page: %d\n", *ptr2);
+    // pmm_free(ptr2, 2);
+    // cond = pmm_check_alloc(ptr2);
+    // kprintf("check alloc ptr2: %d\n", cond);
+    //
+    // kprintf("freed 2 pages at: %p\n", ptr2);
+    // uint64_t* ptr3 = pmm_alloc(1);
+    // kprintf("allocated a page at: %p\n", ptr3);
+    // *ptr3 = 8910; 
+    // kprintf("value at page: %d\n", *ptr3);
+    //
+    // kprintf("%x\n", 0x0);
     // --------------------------------------------------------
     // for demonstration ---
     // process_t* p = process_create("adder1", &add_one_to_x, NULL);
