@@ -16,7 +16,7 @@ void process_idle() {
     klog("SCHEDULER::", "from idle process");
     uint64_t c = 0;
 
-    while (true) {
+    while (c < 100000) {
         c++;
         klog("idle proccess ::", "%d\n", c);
     }

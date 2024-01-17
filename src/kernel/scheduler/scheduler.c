@@ -100,6 +100,7 @@ execution_context* schedule(execution_context* restrict context) {
     while (still_scheduling) {
 
         if (processes_list == NULL) {
+            klog("SCHEDULER ::", "no processes found");
             panic("SCHEDULER ::", "no process found");
         }
 

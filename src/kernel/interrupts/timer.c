@@ -1,6 +1,6 @@
-#include "src/kernel/interrupts/timer.h"
-#include "src/kernel/interrupts/idt.h"
-#include "src/kernel/scheduler/scheduler.h"
+#include "timer.h"
+#include "idt.h"
+#include "../scheduler/scheduler.h"
 
 // I/O port     Usage
 // *** Channel 0 is directly connected to IRQ0 ***
