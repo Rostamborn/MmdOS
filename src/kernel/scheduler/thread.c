@@ -8,12 +8,14 @@
 #include "scheduler.h"
 #include "stdbool.h"
 
+#define STACK_SIZE (64 * 1024)
+
 size_t next_tid = 1;
 
-// allocate 32kB to thread Stack.
+// allocate 64KB to thread Stack.
 void* alloc_stack() {
-    void* stack = kalloc(32 * 1024);
-    return stack;
+    void* stack = kalloc(STACK_SIZE);
+    return stack + STACK_SIZE;
 }
 
 // set status to DEAD
@@ -41,8 +43,8 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     spinlock_t lock = SPINLOCK_INIT;
     spinlock_acquire(&lock);
 
-    execution_context* context = kalloc(sizeof(execution_context));
-    thread_t*          thread = kalloc(sizeof(thread_t));
+    execution_context* context = (execution_context*)kalloc(sizeof(execution_context));
+    thread_t*          thread = (thread_t*)kalloc(sizeof(thread_t));
 
     thread->context = context;
 

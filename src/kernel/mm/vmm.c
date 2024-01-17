@@ -72,8 +72,7 @@ void vmm_switch_pml(vmm_t* vmm) {
         : "memory");
 }
 
-bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical,
-                  uint64_t flags) {
+bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical, uint64_t flags) {
     spinlock_acquire(&vmm->lock);
 
     bool     ok = false;
@@ -96,6 +95,8 @@ bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical,
         goto cleanup;
     }
     if (lvl1[lvl1_offset] & PTE_PRESENT) {
+        // NOTE: maybe we should not set ok = true
+        ok = true;
         goto cleanup;
     }
 
@@ -186,10 +187,28 @@ uint64_t vmm_virt2phys(vmm_t* vmm, uintptr_t virt, bool alloc) {
     return PTE_GET_ADDR(*pte);
 }
 
+vmm_t* vmm_new() {
+    vmm_t* new_vmm = pmm_alloc(1);
+    new_vmm = (vmm_t*) ((uintptr_t) new_vmm + HHDM_OFFSET);
+    new_vmm->lock = (spinlock_t) SPINLOCK_INIT;
+    new_vmm->pml = pmm_alloc(1);
+    new_vmm->pml = (uint64_t*) ((uintptr_t) new_vmm->pml + HHDM_OFFSET);
+
+    for (uint64_t i = 256; i < 512; i++) {
+        new_vmm->pml[i] = vmm_kernel->pml[i];
+    }
+
+    return new_vmm;
+}
+
 void vmm_init() {
-    vmm_kernel = KALLOC(vmm_t);
+    vmm_kernel = pmm_alloc(1);
+    // this will be mapped by the end of vmm_init
+    vmm_kernel = (vmm_t*) ((uintptr_t) vmm_kernel + HHDM_OFFSET);
+    vmm_kernel->arena = NULL;
     vmm_kernel->lock = (spinlock_t) SPINLOCK_INIT;
     vmm_kernel->pml = pmm_alloc(1);
+    // this will be mapped by the end of vmm_init
     vmm_kernel->pml = (uint64_t*) ((uintptr_t) vmm_kernel->pml + HHDM_OFFSET);
     if (vmm_kernel->pml == NULL) {
         panic("Failed to allocate top level page table");
@@ -236,15 +255,15 @@ void vmm_init() {
         }
     }
 
-    // *** Identity mapping all of physical memory ***
+    // TODO: do something so this lower half doesn't have an impact anymore
     for (uintptr_t i = 0x1000; i < 0x100000000; i += PAGE_SIZE) {
         bool res1 = vmm_map_page(vmm_kernel, i, i, PTE_PRESENT |
         PTE_WRITABLE); if (!res1) {
             panic("Failed to identity map the start of physical memory");
         }
 
-        bool res2 = vmm_map_page(vmm_kernel, i + HHDM_OFFSET, i,
-        PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE); if (!res2) {
+        bool res2 = vmm_map_page(vmm_kernel, i + HHDM_OFFSET, i, 
+                                 PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE); if (!res2) {
             panic("Failed to map 0x1000 + HHDM_OFFSET to 0x1000");
         }
     }
@@ -282,6 +301,4 @@ void vmm_init() {
     vmm_switch_pml(vmm_kernel);
 
     klog("VMM ::", "vmm init finished");
-
-    klog("VMM ::", "phys of 0x1000 + HHDTM : %x", vmm_virt2phys(vmm_kernel, 0x1000 + HHDM_OFFSET, false));
 }
