@@ -29,6 +29,8 @@ void _start(void) {
     keyboard_init();
     pmm_init();
     vmm_init();
+    scheduler_init();
+    timer_init(); // timer should be after scheduler_init
 
     // vmm_t* new_vmm = vmm_new();
     // // TODO: crashes because of the absence of the lower half mappings
@@ -46,10 +48,6 @@ void _start(void) {
     kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
     k_free(ptr1);
 
-    // kprintf("cr3 content %x\n", read_cr3());
-    // slab_init();
-    scheduler_init();
-
     // for demonstration ---
     process_t* p = process_create("adder1", &add_one_to_x, NULL);
     process_t* p2 = process_create("adder2", &add_one_to_y, NULL);
@@ -62,8 +60,6 @@ void _start(void) {
     p2->wake_time = timer_get_uptime() + (5 * 1000);
     // ---------------------
 
-    timer_init();
-    // hcf(); // halt, catch fire
     for (;;)
         ;
 }

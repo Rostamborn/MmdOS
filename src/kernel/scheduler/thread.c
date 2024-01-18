@@ -24,7 +24,6 @@ void* alloc_stack() {
 void thread_exit() {
     process_t* current_process = process_get_current();
     current_process->running_thread->status = DEAD;
-    klog("thread_exit ::", "status set to DEAD");
     scheduler_yield();
 }
 

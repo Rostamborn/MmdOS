@@ -1,27 +1,9 @@
 #include "kheap.h"
-#include "../lib/logger.h"
 #include "../lib/panic.h"
-#include "../scheduler/process.h"
+// #include "../scheduler/process.h"
 #include "pmm.h"
 #include "vmm.h"
 #include <stdint.h>
-
-uintptr_t align_forward(uint64_t offset, size_t align) {
-    if (!IS_POWER_2(align)) {
-        panic("align_forward: align must be a power of 2");
-    }
-    // uintptr_t p, rem, tmp;
-    //
-    // p = ptr;
-    // rem = p & (uintptr_t)(align - 1);
-    // if (rem != 0) {
-    //     p += (uintptr_t)align - rem;
-    // }
-    //
-    // return p;
-
-    return (offset + align - 1) & ~(align - 1);
-}
 
 void* k_alloc(uint64_t size) {
     // vmm_t* curr_vmm = process_get_current_vmm();
