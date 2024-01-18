@@ -3,6 +3,7 @@
 
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
+#include "kheap.h"
 #include <stdint.h>
 
 #ifndef PAGE_SIZE
@@ -23,29 +24,32 @@
 
 typedef struct {
     spinlock_t lock;
-    uint64_t*  top_lvl;
-    // VEC_TYPE() mmap_ranges;
-
-} PageMap;
+    uint64_t*  pml;
+    arena_t*   arena;
+} vmm_t;
 
 typedef struct {
     uintptr_t address;
     char*     name;
 } symbol;
 
+extern vmm_t* vmm_kernel;
+
 void vmm_init();
 
-void vmm_destroy_pagemap(PageMap* pagemap);
+vmm_t* vmm_new();
 
-void vmm_switch_pml(PageMap* pagemap);
+void vmm_destroy_pml(vmm_t* vmm);
 
-bool vmm_map_page(PageMap* pagemap, uintptr_t virt, uintptr_t physical,
+void vmm_switch_pml(vmm_t* vmm);
+
+bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical,
                   uint64_t flags);
 
-bool vmm_unmap_page(PageMap* pagemap, uintptr_t virt, bool locked);
+bool vmm_unmap_page(vmm_t* vmm, uintptr_t virt, bool lock);
 
-uint64_t* vmm_virt2pte(PageMap* pagemap, uintptr_t virt, bool alloc);
+uint64_t* vmm_virt2pte(vmm_t* vmm, uintptr_t virt, bool alloc);
 
-uint64_t vmm_virt2physical(PageMap* pagemap, uintptr_t virt, bool alloc);
+uint64_t vmm_virt2phys(vmm_t* vmm, uintptr_t virt, bool alloc);
 
 #endif

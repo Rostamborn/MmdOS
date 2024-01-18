@@ -74,6 +74,7 @@ bool stay_idle(process_t* process) {
                 return false;
             }
         }
+        process = process->next;
     }
 
     return true;
@@ -168,6 +169,7 @@ execution_context* schedule(execution_context* restrict context) {
             current_process = process_get_current();
             processes_list = process_get_list();
             process_switched = true;
+
             continue;
 
         default:
