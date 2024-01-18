@@ -1,6 +1,6 @@
-#include <stdint.h>
-#include <stdbool.h>
 #include "../limine.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 extern struct limine_memmap_request memmap_req;
 

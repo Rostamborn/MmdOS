@@ -5,8 +5,8 @@
 #include "../lib/util.h"
 #include "../limine.h"
 #include "bitmap.h"
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 struct limine_memmap_request memmap_req = {
     .id = LIMINE_MEMMAP_REQUEST,
@@ -18,10 +18,10 @@ struct limine_hhdm_request hhdm_req = {
     .revision = 0,
 };
 
-spinlock_t       spin_lock = SPINLOCK_INIT;
-static uint8_t*  bitmap = 0;
-static uint64_t  bitmap_top_index = 0;
-static uint64_t  bitmap_prev_index = 0;
+spinlock_t      spin_lock = SPINLOCK_INIT;
+static uint8_t* bitmap = 0;
+static uint64_t bitmap_top_index = 0;
+static uint64_t bitmap_prev_index = 0;
 // static uint64_t  used_pages = 0;
 // static uint64_t* base_addr = 0;
 // static uint64_t  total_pages = 0;
@@ -31,7 +31,7 @@ static uint64_t  bitmap_prev_index = 0;
 void pmm_init() {
     struct limine_memmap_response* memmap = memmap_req.response;
     struct limine_hhdm_response*   hhdm = hhdm_req.response;
-    struct limine_memmap_entry** entries = memmap->entries;
+    struct limine_memmap_entry**   entries = memmap->entries;
 
     uint64_t highest_addr = 0;
 
@@ -69,12 +69,14 @@ void pmm_init() {
         if (entry->length >= bitmap_size) {
             // This is where we determine where the free space for allocation
             // resides
-            bitmap = (uint8_t*) (entry->base + HHDM_OFFSET); // offsetting the bitmap to the
+            bitmap = (uint8_t*) (entry->base +
+                                 HHDM_OFFSET); // offsetting the bitmap to the
                                                // higher half of the memory
             // Initialise entire bitmap to 1 (non-free)
             memset(bitmap, 0xff, bitmap_size);
 
-            entry->length -= bitmap_size; // we occupied space for the btimap itself.
+            entry->length -=
+                bitmap_size; // we occupied space for the btimap itself.
             entry->base += bitmap_size; // the start address of usable memory
                                         // that will be allocated.
             break;
@@ -120,8 +122,8 @@ void* physical_alloc(uint64_t n_pages, uint64_t limit) {
                 for (uint64_t i = page_index; i < page_index + n_pages; i++) {
                     bitmap_set(bitmap, i);
                 }
-                // this is going to be a physical address as the 'usable memory entry'
-                // base address gives us physical address.
+                // this is going to be a physical address as the 'usable memory
+                // entry' base address gives us physical address.
                 return (void*) (page_index * PAGE_SIZE);
             }
         }
@@ -157,7 +159,7 @@ void* pmm_alloc(uint64_t n_pages) {
         // memset(allocated, 0, n_pages * PAGE_SIZE);
         memset(allocated + HHDM_OFFSET, 0, n_pages * PAGE_SIZE);
     }
- 
+
     return allocated;
 }
 

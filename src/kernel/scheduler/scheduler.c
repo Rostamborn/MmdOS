@@ -74,6 +74,7 @@ bool stay_idle(process_t* process) {
                 return false;
             }
         }
+        process = process->next;
     }
 
     return true;
@@ -100,7 +101,6 @@ execution_context* schedule(execution_context* restrict context) {
     while (still_scheduling) {
 
         if (processes_list == NULL) {
-            klog("SCHEDULER ::", "no processes found");
             panic("SCHEDULER ::", "no process found");
         }
 
@@ -165,14 +165,13 @@ execution_context* schedule(execution_context* restrict context) {
             break;
 
         case DEAD:
-            klog("schedule ::", "DEAD case");
-
+            klog("schedule ::", "process with pid: %d is dead",
+                 current_process->pid);
             process_delete(current_process);
             current_process = process_get_current();
             processes_list = process_get_list();
             process_switched = true;
-            klog("schedule ::", "process with pid: %d is dead",
-                 current_process->pid);
+
             continue;
 
         default:

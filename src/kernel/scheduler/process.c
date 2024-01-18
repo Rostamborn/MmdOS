@@ -15,14 +15,9 @@ size_t     next_pid = 1;
 void process_idle() {
     klog("SCHEDULER::", "from idle process");
     uint64_t c = 0;
-
-    while (c < 100000) {
-        c++;
-        klog("idle proccess ::", "%d\n", c);
+    while (true) {
+        asm("hlt");
     }
-    // while (true) {
-    //     asm("hlt");
-    // }
 }
 
 // created pcb and allocates memory to process.
@@ -31,7 +26,7 @@ process_t* process_create(char* restrict name, void* restrict function(void*),
                           void* restrict arg) {
     disable_interrupts();
 
-    process_t* process = (process_t*)kalloc(sizeof(process_t));
+    process_t* process = (process_t*) kalloc(sizeof(process_t));
 
     kstrcpy(process->name, name, PROCESS_NAME_MAX_LEN);
     process->pid = next_pid++;
@@ -77,7 +72,6 @@ void process_set_current(process_t* p) { current_process = p; }
 
 void process_delete(process_t* process) {
 
-    klog("thread_delete ::", "start");
     if (process == NULL) {
         return;
     }
@@ -88,12 +82,9 @@ void process_delete(process_t* process) {
     thread_t* next;
     for (thread_t* scan = process->threads; scan != NULL; scan = next) {
         next = scan->next;
-        klog("thread_delete ::", "proceed to delete thread");
         thread_delete(process, scan);
-        klog("thread_delete ::", "thread deleted");
     }
 
-    klog("process_delete ::", "threads are deleted");
     spinlock_acquire(&lock);
     // removing process from queue
     if (processes_list == process) {

@@ -6,11 +6,11 @@
 #include "interrupts/keyboard.h"
 #include "interrupts/timer.h"
 #include "lib/logger.h"
+#include "lib/print.h"
 #include "mm/kheap.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 #include "scheduler/scheduler.h"
-#include "lib/print.h"
 #include "terminal/limine_term.h"
 #include "terminal/prompt.h"
 // #include "limine.h"
@@ -48,13 +48,12 @@ void _start(void) {
 
     // kprintf("cr3 content %x\n", read_cr3());
     // slab_init();
-    // scheduler_init();
+    scheduler_init();
 
     // for demonstration ---
     process_t* p = process_create("adder1", &add_one_to_x, NULL);
     process_t* p2 = process_create("adder2", &add_one_to_y, NULL);
-    thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z,
-    NULL);
+    thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z, NULL);
     // set thread to sleep 10 seconds
     t->status = SLEEPING;
     t->wake_time = timer_get_uptime() + (5 * 1000);
@@ -62,7 +61,6 @@ void _start(void) {
     p2->status = SLEEPING;
     p2->wake_time = timer_get_uptime() + (5 * 1000);
     // ---------------------
-
 
     timer_init();
     // hcf(); // halt, catch fire

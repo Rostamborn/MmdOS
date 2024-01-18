@@ -3,8 +3,8 @@
 
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
-#include <stdint.h>
 #include "kheap.h"
+#include <stdint.h>
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
@@ -22,11 +22,10 @@
 #define PTE_GET_ADDR(pte) ((pte) &PTE_ADDR)
 #define PTE_GET_FLAGS(pte) ((pte) & ~PTE_ADDR)
 
-
 typedef struct {
     spinlock_t lock;
-    uint64_t* pml;
-    arena_t*  arena;
+    uint64_t*  pml;
+    arena_t*   arena;
 } vmm_t;
 
 typedef struct {
@@ -44,7 +43,8 @@ void vmm_destroy_pml(vmm_t* vmm);
 
 void vmm_switch_pml(vmm_t* vmm);
 
-bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical, uint64_t flags);
+bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical,
+                  uint64_t flags);
 
 bool vmm_unmap_page(vmm_t* vmm, uintptr_t virt, bool lock);
 

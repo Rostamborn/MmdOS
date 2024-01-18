@@ -36,8 +36,9 @@ static uint64_t* walk_pte(uint64_t* pte, uint64_t offset, bool alloc) {
     void* next_lvl = pmm_alloc(1); // the returned address is page aligned
 
     // not sure bout the PTE_USER flag
-    pte[offset] = (uint64_t)next_lvl | PTE_PRESENT | PTE_WRITABLE;
-    return next_lvl + HHDM_OFFSET; // HHDM_OFFSET because we access using virtual memory
+    pte[offset] = (uint64_t) next_lvl | PTE_PRESENT | PTE_WRITABLE;
+    return next_lvl +
+           HHDM_OFFSET; // HHDM_OFFSET because we access using virtual memory
 }
 
 static void pte_destroy(vmm_t* vmm, uint16_t start, uint16_t end,
@@ -67,12 +68,12 @@ void vmm_destroy_pml(vmm_t* vmm) {
 
 void vmm_switch_pml(vmm_t* vmm) {
     // not sure about the HHDM_OFFSET
-    __asm__ volatile(
-        "mov %0, %%cr3" ::"r"((void*) vmm->pml - HHDM_OFFSET)
-        : "memory");
+    __asm__ volatile("mov %0, %%cr3" ::"r"((void*) vmm->pml - HHDM_OFFSET)
+                     : "memory");
 }
 
-bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical, uint64_t flags) {
+bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical,
+                  uint64_t flags) {
     spinlock_acquire(&vmm->lock);
 
     bool     ok = false;
@@ -221,18 +222,19 @@ void vmm_init() {
         }
     }
 
-    uintptr_t text_start = ALIGN_DOWN((uintptr_t)_text_start_addr, PAGE_SIZE),
-              rodata_start = ALIGN_DOWN((uintptr_t)_rodata_start_addr, PAGE_SIZE),
-              data_start = ALIGN_DOWN((uintptr_t)_data_start_addr, PAGE_SIZE),
-              text_end = ALIGN_UP((uintptr_t)_text_end_addr, PAGE_SIZE),
-              rodata_end = ALIGN_UP((uintptr_t)_rodata_end_addr, PAGE_SIZE),
-              data_end = ALIGN_UP((uintptr_t)_data_end_addr, PAGE_SIZE);
+    uintptr_t text_start = ALIGN_DOWN((uintptr_t) _text_start_addr, PAGE_SIZE),
+              rodata_start =
+                  ALIGN_DOWN((uintptr_t) _rodata_start_addr, PAGE_SIZE),
+              data_start = ALIGN_DOWN((uintptr_t) _data_start_addr, PAGE_SIZE),
+              text_end = ALIGN_UP((uintptr_t) _text_end_addr, PAGE_SIZE),
+              rodata_end = ALIGN_UP((uintptr_t) _rodata_end_addr, PAGE_SIZE),
+              data_end = ALIGN_UP((uintptr_t) _data_end_addr, PAGE_SIZE);
 
     struct limine_kernel_address_response* kaddr = kaddr_req.response;
-    
+
     for (uintptr_t i = text_start; i < text_end; i += PAGE_SIZE) {
         uintptr_t physical = i - kaddr->virtual_base + kaddr->physical_base;
-        bool res = vmm_map_page(vmm_kernel, i, physical, PTE_PRESENT);
+        bool      res = vmm_map_page(vmm_kernel, i, physical, PTE_PRESENT);
         if (!res) {
             panic("Failed to map kernel text");
         }
@@ -240,8 +242,8 @@ void vmm_init() {
 
     for (uintptr_t i = rodata_start; i < rodata_end; i += PAGE_SIZE) {
         uintptr_t physical = i - kaddr->virtual_base + kaddr->physical_base;
-        bool      res = vmm_map_page(vmm_kernel, i, physical,
-                                     PTE_PRESENT | PTE_NO_EXECUTE);
+        bool      res =
+            vmm_map_page(vmm_kernel, i, physical, PTE_PRESENT | PTE_NO_EXECUTE);
         if (!res) {
             panic("Failed to map kernel rodata");
         }
@@ -257,13 +259,14 @@ void vmm_init() {
 
     // TODO: do something so this lower half doesn't have an impact anymore
     for (uintptr_t i = 0x1000; i < 0x100000000; i += PAGE_SIZE) {
-        bool res1 = vmm_map_page(vmm_kernel, i, i, PTE_PRESENT |
-        PTE_WRITABLE); if (!res1) {
+        bool res1 = vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE);
+        if (!res1) {
             panic("Failed to identity map the start of physical memory");
         }
 
-        bool res2 = vmm_map_page(vmm_kernel, i + HHDM_OFFSET, i, 
-                                 PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE); if (!res2) {
+        bool res2 = vmm_map_page(vmm_kernel, i + HHDM_OFFSET, i,
+                                 PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE);
+        if (!res2) {
             panic("Failed to map 0x1000 + HHDM_OFFSET to 0x1000");
         }
     }
