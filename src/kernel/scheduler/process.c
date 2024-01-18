@@ -113,7 +113,7 @@ void process_delete(process_t* process) {
     // freeing resources
     // TODO: free process->resources
     // TODO: free root page table if not used by other processes
-    // kfree(process);
+    kfree(process);
 
     return;
 }

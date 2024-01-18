@@ -43,9 +43,9 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     spinlock_t lock = SPINLOCK_INIT;
     spinlock_acquire(&lock);
 
+    thread_t*          thread = kalloc(sizeof(thread_t));
     execution_context* context =
         (execution_context*) kalloc(sizeof(execution_context));
-    thread_t* thread = kalloc(sizeof(thread_t));
 
     thread->context = context;
 
@@ -118,9 +118,12 @@ void thread_delete(process_t* process, thread_t* thread) {
     process->threads_count--;
     spinlock_release(&lock);
     // release resources
-    // kfree(thread->stack);
+
+    // klog("thread_delete ::", "about to free thread.stack");
+    kfree(thread->stack - STACK_SIZE);
+    // klog("thread_delete ::", "about to free thread.context");
     // kfree(thread->context);
-    // kfree(thread);
+    kfree(thread);
 
     return;
 }

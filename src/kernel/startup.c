@@ -5,6 +5,7 @@
 #include "interrupts/idt.h"
 #include "interrupts/keyboard.h"
 #include "interrupts/timer.h"
+#include "lib/alloc.h"
 #include "lib/logger.h"
 #include "lib/print.h"
 #include "mm/kheap.h"
@@ -43,12 +44,12 @@ void _start(void) {
     // vmm_kernel is not enough and the program crashes and when I copy the
     // lower half too, it works.
 
-    uint64_t* ptr1 = k_alloc(sizeof(uint64_t));
-    *ptr1 = 8765;
-    kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
-    k_free(ptr1);
+    // uint64_t* ptr1 = kalloc(sizeof(uint64_t));
+    // *ptr1 = 8765;
+    // kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
+    // kfree(ptr1);
 
-    // for demonstration ---
+    // // for demonstration ---
     process_t* p = process_create("adder1", &add_one_to_x, NULL);
     process_t* p2 = process_create("adder2", &add_one_to_y, NULL);
     thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z, NULL);

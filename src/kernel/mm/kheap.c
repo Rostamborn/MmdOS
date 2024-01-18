@@ -1,4 +1,5 @@
 #include "kheap.h"
+#include "../lib/logger.h"
 #include "../lib/panic.h"
 // #include "../scheduler/process.h"
 #include "pmm.h"
@@ -42,9 +43,8 @@ void* k_alloc(uint64_t size) {
     }
 
     new_arena->next = NULL;
-    // new_arena->base = (uintptr_t) ((void*)new_arena + sizeof(arena_t));
     new_arena->base = (uintptr_t) new_arena;
-    new_arena->size = PAGE_SIZE - sizeof(arena_t);
+    new_arena->size = ALIGN_UP(size, PAGE_SIZE);
     new_arena->offset = sizeof(arena_t);
     new_arena->allocated = 0;
 
@@ -55,11 +55,11 @@ void* k_alloc(uint64_t size) {
     }
 
     arena_metadata* metadata =
-        (arena_metadata*) ((uintptr_t) new_arena->base + new_arena->offset);
+        (arena_metadata*) (new_arena->base + new_arena->offset);
     metadata->arena_base = (uint64_t) new_arena;
 
-    void* ret = (void*) ((uintptr_t) new_arena->base + new_arena->offset +
-                         sizeof(arena_metadata));
+    void* ret =
+        (void*) (new_arena->base + new_arena->offset + sizeof(arena_metadata));
 
     new_arena->offset = ALIGN_UP(
         new_arena->offset + size + sizeof(arena_metadata), DEFAULT_ALIGNMENT);
@@ -78,6 +78,7 @@ void k_free(void* addr) {
     if (arena->allocated <= 0) {
         // free arena
         // arena_t* curr = process_get_current_vmm()->arena;
+        klog("k_free ::", "allocated <= 0");
         arena_t* curr = vmm_kernel->arena;
         if (curr == arena) {
             curr = arena->next;
