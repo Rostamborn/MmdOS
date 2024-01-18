@@ -5,7 +5,7 @@ void add_one_to_x() {
 
     while (x < 5000000) {
         x++;
-        klog("DEMO ::", "x: %d\n", x);
+        // klog("DEMO ::", "x: %d\n", x);
     }
     klog("DEMO::", "x  will now exit");
 }
@@ -14,7 +14,7 @@ void add_one_to_y() {
 
     while (y < 6000000) {
         y++;
-        klog("DEMO ::", "y: %d\n", y);
+        // klog("DEMO ::", "y: %d\n", y);
     }
     klog("DEMO::", "y  will now exit");
 }
@@ -23,7 +23,7 @@ void add_one_to_z() {
 
     while (z < 7000000) {
         z++;
-        klog("DEMO ::", "z: %d\n", z);
+        // klog("DEMO ::", "z: %d\n", z);
     }
 
     klog("DEMO::", "z  will now exit");

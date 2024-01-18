@@ -5,6 +5,7 @@
 #include "interrupts/idt.h"
 #include "interrupts/keyboard.h"
 #include "interrupts/timer.h"
+#include "lib/logger.h"
 #include "mm/kheap.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"

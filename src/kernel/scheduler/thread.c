@@ -24,6 +24,7 @@ void* alloc_stack() {
 void thread_exit() {
     process_t* current_process = process_get_current();
     current_process->running_thread->status = DEAD;
+    klog("thread_exit ::", "status set to DEAD");
     scheduler_yield();
 }
 
@@ -44,7 +45,7 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     spinlock_acquire(&lock);
 
     execution_context* context = (execution_context*)kalloc(sizeof(execution_context));
-    thread_t*          thread = (thread_t*)kalloc(sizeof(thread_t));
+    thread_t*          thread = kalloc(sizeof(thread_t));
 
     thread->context = context;
 
@@ -114,12 +115,13 @@ void thread_delete(process_t* process, thread_t* thread) {
         process->running_thread = thread->next;
     }
 
-    // release resources
-    kfree(&thread->stack);
-    kfree(&thread->context);
-    kfree(thread);
     process->threads_count--;
     spinlock_release(&lock);
+    // release resources
+    // kfree(thread->stack);
+    // kfree(thread->context);
+    // kfree(thread);
+    
 
     return;
 }

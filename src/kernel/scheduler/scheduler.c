@@ -165,10 +165,14 @@ execution_context* schedule(execution_context* restrict context) {
             break;
 
         case DEAD:
+            klog("schedule ::", "DEAD case");
+
             process_delete(current_process);
             current_process = process_get_current();
             processes_list = process_get_list();
             process_switched = true;
+            klog("schedule ::", "process with pid: %d is dead",
+                 current_process->pid);
             continue;
 
         default:

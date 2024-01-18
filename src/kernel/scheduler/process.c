@@ -76,20 +76,25 @@ vmm_t* process_get_current_vmm() { return process_get_current()->pml; }
 void process_set_current(process_t* p) { current_process = p; }
 
 void process_delete(process_t* process) {
+
+    klog("thread_delete ::", "start");
     if (process == NULL) {
         return;
     }
 
     spinlock_t lock = SPINLOCK_INIT;
-    spinlock_acquire(&lock);
 
     // removing threads
     thread_t* next;
     for (thread_t* scan = process->threads; scan != NULL; scan = next) {
         next = scan->next;
+        klog("thread_delete ::", "proceed to delete thread");
         thread_delete(process, scan);
+        klog("thread_delete ::", "thread deleted");
     }
 
+    klog("process_delete ::", "threads are deleted");
+    spinlock_acquire(&lock);
     // removing process from queue
     if (processes_list == process) {
         processes_list = process->next;
@@ -113,11 +118,11 @@ void process_delete(process_t* process) {
         current_process = processes_list;
     }
 
+    spinlock_release(&lock);
     // freeing resources
     // TODO: free process->resources
     // TODO: free root page table if not used by other processes
-    kfree(process);
+    // kfree(process);
 
-    spinlock_release(&lock);
     return;
 }
