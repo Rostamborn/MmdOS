@@ -135,3 +135,9 @@ clean:
 
 format: $(KERNEL_C_FILES)
 	clang-format -i $(KERNEL_C_FILES) $(KERNEL_HEADER_FILES)
+
+drun: $(ISO_FILENAME)
+	qemu-system-x86_64 -s -S -serial stdio $(ISO_FILENAME)
+
+gdb:
+	gdb -x gdb_commands	
