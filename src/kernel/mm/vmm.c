@@ -41,34 +41,31 @@ static uint64_t* walk_pte(uint64_t* pte, uint64_t offset, bool alloc) {
            HHDM_OFFSET; // HHDM_OFFSET because we access using virtual memory
 }
 
-static void pte_destroy(vmm_t* vmm, uint16_t start, uint16_t end,
-                        uint16_t lvl) {
-    // Base of Recursion
-    if (lvl == 0) {
-        return;
-    }
+void vmm_destroy_pml(vmm_t* vmm) {
+    pmm_free((void*) vmm->pml - HHDM_OFFSET, 1);
+}
 
-    for (uint16_t i = start; i < end; i++) {
-        uint64_t* next_lvl = walk_pte(vmm->pml, i, false);
-        if (next_lvl == NULL) {
-            continue;
-        }
-
-        pte_destroy(vmm, 0, 512, lvl - 1);
-    }
+void vmm_destroy(vmm_t* vmm) {
+    vmm_destroy_pml(vmm);
     pmm_free((void*) vmm - HHDM_OFFSET, 1);
 }
 
-void vmm_destroy_pml(vmm_t* vmm) {
+vmm_t* vmm_new() {
+    vmm_t* new_vmm = pmm_alloc(1);
+    new_vmm = (vmm_t*) ((uintptr_t) new_vmm + HHDM_OFFSET);
+    new_vmm->lock = (spinlock_t) SPINLOCK_INIT;
+    new_vmm->pml = pmm_alloc(1);
+    new_vmm->pml = (uint64_t*) ((uintptr_t) new_vmm->pml + HHDM_OFFSET);
 
-    spinlock_acquire(&vmm->lock);
-    pte_destroy(vmm, 0, 512, 3);
-    spinlock_release(&vmm->lock);
+    for (uint64_t i = 256; i < 512; i++) {
+        new_vmm->pml[i] = vmm_kernel->pml[i];
+    }
+
+    return new_vmm;
 }
 
 void vmm_switch_pml(vmm_t* vmm) {
-    // not sure about the HHDM_OFFSET
-    __asm__ volatile("mov %0, %%cr3" ::"r"((void*) vmm->pml - HHDM_OFFSET)
+    asm volatile("mov %0, %%cr3" ::"r"((void*) vmm->pml - HHDM_OFFSET)
                      : "memory");
 }
 
@@ -188,19 +185,7 @@ uint64_t vmm_virt2phys(vmm_t* vmm, uintptr_t virt, bool alloc) {
     return PTE_GET_ADDR(*pte);
 }
 
-vmm_t* vmm_new() {
-    vmm_t* new_vmm = pmm_alloc(1);
-    new_vmm = (vmm_t*) ((uintptr_t) new_vmm + HHDM_OFFSET);
-    new_vmm->lock = (spinlock_t) SPINLOCK_INIT;
-    new_vmm->pml = pmm_alloc(1);
-    new_vmm->pml = (uint64_t*) ((uintptr_t) new_vmm->pml + HHDM_OFFSET);
 
-    for (uint64_t i = 256; i < 512; i++) {
-        new_vmm->pml[i] = vmm_kernel->pml[i];
-    }
-
-    return new_vmm;
-}
 
 void vmm_init() {
     vmm_kernel = pmm_alloc(1);
@@ -209,11 +194,7 @@ void vmm_init() {
     vmm_kernel->arena = NULL;
     vmm_kernel->lock = (spinlock_t) SPINLOCK_INIT;
     vmm_kernel->pml = pmm_alloc(1);
-    // this will be mapped by the end of vmm_init
     vmm_kernel->pml = (uint64_t*) ((uintptr_t) vmm_kernel->pml + HHDM_OFFSET);
-    if (vmm_kernel->pml == NULL) {
-        panic("Failed to allocate top level page table");
-    }
 
     // allocate the kernel page table(higher half)
     for (uint64_t i = 256; i < 512; i++) {
@@ -271,36 +252,37 @@ void vmm_init() {
         }
     }
 
-    // struct limine_memmap_response* memmap = memmap_req.response;
-    // for (uint64_t i = 0; i < memmap->entry_count; i++) {
-    //     struct limine_memmap_entry* entry = memmap->entries[i];
-    //
-    //     // identity map the higher half
-    //     uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
-    //     uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
-    //     if (top <= 0x100000000) {
-    //         continue;
-    //     }
-    //
-    //     for (uintptr_t j = base; j < top; j += PAGE_SIZE) {
-    //         if (j < 0x100000000) {
-    //             continue;
-    //         }
-    //
-    //         bool res1 = vmm_map_page(vmm_kernel, j, j,
-    //                                  PTE_PRESENT | PTE_WRITABLE);
-    //         if (!res1) {
-    //             panic("Failed to identity map physical memory");
-    //         }
-    //
-    //         bool res2 =
-    //             vmm_map_page(vmm_kernel, j + HHDM_OFFSET, j,
-    //                          PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE);
-    //         if (!res2) {
-    //             panic("Failed to map physical memory");
-    //         }
-    //     }
-    // }
+    struct limine_memmap_response* memmap = memmap_req.response;
+    for (uint64_t i = 0; i < memmap->entry_count; i++) {
+        struct limine_memmap_entry* entry = memmap->entries[i];
+
+        // identity map the higher half
+        uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
+        uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
+        if (top <= 0x100000000) {
+            continue;
+        }
+
+        for (uintptr_t j = base; j < top; j += PAGE_SIZE) {
+            if (j < 0x100000000) {
+                continue;
+            }
+
+            bool res1 = vmm_map_page(vmm_kernel, j, j,
+                                     PTE_PRESENT | PTE_WRITABLE);
+            if (!res1) {
+                panic("Failed to identity map physical memory");
+            }
+
+            bool res2 =
+                vmm_map_page(vmm_kernel, j + HHDM_OFFSET, j,
+                             PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE);
+            if (!res2) {
+                panic("Failed to map physical memory");
+            }
+        }
+    }
+
     vmm_switch_pml(vmm_kernel);
 
     klog("VMM ::", "vmm init finished");

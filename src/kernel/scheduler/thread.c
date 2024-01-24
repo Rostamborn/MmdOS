@@ -40,6 +40,7 @@ void thread_sleep(thread_t* thread, size_t millis) {
 
 thread_t* thread_add(process_t* restrict process, char* restrict name,
                      void* restrict function(void*), void* restrict arg) {
+
     spinlock_t lock = SPINLOCK_INIT;
     spinlock_acquire(&lock);
 
