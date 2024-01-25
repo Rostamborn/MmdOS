@@ -57,7 +57,7 @@ vmm_t* vmm_new() {
     new_vmm->pml = pmm_alloc(1);
     new_vmm->pml = (uint64_t*) ((uintptr_t) new_vmm->pml + HHDM_OFFSET);
 
-    for (uint64_t i = 256; i < 512; i++) {
+    for (uint64_t i = 0; i < 512; i++) {
         new_vmm->pml[i] = vmm_kernel->pml[i];
     }
 
@@ -259,6 +259,16 @@ void vmm_init() {
         // identity map the higher half
         uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
         uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
+
+        switch (entry->type) {
+            case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
+                for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
+                    if(!vmm_map_page(vmm_kernel, i + HHDM_OFFSET, i, PTE_PRESENT | PTE_WRITABLE)) {
+                        panic("bootloader reclaimable not mapped");
+                    }
+                }
+        }
+
         if (top <= 0x100000000) {
             continue;
         }
