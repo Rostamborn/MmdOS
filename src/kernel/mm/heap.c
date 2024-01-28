@@ -34,7 +34,7 @@ void* u_alloc(uint64_t size) {
 
     // no arena or no space in current arena
     void*    new_alloc = pmm_alloc(DIV_ROUNDUP(size, PAGE_SIZE));
-    arena_t* new_arena = (arena_t*) (new_alloc + HHDM_OFFSET);
+    arena_t* new_arena = (arena_t*) (new_alloc + get_hhdm());
 
     if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena, (uintptr_t) new_alloc,
                       PTE_PRESENT | PTE_WRITABLE)) {
@@ -86,7 +86,7 @@ void u_free(void* addr) {
             curr->next = arena->next;
         }
 
-        pmm_free((void*) arena - HHDM_OFFSET,
+        pmm_free((void*) arena - get_hhdm(),
                  DIV_ROUNDUP(arena->size, PAGE_SIZE));
 
         for (uint64_t i = 0; i < arena->size / PAGE_SIZE; i++) {
