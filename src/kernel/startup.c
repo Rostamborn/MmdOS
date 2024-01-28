@@ -34,8 +34,10 @@ void _start(void) {
     // scheduler_init();
     // timer_init(); // timer should be after scheduler_init
 
+    // TODO: crashes because of the absence of the lower half mappings
+    //  which includes the framebuffer. we should fix this.
+    //  mapping in vmm_init didn't fix
     // vmm_t* new_vmm = vmm_new();
-    // // TODO: crashes because of the absence of the lower half mappings
     // vmm_switch_pml(new_vmm);
     // vmm_switch_pml(vmm_kernel);
 
