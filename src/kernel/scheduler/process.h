@@ -14,7 +14,7 @@
 typedef struct process_t {
     size_t   pid;
     status_t status;
-    vmm_t*   pml;
+    vmm_t*   vmm;
     // stores system-wide ids to keep track of resources
     size_t            resources[MAX_RESOURCE_IDS];
     char              name[PROCESS_NAME_MAX_LEN];

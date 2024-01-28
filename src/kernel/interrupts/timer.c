@@ -1,6 +1,8 @@
 #include "timer.h"
 #include "../scheduler/scheduler.h"
+#include "../scheduler/process.h"
 #include "idt.h"
+#include "../mm/vmm.h"
 
 // I/O port     Usage
 // *** Channel 0 is directly connected to IRQ0 ***
@@ -19,6 +21,8 @@ uint64_t quantum = 10;
 execution_context* timer_handler(execution_context* frame) {
     uptime += quantum;
     frame = schedule(frame);
+    // vmm_switch_pml(process_get_current_vmm());
+
     return frame;
 }
 
