@@ -44,7 +44,7 @@ void _start(void) {
     // vmm_kernel is not enough and the program crashes and when I copy the
     // lower half too, it works.
 
-    // uint64_t* ptr1 = kalloc(sizeof(uint64_t));
+    // uint64_t* ptr1 = kalloc(4000);
     // *ptr1 = 8765;
     // kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
     // kfree(ptr1);

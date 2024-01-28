@@ -41,14 +41,6 @@ static uint64_t* walk_pte(uint64_t* pte, uint64_t offset, bool alloc) {
            HHDM_OFFSET; // HHDM_OFFSET because we access using virtual memory
 }
 
-void vmm_destroy_pml(vmm_t* vmm) {
-    pmm_free((void*) vmm->pml - HHDM_OFFSET, 1);
-}
-
-void vmm_destroy(vmm_t* vmm) {
-    vmm_destroy_pml(vmm);
-    pmm_free((void*) vmm - HHDM_OFFSET, 1);
-}
 
 vmm_t* vmm_new() {
     vmm_t* new_vmm = pmm_alloc(1);
@@ -63,6 +55,31 @@ vmm_t* vmm_new() {
 
     return new_vmm;
 }
+
+static void destroy_lvl(uint64_t* lvl, uint64_t lvl_offset) {
+    // basis of recursion
+    if (lvl == 0) {
+        
+        return;
+    }
+    // NOTE: not sure, maybe a bug
+    for (uint64_t i = 0; i < 512; i++) {
+        if (lvl[i] & PTE_PRESENT) {
+            uint64_t* next_lvl = (uint64_t*) (PTE_GET_ADDR(lvl[i]));
+            destroy_lvl(next_lvl, lvl_offset - 1);
+            pmm_free((void*)next_lvl - HHDM_OFFSET, 1);
+        }
+    }
+    pmm_free((void*)lvl - HHDM_OFFSET, 1);
+}
+
+void vmm_destroy(vmm_t* vmm) {
+
+    destroy_lvl(vmm->pml, 4);
+    pmm_free((void*) vmm->arena - HHDM_OFFSET, 1);
+    pmm_free((void*) vmm - HHDM_OFFSET, 1);
+}
+
 
 void vmm_switch_pml(vmm_t* vmm) {
     asm volatile("mov %0, %%cr3" ::"r"((void*) vmm->pml - HHDM_OFFSET)
@@ -184,8 +201,6 @@ uint64_t vmm_virt2phys(vmm_t* vmm, uintptr_t virt, bool alloc) {
 
     return PTE_GET_ADDR(*pte);
 }
-
-
 
 void vmm_init() {
     vmm_kernel = pmm_alloc(1);
