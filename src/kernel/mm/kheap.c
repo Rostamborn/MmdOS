@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 void* k_alloc(uint64_t size) {
-    // vmm_t* curr_vmm = process_get_current_vmm();
     vmm_t* curr_vmm = vmm_kernel;
 
     arena_t* current = curr_vmm->arena;
@@ -77,7 +76,6 @@ void k_free(void* addr) {
 
     if (arena->allocated <= 0) {
         // free arena
-        // arena_t* curr = process_get_current_vmm()->arena;
         klog("k_free ::", "allocated <= 0");
         arena_t* curr = vmm_kernel->arena;
         if (curr == arena) {
