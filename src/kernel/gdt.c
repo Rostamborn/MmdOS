@@ -31,8 +31,9 @@ struct gdtr {
     uint64_t address;
 } __attribute__((packed));
 
-static struct gdt  gdt_instance;
-static struct gdtr gdtr_instance;
+static struct gdt   gdt_instance;
+static struct gdtr  gdtr_instance;
+static struct tss_t tss_instance;
 
 void gdt_load(void) {
     asm volatile("lgdt %0\n\t"
@@ -53,7 +54,8 @@ void gdt_load(void) {
 }
 
 void tss_load(void) {
-    asm volatile("mov $0x2b, %%ax\n\t"
+    // this must be the offset of tss
+    asm volatile("mov $0x48, %%ax\n\t"
                  "ltr %%ax\n\t"
                  :
                  :
@@ -134,21 +136,44 @@ void gdt_init() {
     gdt_instance.descriptors[8].base_high8 = 0;
 
     // TSS. 0x48
+    // NOTE: not sure about the address of tss_instance
     gdt_instance.tss.length = 104;
-    gdt_instance.tss.base_low16 = 0;
-    gdt_instance.tss.base_mid8 = 0;
+    gdt_instance.tss.base_low16 =
+        (uint16_t) (((uint64_t) &tss_instance) & 0xffff);
+    gdt_instance.tss.base_mid8 =
+        (uint8_t) (((uint64_t) &tss_instance >> 16) & 0xff);
     gdt_instance.tss.flags1 = 0b10001001;
     gdt_instance.tss.flags2 = 0;
-    gdt_instance.tss.base_high8 = 0;
-    gdt_instance.tss.base_upper32 = 0;
+    gdt_instance.tss.base_high8 =
+        (uint8_t) (((uint64_t) &tss_instance >> 24) & 0xff);
+    gdt_instance.tss.base_upper32 =
+        (uint32_t) (((uint64_t) &tss_instance >> 32) & 0xffffffff);
     gdt_instance.tss.reserved = 0;
 
     gdtr_instance.limit = sizeof(struct gdt) - 1;
     gdtr_instance.address = (uint64_t) &gdt_instance;
 
-    // load_gdt();
     gdt_load();
+    tss_load();
 }
 
-// TODO: implement TSS
-void tss_init(void) { tss_load(); }
+void tss_init(void) {
+    tss_instance.resereved0 = 0;
+    tss_instance.rsp0 = 0;
+    tss_instance.rsp1 = 0;
+    tss_instance.rsp2 = 0;
+    tss_instance.resereved1 = 0;
+    tss_instance.resereved2 = 0;
+    tss_instance.ist1 = 0;
+    tss_instance.ist2 = 0;
+    tss_instance.ist3 = 0;
+    tss_instance.ist4 = 0;
+    tss_instance.ist5 = 0;
+    tss_instance.ist6 = 0;
+    tss_instance.ist7 = 0;
+    tss_instance.resereved3 = 0;
+    tss_instance.resereved4 = 0;
+    tss_instance.iomap_offset = 0;
+
+    tss_load();
+}
