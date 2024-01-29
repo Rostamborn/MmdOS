@@ -25,6 +25,13 @@ irq%1:
     jmp irq_stub
 %endmacro
 
+global isr128
+isr128:
+    cli
+    push 0  ; Dummy error code
+    push 0 ; Push syscall number
+    jmp syscall_stub
+
 ; CPU exceptions
 %assign n 0
 %rep 8
@@ -46,8 +53,8 @@ isr_err 14
 %assign n n+1
 %endrep
 
-isr 128
-isr 177
+; isr 128
+; isr 177
 
 irq 0, 32
 irq   1,    33
@@ -80,6 +87,8 @@ irq  15,    47
 ; %endrep
 
 extern isr_handler
+extern irq_handler
+extern syscall_handler
 extern pic_eoi
 isr_stub:
     push rax
@@ -141,6 +150,45 @@ irq_stub:
     push rbp
     mov rdi, rsp ; pass stack pointer to interrupt_dispatch
     call irq_handler
+    mov rsp, rax
+    pop rbp
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rsi
+    pop rdi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    add rsp, 16 ; remove interrupt number and error code as the stacks grows downwards
+
+    sti
+    iretq
+
+syscall_stub:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rdi
+    push rsi
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+    push rbp
+    mov rdi, rsp ; pass stack pointer to interrupt_dispatch
+    call syscall_handler
     mov rsp, rax
     pop rbp
     pop r15

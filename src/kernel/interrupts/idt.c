@@ -3,6 +3,7 @@
 #include "../cpu/pic.h"
 #include "../lib/panic.h"
 #include "../terminal/limine_term.h"
+#include "../userland/sys.h"
 #include <stdint.h>
 extern void* isr_stub_table[];
 
@@ -63,8 +64,9 @@ char* exception_messages[] = {
 
 // ISRs
 execution_context* isr_handler(execution_context* frame) {
-    void (*handler)(execution_context * frame);
+    execution_context* (*handler)(execution_context * frame);
     handler = irq_handlers[frame->int_number];
+
     if (handler) {
         handler(frame);
     }
@@ -191,7 +193,7 @@ extern void idt_init() {
 
     // used for system calls
     set_interrupt_descriptor(128, isr128, 3);
-    set_interrupt_descriptor(177, isr177, 3);
+    // set_interrupt_descriptor(177, isr177, 3);
 
     pic_init();
     idt_load();

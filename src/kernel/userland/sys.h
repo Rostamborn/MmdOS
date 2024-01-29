@@ -15,5 +15,4 @@ void syscall_init(void);
 void syscall_install_handler(
     uint8_t offset, execution_context* (*handler)(execution_context* frame));
 
-
 #endif
