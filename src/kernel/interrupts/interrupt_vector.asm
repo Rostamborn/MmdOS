@@ -29,7 +29,7 @@ global isr128
 isr128:
     cli
     push 0  ; Dummy error code
-    push 0 ; Push syscall number
+    push 0x80 ; Push syscall number
     jmp syscall_stub
 
 ; CPU exceptions
@@ -106,7 +106,7 @@ isr_stub:
     push r14
     push r15
     push rbp
-    mov rdi, rsp ; pass stack pointer to interrupt_dispatch
+    mov rdi, rsp
     call isr_handler
     mov rsp, rax
     pop rbp
@@ -148,7 +148,7 @@ irq_stub:
     push r14
     push r15
     push rbp
-    mov rdi, rsp ; pass stack pointer to interrupt_dispatch
+    mov rdi, rsp
     call irq_handler
     mov rsp, rax
     pop rbp
@@ -187,8 +187,10 @@ syscall_stub:
     push r14
     push r15
     push rbp
-    mov rdi, rsp ; pass stack pointer to interrupt_dispatch
+    mov rdi, rsp
+
     call syscall_handler
+    
     mov rsp, rax
     pop rbp
     pop r15

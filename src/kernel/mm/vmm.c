@@ -281,6 +281,9 @@ void vmm_init() {
                     if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
                         panic("bootloader reclaimable not mapped");
                     }
+                    if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
+                        panic("bootloader reclaimable not mapped");
+                    }
                 }
             case LIMINE_MEMMAP_FRAMEBUFFER:
                 for (uintptr_t i = base; i < top; i += PAGE_SIZE) {

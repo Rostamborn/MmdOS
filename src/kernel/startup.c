@@ -14,6 +14,7 @@
 #include "scheduler/scheduler.h"
 #include "terminal/limine_term.h"
 #include "terminal/prompt.h"
+#include "userland/sys.h"
 // #include "limine.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -30,6 +31,7 @@ void _start(void) {
     keyboard_init();
     pmm_init();
     vmm_init();
+    syscall_init();
     // // process init
     // scheduler_init();
     // timer_init(); // timer should be after scheduler_init
@@ -41,6 +43,7 @@ void _start(void) {
     // vmm_switch_pml(new_vmm);
     // vmm_switch_pml(vmm_kernel);
 
+    
     // this crashes because I think the stack is no longer valid because of pml
     // switch and we should do something about it. it also seems that the stack
     // resides somewhere in the lower half becuase copying the higher half of
@@ -51,6 +54,11 @@ void _start(void) {
     *ptr1 = 8765;
     kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
     kfree(ptr1);
+
+    // char* str = "Hello, World!";
+    // void* ptr0 = kalloc(64);
+    // syscall_memcpy(ptr0, str, 64);
+    // kprintf("prt0: %s\n", ptr0);
 
     // process init
     scheduler_init();

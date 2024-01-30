@@ -51,7 +51,7 @@ extern void isr29(void);
 extern void isr30(void);
 extern void isr31(void);
 extern void isr128(void);
-extern void isr177(void);
+// extern void isr177(void);
 
 // IRQs
 extern void irq0();

@@ -2,6 +2,7 @@
 #include "../cpu/cpu.h"
 #include "../cpu/pic.h"
 #include "../lib/panic.h"
+#include "../lib/logger.h"
 #include "../terminal/limine_term.h"
 #include "../userland/sys.h"
 #include <stdint.h>
@@ -64,7 +65,7 @@ char* exception_messages[] = {
 
 // ISRs
 execution_context* isr_handler(execution_context* frame) {
-    execution_context* (*handler)(execution_context * frame);
+    execution_context* (*handler)(execution_context* frame);
     handler = irq_handlers[frame->int_number];
 
     if (handler) {
@@ -73,7 +74,7 @@ execution_context* isr_handler(execution_context* frame) {
 
     if (frame->int_number < 32) {
         // log_to_serial(exception_messages[frame->int_number]);
-        panic("\n %s", exception_messages[frame->int_number]);
+        panic("%s", exception_messages[frame->int_number]);
     }
 
     return frame;
@@ -81,7 +82,7 @@ execution_context* isr_handler(execution_context* frame) {
 
 // IRQs
 execution_context* irq_handler(execution_context* frame) {
-    execution_context* (*handler)(execution_context * frame);
+    execution_context* (*handler)(execution_context* frame);
     handler = irq_handlers[frame->int_number - 32];
     if (handler) {
         if (frame->int_number == 32) {
