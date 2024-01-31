@@ -1,6 +1,7 @@
 #ifndef GDT_H
 #define GDT_H
 
+#include "cpu/cpu.h"
 #include <stdint.h>
 
 struct tss_t {
@@ -24,6 +25,10 @@ struct tss_t {
 
 void gdt_init();
 
+void tss_init();
+
 void gdt_load();
+
+void tss_set_rsp0(uint64_t rsp0);
 
 #endif

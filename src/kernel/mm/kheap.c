@@ -37,7 +37,8 @@ void* k_alloc(uint64_t size) {
     arena_t* new_arena = (arena_t*) (new_alloc + get_hhdm());
 
     for (uint64_t i = 0; i < DIV_ROUNDUP(size, PAGE_SIZE); i++) {
-        if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena + i*PAGE_SIZE, (uintptr_t) new_alloc + i*PAGE_SIZE,
+        if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena + i * PAGE_SIZE,
+                          (uintptr_t) new_alloc + i * PAGE_SIZE,
                           PTE_PRESENT | PTE_WRITABLE)) {
             panic("k_alloc: failed to map new allocated page");
         }
@@ -96,7 +97,6 @@ void k_free(void* addr) {
             vmm_unmap_page(vmm_kernel, (uintptr_t) arena + i * PAGE_SIZE, true);
         }
     }
-
 
     return;
 }

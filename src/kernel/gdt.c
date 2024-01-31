@@ -62,6 +62,8 @@ void tss_load(void) {
                  : "rax", "memory");
 }
 
+void tss_set_rsp0(uint64_t rsp0) { tss_instance.rsp0 = rsp0; }
+
 void gdt_init() {
     // Null descriptor. 0x00
     gdt_instance.descriptors[0].limit = 0;
@@ -154,7 +156,7 @@ void gdt_init() {
     gdtr_instance.address = (uint64_t) &gdt_instance;
 
     gdt_load();
-    tss_load();
+    tss_init();
 }
 
 void tss_init(void) {

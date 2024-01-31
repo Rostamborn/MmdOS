@@ -4,6 +4,9 @@
 #include "../cpu/cpu.h"
 #include <stdint.h>
 
+#define KERNEL_MODE 0
+#define USER_MODE 3
+
 #define KERNEL_CS 0x28 | 0
 #define KERNEL_SS 0x30 | 0
 #define USER_CS 0x38 | 3 // setting RPL(requested privilage lvl) to 3
