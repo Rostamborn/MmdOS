@@ -25,7 +25,8 @@ typedef struct thread_t {
     uint64_t           wake_time;
     int16_t            remaining_quantum;
     // keeping pointer to stack so to free it easily later on
-    void* stack;
+    void* ustack;
+    void* kstack;
 } thread_t;
 
 // create a thread but will not add it to process yet

@@ -80,12 +80,15 @@ prod: $(OBJS)
 	make deploy-limine -B
 
 kernel/development: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
+	@echo "compiling assembly files to objects"
+
+	nasm src/kernel/interrupts/interrupt_vector.asm ${NASMFLAGS} -o $(OBJECTS_DIR)/interrupt_vector.o
+	nasm src/kernel/userland/syscall.asm ${NASMFLAGS} -o $(OBJECTS_DIR)/syscall.o
+	nasm src/kernel/userland/user.asm ${NASMFLAGS} -o $(OBJECTS_DIR)/user.o
+
 	@echo "compiling c files to objects"
 	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -D PROD_MODE=0 -c $(KERNEL_C_FILES) ${LIB_C_FILES}
 	mv *.o $(OBJECTS_DIR)
-
-	@echo "compiling assembly files to objects"
-	nasm ${KERNEL_ASSEMBLY_FILES} ${NASMFLAGS} -o $(OBJECTS_DIR)/interrupt_vector.o
 
 	@echo "linking..."
 	$(DEFAULT_LD) $(LDFLAGS) -o $(TARGET) \

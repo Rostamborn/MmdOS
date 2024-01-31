@@ -1,7 +1,16 @@
 #include "../fs/vfs.h"
+#include "../lib/alloc.h"
 #include "../lib/logger.h"
+#include "../lib/print.h"
+#include "../userland/sys.h"
 
 void add_one_to_x() {
+    char*    str = "Hello world";
+    void*    ptr0 = kalloc(64);
+    uint64_t res0 = syscall_memcpy(ptr0, str, 12);
+    klog("process x ::", "prt0: %s", ptr0);
+    klog("process x ::", "prt0 result: %d", res0);
+
     int x = 0;
 
     while (x < 5000000) {

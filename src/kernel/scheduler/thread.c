@@ -4,18 +4,26 @@
 #include "../lib/panic.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
+#include "../userland/sys.h"
 #include "process.h"
 #include "scheduler.h"
 #include "stdbool.h"
+#include <stdint.h>
 
 #define STACK_SIZE (64 * 1024)
 
 size_t next_tid = 1;
 
 // allocate 64KB to thread Stack.
-void* alloc_stack() {
-    void* stack = kalloc(STACK_SIZE);
-    return stack + STACK_SIZE;
+void* alloc_stack(uint8_t mode) {
+    if (mode == KERNEL_MODE) {
+        return kalloc(STACK_SIZE) + STACK_SIZE;
+    } else if (mode == USER_MODE) {
+        return malloc(STACK_SIZE) + STACK_SIZE;
+    } else {
+        panic("alloc_stack: invalid mode");
+        return NULL;
+    }
 }
 
 // set status to DEAD
@@ -69,9 +77,10 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     // TODO check if process should move to ready or blocked state
     thread->status = READY;
     thread->next = NULL;
-    thread->stack = alloc_stack();
+    thread->kstack = alloc_stack(KERNEL_MODE);
+    // thread->ustack = alloc_stack(USER_MODE);
     thread->context->iret_ss = 0x30;
-    thread->context->iret_rsp = (uint64_t) thread->stack;
+    thread->context->iret_rsp = (uint64_t) thread->kstack;
     thread->context->iret_flags =
         0x202; // resets all bits but 2 and 9.
                // 2 for legacy reasons and 9 for interrupts.
@@ -120,10 +129,11 @@ void thread_delete(process_t* process, thread_t* thread) {
     spinlock_release(&lock);
     // release resources
 
-    // klog("thread_delete ::", "about to free thread.stack");
-    kfree(thread->stack - STACK_SIZE);
-    // klog("thread_delete ::", "about to free thread.context");
+    // TODO: free thread->context crashes the system and
+    // causes panic: page fault
     // kfree(thread->context);
+    kfree(thread->kstack - STACK_SIZE);
+    // free(thread->ustack - STACK_SIZE);
     kfree(thread);
 
     return;
