@@ -1,9 +1,10 @@
-#include "src/kernel/interrupts/idt.h"
-#include "src/kernel/cpu/cpu.h"
-#include "src/kernel/cpu/pic.h"
-#include "src/kernel/interrupts/idt.h"
-#include "src/kernel/lib/panic.h"
-#include "src/kernel/terminal/limine_term.h"
+#include "idt.h"
+#include "../cpu/cpu.h"
+#include "../cpu/pic.h"
+#include "../lib/panic.h"
+#include "../lib/logger.h"
+#include "../terminal/limine_term.h"
+#include "../userland/sys.h"
 #include <stdint.h>
 extern void* isr_stub_table[];
 
@@ -64,15 +65,16 @@ char* exception_messages[] = {
 
 // ISRs
 execution_context* isr_handler(execution_context* frame) {
-    void (*handler)(execution_context * frame);
+    execution_context* (*handler)(execution_context* frame);
     handler = irq_handlers[frame->int_number];
+
     if (handler) {
         handler(frame);
     }
 
     if (frame->int_number < 32) {
         // log_to_serial(exception_messages[frame->int_number]);
-        panic("\n %s", exception_messages[frame->int_number]);
+        panic("%s", exception_messages[frame->int_number]);
     }
 
     return frame;
@@ -80,7 +82,7 @@ execution_context* isr_handler(execution_context* frame) {
 
 // IRQs
 execution_context* irq_handler(execution_context* frame) {
-    execution_context* (*handler)(execution_context * frame);
+    execution_context* (*handler)(execution_context* frame);
     handler = irq_handlers[frame->int_number - 32];
     if (handler) {
         if (frame->int_number == 32) {
@@ -173,7 +175,7 @@ extern void idt_init() {
     set_interrupt_descriptor(31, isr31, 0);
 
     // here on would be IRQs
-    set_interrupt_descriptor(32, irq0, 0);
+    set_interrupt_descriptor(32, irq0, 3);
     set_interrupt_descriptor(33, irq1, 0);
     set_interrupt_descriptor(34, irq2, 0);
     set_interrupt_descriptor(35, irq3, 0);
@@ -191,8 +193,8 @@ extern void idt_init() {
     set_interrupt_descriptor(47, irq15, 0);
 
     // used for system calls
-    set_interrupt_descriptor(128, isr128, 0);
-    set_interrupt_descriptor(177, isr177, 0);
+    set_interrupt_descriptor(128, isr128, 3);
+    // set_interrupt_descriptor(177, isr177, 3);
 
     pic_init();
     idt_load();

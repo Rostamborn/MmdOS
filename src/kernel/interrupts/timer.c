@@ -1,4 +1,5 @@
 #include "timer.h"
+#include "../lib/logger.h"
 #include "../scheduler/scheduler.h"
 #include "../scheduler/process.h"
 #include "idt.h"

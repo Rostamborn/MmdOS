@@ -168,6 +168,44 @@ cleanup:
     return ok;
 }
 
+bool vmm_change_flag(vmm_t* vmm, uintptr_t virt, uint64_t flags,bool lock) {
+    if (lock) {
+        spinlock_acquire(&vmm->lock);
+    }
+
+    bool     ok = false;
+    uint64_t lvl4_offset = (virt & (0x1ffull << 39)) >> 39;
+    uint64_t lvl3_offset = (virt & (0x1ffull << 30)) >> 30;
+    uint64_t lvl2_offset = (virt & (0x1ffull << 21)) >> 21;
+    uint64_t lvl1_offset = (virt & (0x1ffull << 12)) >> 12;
+
+    uint64_t* lvl4 = vmm->pml;
+    uint64_t* lvl3 = walk_pte(lvl4, lvl4_offset, true);
+    if (lvl3 == NULL) {
+        goto cleanup;
+    }
+    uint64_t* lvl2 = walk_pte(lvl3, lvl3_offset, true);
+    if (lvl2 == NULL) {
+        goto cleanup;
+    }
+    uint64_t* lvl1 = walk_pte(lvl2, lvl2_offset, true);
+    if (lvl1 == NULL) {
+        goto cleanup;
+    }
+    if (!(lvl1[lvl1_offset] & PTE_PRESENT)) {
+        goto cleanup;
+    }
+
+    ok = true;
+    lvl1[lvl1_offset] = PTE_GET_ADDR(lvl1[lvl1_offset]) | flags;
+
+cleanup:
+    if (lock) {
+        spinlock_release(&vmm->lock);
+    }
+    return ok;
+}
+
 uint64_t* vmm_virt2pte(vmm_t* vmm, uintptr_t virt, bool alloc) {
     uint64_t lvl4_offset = (virt & (0x1ffull << 39)) >> 39;
     uint64_t lvl3_offset = (virt & (0x1ffull << 30)) >> 30;
@@ -279,6 +317,9 @@ void vmm_init() {
             case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
                 for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
                     if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
+                        panic("bootloader reclaimable not mapped");
+                    }
+                    if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
                         panic("bootloader reclaimable not mapped");
                     }
                 }
