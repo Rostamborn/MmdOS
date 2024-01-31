@@ -34,12 +34,15 @@ void* u_alloc(uint64_t size) {
 
     // no arena or no space in current arena
     void*    new_alloc = pmm_alloc(DIV_ROUNDUP(size, PAGE_SIZE));
-    arena_t* new_arena = (arena_t*) (new_alloc + get_hhdm());
+    arena_t* new_arena = (arena_t*) (new_alloc);
 
-    if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena, (uintptr_t) new_alloc,
-                      PTE_PRESENT | PTE_WRITABLE)) {
-        panic("k_alloc: failed to map new allocated page");
+    for (uint64_t i = 0; i < DIV_ROUNDUP(size, PAGE_SIZE); i++) {
+        if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena + i*PAGE_SIZE, (uintptr_t) new_alloc + i*PAGE_SIZE,
+                          PTE_PRESENT | PTE_WRITABLE | PTE_USER)) {
+            panic("u_alloc: failed to map new allocated page");
+        }
     }
+    
 
     new_arena->next = NULL;
     new_arena->base = (uintptr_t) new_arena;
@@ -86,7 +89,7 @@ void u_free(void* addr) {
             curr->next = arena->next;
         }
 
-        pmm_free((void*) arena - get_hhdm(),
+        pmm_free((void*) arena,
                  DIV_ROUNDUP(arena->size, PAGE_SIZE));
 
         for (uint64_t i = 0; i < arena->size / PAGE_SIZE; i++) {

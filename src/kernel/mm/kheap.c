@@ -36,9 +36,11 @@ void* k_alloc(uint64_t size) {
     void*    new_alloc = pmm_alloc(DIV_ROUNDUP(size, PAGE_SIZE));
     arena_t* new_arena = (arena_t*) (new_alloc + get_hhdm());
 
-    if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena, (uintptr_t) new_alloc,
-                      PTE_PRESENT | PTE_WRITABLE)) {
-        panic("k_alloc: failed to map new allocated page");
+    for (uint64_t i = 0; i < DIV_ROUNDUP(size, PAGE_SIZE); i++) {
+        if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena + i*PAGE_SIZE, (uintptr_t) new_alloc + i*PAGE_SIZE,
+                          PTE_PRESENT | PTE_WRITABLE)) {
+            panic("k_alloc: failed to map new allocated page");
+        }
     }
 
     new_arena->next = NULL;

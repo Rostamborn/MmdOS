@@ -6,8 +6,8 @@
 
 #define KERNEL_CS 0x28 | 0
 #define KERNEL_SS 0x30 | 0
-#define USER_CS 0x38 | 3
-#define USER_SS 0x40 | 3
+#define USER_CS 0x38 | 3 // setting RPL(requested privilage lvl) to 3
+#define USER_SS 0x40 | 3 // if RPL is not correctly set, it'll result in #GP error
 
 #define RFLAGS 0x202
 
