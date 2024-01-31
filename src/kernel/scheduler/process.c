@@ -34,8 +34,7 @@ process_t* process_create(char* restrict name, void* restrict function(void*),
 
     thread_t* thread = thread_add(process, name, &(*function), arg);
 
-    // TODO: vmm_create()
-    process->pml = vmm_new();
+    process->vmm = vmm_new();
 
     process_add(process);
     enable_interrupts();
@@ -66,7 +65,7 @@ process_t* process_get_list() { return processes_list; }
 
 process_t* process_get_current() { return current_process; }
 
-vmm_t* process_get_current_vmm() { return process_get_current()->pml; }
+vmm_t* process_get_current_vmm() { return process_get_current()->vmm; }
 
 void process_set_current(process_t* p) { current_process = p; }
 

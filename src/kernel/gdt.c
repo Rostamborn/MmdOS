@@ -61,7 +61,7 @@ void tss_load(void) {
 }
 
 void gdt_init() {
-    // Null descriptor.
+    // Null descriptor. 0x00
     gdt_instance.descriptors[0].limit = 0;
     gdt_instance.descriptors[0].base_low16 = 0;
     gdt_instance.descriptors[0].base_mid8 = 0;
@@ -69,7 +69,7 @@ void gdt_init() {
     gdt_instance.descriptors[0].granularity = 0;
     gdt_instance.descriptors[0].base_high8 = 0;
 
-    // Kernel code 16.
+    // Kernel code 16. 0x08
     gdt_instance.descriptors[1].limit = 0xffff;
     gdt_instance.descriptors[1].base_low16 = 0;
     gdt_instance.descriptors[1].base_mid8 = 0;
@@ -77,7 +77,7 @@ void gdt_init() {
     gdt_instance.descriptors[1].granularity = 0b00000000;
     gdt_instance.descriptors[1].base_high8 = 0;
 
-    // Kernel data 16.
+    // Kernel data 16. 0x10
     gdt_instance.descriptors[2].limit = 0xffff;
     gdt_instance.descriptors[2].base_low16 = 0;
     gdt_instance.descriptors[2].base_mid8 = 0;
@@ -85,7 +85,7 @@ void gdt_init() {
     gdt_instance.descriptors[2].granularity = 0b00000000;
     gdt_instance.descriptors[2].base_high8 = 0;
 
-    // Kernel code 32.
+    // Kernel code 32. 0x18
     gdt_instance.descriptors[3].limit = 0xffff;
     gdt_instance.descriptors[3].base_low16 = 0;
     gdt_instance.descriptors[3].base_mid8 = 0;
@@ -93,7 +93,7 @@ void gdt_init() {
     gdt_instance.descriptors[3].granularity = 0b11001111;
     gdt_instance.descriptors[3].base_high8 = 0;
 
-    // Kernel data 32.
+    // Kernel data 32. 0x20
     gdt_instance.descriptors[4].limit = 0xffff;
     gdt_instance.descriptors[4].base_low16 = 0;
     gdt_instance.descriptors[4].base_mid8 = 0;
@@ -101,7 +101,7 @@ void gdt_init() {
     gdt_instance.descriptors[4].granularity = 0b11001111;
     gdt_instance.descriptors[4].base_high8 = 0;
 
-    // Kernel code 64.
+    // Kernel code 64. 0x28
     gdt_instance.descriptors[5].limit = 0;
     gdt_instance.descriptors[5].base_low16 = 0;
     gdt_instance.descriptors[5].base_mid8 = 0;
@@ -109,7 +109,7 @@ void gdt_init() {
     gdt_instance.descriptors[5].granularity = 0b00100000;
     gdt_instance.descriptors[5].base_high8 = 0;
 
-    // Kernel data 64.
+    // Kernel data 64. 0x30
     gdt_instance.descriptors[6].limit = 0;
     gdt_instance.descriptors[6].base_low16 = 0;
     gdt_instance.descriptors[6].base_mid8 = 0;
@@ -117,7 +117,7 @@ void gdt_init() {
     gdt_instance.descriptors[6].granularity = 0;
     gdt_instance.descriptors[6].base_high8 = 0;
 
-    // User code 64.
+    // User code 64. 0x38
     gdt_instance.descriptors[7].limit = 0;
     gdt_instance.descriptors[7].base_low16 = 0;
     gdt_instance.descriptors[7].base_mid8 = 0;
@@ -125,7 +125,7 @@ void gdt_init() {
     gdt_instance.descriptors[7].granularity = 0b00100000;
     gdt_instance.descriptors[7].base_high8 = 0;
 
-    // User data 64.
+    // User data 64. 0x40
     gdt_instance.descriptors[8].limit = 0;
     gdt_instance.descriptors[8].base_low16 = 0;
     gdt_instance.descriptors[8].base_mid8 = 0;
@@ -133,7 +133,7 @@ void gdt_init() {
     gdt_instance.descriptors[8].granularity = 0;
     gdt_instance.descriptors[8].base_high8 = 0;
 
-    // TSS.
+    // TSS. 0x48
     gdt_instance.tss.length = 104;
     gdt_instance.tss.base_low16 = 0;
     gdt_instance.tss.base_mid8 = 0;

@@ -18,6 +18,8 @@ struct limine_hhdm_request hhdm_req = {
     .revision = 0,
 };
 
+uint64_t hhdm_offset = 0;
+
 spinlock_t      spin_lock = SPINLOCK_INIT;
 static uint8_t* bitmap = 0;
 static uint64_t bitmap_top_index = 0;
@@ -27,11 +29,14 @@ static uint64_t bitmap_prev_index = 0;
 // static uint64_t  total_pages = 0;
 // static uint64_t  usable_pages = 0;
 // static uint64_t  reserved_pages = 0;
+uint64_t get_hhdm() { return hhdm_offset; }
 
 void pmm_init() {
     struct limine_memmap_response* memmap = memmap_req.response;
     struct limine_hhdm_response*   hhdm = hhdm_req.response;
     struct limine_memmap_entry**   entries = memmap->entries;
+
+    hhdm_offset = hhdm->offset;
 
     uint64_t highest_addr = 0;
 
@@ -70,8 +75,8 @@ void pmm_init() {
             // This is where we determine where the free space for allocation
             // resides
             bitmap = (uint8_t*) (entry->base +
-                                 HHDM_OFFSET); // offsetting the bitmap to the
-                                               // higher half of the memory
+                                 get_hhdm()); // offsetting the bitmap to the
+                                              // higher half of the memory
             // Initialise entire bitmap to 1 (non-free)
             memset(bitmap, 0xff, bitmap_size);
 
@@ -157,7 +162,7 @@ void* pmm_alloc(uint64_t n_pages) {
     void* allocated = pmm_alloc_nozero(n_pages);
     if (allocated != NULL) {
         // memset(allocated, 0, n_pages * PAGE_SIZE);
-        memset(allocated + HHDM_OFFSET, 0, n_pages * PAGE_SIZE);
+        memset(allocated + get_hhdm(), 0, n_pages * PAGE_SIZE);
     }
 
     return allocated;

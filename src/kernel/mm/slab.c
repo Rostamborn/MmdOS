@@ -35,7 +35,7 @@ static inline slab* slab_search(uint64_t size) {
 
 static void create_slab(slab* slab, uint64_t entry_size) {
     slab->spin_lock = (spinlock_t) SPINLOCK_INIT;
-    slab->free_entry = pmm_alloc_nozero(1) + HHDM_OFFSET;
+    slab->free_entry = pmm_alloc_nozero(1) + get_hhdm();
     slab->entry_size = entry_size;
 
     uint64_t header_offset = ALIGN_UP(sizeof(slab_header), entry_size);
@@ -101,7 +101,7 @@ void* slab_alloc(uint64_t size) {
         return NULL;
     }
 
-    res += HHDM_OFFSET;
+    res += get_hhdm();
 
     // The metadata(alloc_info) resides in a page
     allocation_info* alloc_info = (allocation_info*) res;
@@ -119,7 +119,7 @@ void slab_free(void* addr) {
     // if the lower 12 bits are 0, then it's a slab, otherwise a slab_ptr
     if (((uintptr_t) addr & 0xfff) == 0) {
         allocation_info* alloc_info = (allocation_info*) (addr - PAGE_SIZE);
-        pmm_free((void*) alloc_info - HHDM_OFFSET,
+        pmm_free((void*) alloc_info - get_hhdm(),
                  alloc_info->n_pages + 1); // +1 becuase of the metadata
         return;
     }

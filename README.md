@@ -12,6 +12,8 @@ which are usually pre-installed on UNIX-like systems. Also [qemu](https://www.qe
 
 We also use [clang-format](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormat.html) in the `make format` script, so make sure to have it installed in a development workspace.
 
+In order to run the debugger, be sure to have [gdb](https://www.sourceware.org/gdb/).
+
 to compile and build in debug mode run:
 
 ```sh
@@ -28,6 +30,16 @@ if you want to run the os using qemu, execute:
 
 ```sh
 make run
+```
+
+if you want to use gdb:
+
+```sh
+make drun
+```
+then open another shell and move to the same directory and:
+```sh
+make gdb
 ```
 
 #### Implemented features

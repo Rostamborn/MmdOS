@@ -30,25 +30,29 @@ void _start(void) {
     pmm_init();
     vmm_init();
     vfs_init();
-    scheduler_init();
-    timer_init(); // timer should be after scheduler_init
+    read_file_x();
+    read_file_y();
 
+    // TODO: crashes because of the absence of the lower half mappings
+    //  which includes the framebuffer. we should fix this.
+    //  mapping in vmm_init didn't fix
     // vmm_t* new_vmm = vmm_new();
-    // // TODO: crashes because of the absence of the lower half mappings
     // vmm_switch_pml(new_vmm);
     // vmm_switch_pml(vmm_kernel);
 
-    // this crashes because I think the stack is no longer valid because of pml
-    // switch and we should do something about it. it also seems that the stack
-    // resides somewhere in the lower half becuase copying the higher half of
-    // vmm_kernel is not enough and the program crashes and when I copy the
-    // lower half too, it works.
+    // this crashes because I think the stack is no longer valid because of
+    // pml switch and we should do something about it. it also seems that
+    // the stack resides somewhere in the lower half becuase copying the
+    // higher half of vmm_kernel is not enough and the program crashes and
+    // when I copy the lower half too, it works.
 
-    // uint64_t* ptr1 = kalloc(sizeof(uint64_t));
-    // *ptr1 = 8765;
-    // kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
-    // kfree(ptr1);
+    uint64_t* ptr1 = kalloc(9000);
+    *ptr1 = 8765;
+    kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
+    kfree(ptr1);
 
+    // process init
+    scheduler_init();
     // for demonstration ---
     process_t* p = process_create("adder1", &add_one_to_x, NULL);
     process_t* p2 = process_create("adder2", &add_one_to_y, NULL);
@@ -60,6 +64,15 @@ void _start(void) {
     p2->status = SLEEPING;
     p2->wake_time = timer_get_uptime() + (5 * 1000);
     // ---------------------
+
+    uint64_t* ptr2 = kalloc(9000);
+    *ptr2 = 8765;
+    kprintf("ptr2 addr: %p value: %d\n", ptr2, *ptr2);
+    kfree(ptr2);
+
+    // important: timer should be after all these code so that
+    // it won't interrupt anything by mistake
+    timer_init();
 
     for (;;)
         ;

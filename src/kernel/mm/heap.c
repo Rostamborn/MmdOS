@@ -1,13 +1,13 @@
-#include "kheap.h"
 #include "../lib/logger.h"
 #include "../lib/panic.h"
-// #include "../scheduler/process.h"
+#include "../scheduler/process.h"
+#include "kheap.h"
 #include "pmm.h"
 #include "vmm.h"
 #include <stdint.h>
 
-void* k_alloc(uint64_t size) {
-    vmm_t* curr_vmm = vmm_kernel;
+void* u_alloc(uint64_t size) {
+    vmm_t* curr_vmm = process_get_current_vmm();
 
     arena_t* current = curr_vmm->arena;
     if (current != NULL) {
@@ -67,7 +67,7 @@ void* k_alloc(uint64_t size) {
     return ret;
 }
 
-void k_free(void* addr) {
+void u_free(void* addr) {
     arena_metadata* metadata =
         (arena_metadata*) (addr - sizeof(arena_metadata));
     arena_t* arena = (arena_t*) metadata->arena_base;
@@ -76,8 +76,7 @@ void k_free(void* addr) {
 
     if (arena->allocated <= 0) {
         // free arena
-        klog("k_free ::", "allocated <= 0");
-        arena_t* curr = vmm_kernel->arena;
+        arena_t* curr = process_get_current_vmm()->arena;
         if (curr == arena) {
             curr = arena->next;
         } else {
@@ -91,7 +90,8 @@ void k_free(void* addr) {
                  DIV_ROUNDUP(arena->size, PAGE_SIZE));
 
         for (uint64_t i = 0; i < arena->size / PAGE_SIZE; i++) {
-            vmm_unmap_page(vmm_kernel, (uintptr_t) arena + i * PAGE_SIZE, true);
+            vmm_unmap_page(process_get_current_vmm(),
+                           (uintptr_t) arena + i * PAGE_SIZE, true);
         }
     }
 
