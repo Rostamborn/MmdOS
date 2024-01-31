@@ -1,6 +1,9 @@
-#include <stdint.h>
+#ifndef KERNEL_UTIL_DEF
+#define KERNEL_UTIL_DEF
 
-#define NULL (void*) 0
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define PAGE_SIZE 4096
 
@@ -60,4 +63,15 @@ void memset(void* ptr, uint8_t value, uint64_t size);
 
 void memcpy(void* restrict dest, const void* restrict src, uint64_t size);
 
+int64_t kpow(int64_t x, uint16_t y);
+
 void kstrcpy(char dest[], char* src, uint32_t size);
+
+bool kstrcmp(char* str1, char* str2);
+
+// converts octal number in ascii to its decimal counterpart
+// note that numbers should start with 0
+// wrong size or not starting with 0 result in undefined behaviour!!
+size_t oct_ascii_to_dec(char* number, uint16_t size);
+
+#endif

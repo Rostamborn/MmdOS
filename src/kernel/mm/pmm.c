@@ -55,7 +55,7 @@ void pmm_init() {
     uint64_t bitmap_size = ALIGN_UP(bitmap_top_index / 8, PAGE_SIZE);
 
     klog("PMM ::", "highest addr: %x", highest_addr);
-    klog("PMM ::", "bitmap size: %d", bitmap_size);
+    klog("PMM ::", "bitmap size: %u", bitmap_size);
 
     // Find a hole for the bitmap in the memory map.
     // Find a place for the bitmap to reside in.

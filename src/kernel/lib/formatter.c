@@ -49,6 +49,40 @@ int format_char(int c, char buffer[], int buffer_offset) {
     return buffer_offset;
 }
 
+int format_uint(uint64_t uint, char buffer[], int buffer_offset) {
+    if (uint == 0) {
+        if (buffer_offset < MAX_STRING_FORMATTER_BUFFER_SIZE) {
+            buffer[buffer_offset] = '0';
+            buffer_offset++;
+        }
+        return buffer_offset;
+    }
+    uint32_t len = 0;
+    uint64_t remainder = uint;
+    while (remainder != 0) {
+        len++;
+        remainder /= 10;
+    }
+
+    char number[len];
+
+    for (uint32_t i = 0; i < len; i++) {
+        number[i] = (uint % 10) + '0';
+        uint /= 10;
+    }
+
+    for (int i = len - 1; i >= 0; i--) {
+        if (buffer_offset < MAX_STRING_FORMATTER_BUFFER_SIZE) {
+            buffer[buffer_offset] = number[i];
+            buffer_offset++;
+        } else {
+            break;
+        }
+    }
+
+    return buffer_offset;
+}
+
 int format_int(int64_t integer, char buffer[], int buffer_offset) {
     if (integer == 0) {
         if (buffer_offset < MAX_STRING_FORMATTER_BUFFER_SIZE) {
@@ -101,6 +135,8 @@ int format_handler(char format, char buffer[], int buffer_offset,
 
     // unsigned int
     case 'u':
+        uint64_t uint_arg = va_arg(args, uint64_t);
+        buffer_offset = format_uint(uint_arg, buffer, buffer_offset);
         break;
 
     // unsigned octal

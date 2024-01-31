@@ -64,7 +64,7 @@ char* exception_messages[] = {
 
 // ISRs
 execution_context* isr_handler(execution_context* frame) {
-    void (*handler)(execution_context * frame);
+    void (*handler)(execution_context* frame);
     handler = irq_handlers[frame->int_number];
     if (handler) {
         handler(frame);
@@ -80,7 +80,7 @@ execution_context* isr_handler(execution_context* frame) {
 
 // IRQs
 execution_context* irq_handler(execution_context* frame) {
-    execution_context* (*handler)(execution_context * frame);
+    execution_context* (*handler)(execution_context* frame);
     handler = irq_handlers[frame->int_number - 32];
     if (handler) {
         if (frame->int_number == 32) {

@@ -1,6 +1,7 @@
 #include "cpu/cpu.h"
 #include "cpu/pic.h"
-#include "demo.h"
+#include "demo/demo.h"
+#include "fs/vfs.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
 #include "interrupts/keyboard.h"
@@ -14,10 +15,8 @@
 #include "scheduler/scheduler.h"
 #include "terminal/limine_term.h"
 #include "terminal/prompt.h"
-// #include "limine.h"
 #include <stdbool.h>
 #include <stdint.h>
-// #include <stdint.h>
 
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own functions*
 
@@ -30,6 +29,7 @@ void _start(void) {
     keyboard_init();
     pmm_init();
     vmm_init();
+    vfs_init();
     scheduler_init();
     timer_init(); // timer should be after scheduler_init
 
@@ -49,7 +49,7 @@ void _start(void) {
     // kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
     // kfree(ptr1);
 
-    // // for demonstration ---
+    // for demonstration ---
     process_t* p = process_create("adder1", &add_one_to_x, NULL);
     process_t* p2 = process_create("adder2", &add_one_to_y, NULL);
     thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z, NULL);
