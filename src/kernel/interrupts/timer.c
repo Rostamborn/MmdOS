@@ -22,7 +22,8 @@ uint64_t quantum = 10;
 execution_context* timer_handler(execution_context* frame) {
     uptime += quantum;
     frame = schedule(frame);
-    // vmm_switch_pml(process_get_current_vmm());
+    // vmm_switch_pml(vmm_kernel);
+    // klog("TIMER ::", "timer_handler");
 
     return frame;
 }

@@ -1,10 +1,10 @@
 #include "process.h"
 #include "../lib/alloc.h"
 #include "../lib/logger.h"
+#include "../lib/panic.h"
 #include "../lib/print.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
-#include "../lib/panic.h"
 #include "../scheduler/process.h"
 #include "stdbool.h"
 #include <stdint.h>
@@ -33,6 +33,7 @@ process_t* process_create(char* restrict name, void* restrict function(void*),
     process->pid = next_pid++;
     process->status = SPAWNED;
 
+    klog("PROCESS::", "before thread_add");
     thread_t* thread = thread_add(process, name, &(*function), arg);
 
     process->vmm = vmm_new();
@@ -40,6 +41,7 @@ process_t* process_create(char* restrict name, void* restrict function(void*),
     process_add(process);
     enable_interrupts();
 
+    klog("PROCESS::", "process created");
     return process;
 }
 

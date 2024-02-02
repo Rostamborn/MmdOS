@@ -16,14 +16,15 @@ size_t next_tid = 1;
 
 // allocate 64KB to thread Stack.
 void* alloc_stack(uint8_t mode) {
-    if (mode == KERNEL_MODE) {
-        return kalloc(STACK_SIZE) + STACK_SIZE;
-    } else if (mode == USER_MODE) {
-        return malloc(STACK_SIZE) + STACK_SIZE;
-    } else {
-        panic("alloc_stack: invalid mode");
-        return NULL;
-    }
+    return kalloc(STACK_SIZE) + STACK_SIZE;
+    // if (mode == KERNEL_MODE) {
+    //     return kalloc(STACK_SIZE) + STACK_SIZE;
+    // } else if (mode == USER_MODE) {
+    //     return malloc(STACK_SIZE) + STACK_SIZE;
+    // } else {
+    //     panic("alloc_stack: invalid mode");
+    //     return NULL;
+    // }
 }
 
 // set status to DEAD
@@ -79,6 +80,7 @@ thread_t* thread_add(process_t* restrict process, char* restrict name,
     thread->next = NULL;
     thread->kstack = alloc_stack(KERNEL_MODE);
     // thread->ustack = alloc_stack(USER_MODE);
+    thread->ustack = NULL;
     thread->context->iret_ss = 0x30;
     thread->context->iret_rsp = (uint64_t) thread->kstack;
     thread->context->iret_flags =

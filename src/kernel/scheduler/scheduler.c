@@ -1,5 +1,7 @@
 #include "scheduler.h"
+#include "process.h"
 #include "../cpu/cpu.h"
+#include "../gdt.h"
 #include "../interrupts/timer.h"
 #include "../lib/logger.h"
 #include "../lib/panic.h"
@@ -10,6 +12,20 @@ void scheduler_init() { process_create("idle process", &process_idle, NULL); }
 
 // return control to scheduler by firing interrupt
 void scheduler_yield() { asm("int $0x20"); }
+
+execution_context* scheduler_context_switch(execution_context* context) {
+    tss_set_rsp0((uint64_t)process_get_current()->running_thread->kstack);
+    klog("context switch ::", "switched tss rsp0");
+
+    context = process_get_current()->running_thread->context;
+    klog("context switch ::", "update context");
+
+    vmm_switch_pml(process_get_current_vmm());
+    vmm_switch_pml(vmm_kernel);
+    klog("context switch ::", "switched pml");
+
+    return context;
+} 
 
 // private method for schedule
 bool switch_threads(process_t* process) {
@@ -210,6 +226,12 @@ execution_context* schedule(execution_context* restrict context) {
         }
     }
 
+    if (current_process->pid != 1) {
+        klog("SCHEDULER ::",
+             "thread with tid: %d from process with pid: %d will run next",
+             current_process->running_thread->tid, current_process->pid);
+    }
+
     process_set_current(current_process);
     current_process->status = RUNNING;
     current_process->running_thread->status = RUNNING;
@@ -218,16 +240,13 @@ execution_context* schedule(execution_context* restrict context) {
         current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
         current_process->running_thread->remaining_quantum =
             DEFAULT_THREAD_RUNNING_QUANTUM;
+
+        return scheduler_context_switch(process_get_current()->running_thread->context);
     } else if (thread_switched) {
         current_process->running_thread->remaining_quantum =
             DEFAULT_THREAD_RUNNING_QUANTUM;
     }
 
-    if (current_process->pid != 1) {
-        klog("SCHEDULER ::",
-             "thread with tid: %d from process with pid: %d will run next",
-             current_process->running_thread->tid, current_process->pid);
-    }
-
+    
     return current_process->running_thread->context;
 }

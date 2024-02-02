@@ -1,6 +1,7 @@
 #include "vmm.h"
 #include "../lib/alloc.h"
 #include "../lib/logger.h"
+#include "../cpu/cpu.h"
 #include "../lib/panic.h"
 #include "../lib/util.h"
 #include "../limine.h"
@@ -24,7 +25,7 @@ extern char _kernel_end[];
 
 static uint64_t* walk_pte(uint64_t* pte, uint64_t offset, bool alloc) {
     if (pte[offset] & PTE_PRESENT) {
-        return (uint64_t*) (PTE_GET_ADDR(pte[offset]));
+        return (uint64_t*) (PTE_GET_ADDR(pte[offset]) + get_hhdm());
     }
 
     if (!alloc) {
@@ -37,19 +38,27 @@ static uint64_t* walk_pte(uint64_t* pte, uint64_t offset, bool alloc) {
 
     // not sure bout the PTE_USER flag
     pte[offset] = (uint64_t) next_lvl | PTE_PRESENT | PTE_WRITABLE;
-    return next_lvl +
-           get_hhdm(); // get_hhdm() because we access using virtual memory
+    return (uint64_t*)(next_lvl + get_hhdm());
 }
 
 
 vmm_t* vmm_new() {
     vmm_t* new_vmm = pmm_alloc(1);
     new_vmm = (vmm_t*) ((uintptr_t) new_vmm + get_hhdm());
+    new_vmm->arena = NULL;
     new_vmm->lock = (spinlock_t) SPINLOCK_INIT;
     new_vmm->pml = pmm_alloc(1);
+    // new_vmm->pml = (uint64_t*) ((uintptr_t) new_vmm->pml + get_hhdm());
     new_vmm->pml = (uint64_t*) ((uintptr_t) new_vmm->pml + get_hhdm());
 
-    for (uint64_t i = 0; i < 512; i++) {
+    vmm_map_page(vmm_kernel, (uintptr_t)((void*)new_vmm + get_hhdm()), (uintptr_t) new_vmm,
+                 PTE_PRESENT | PTE_WRITABLE);
+
+    vmm_map_page(vmm_kernel, (uintptr_t)((void*)new_vmm->pml + get_hhdm()), (uintptr_t) new_vmm->pml,
+                 PTE_PRESENT | PTE_WRITABLE);
+
+
+    for (uint64_t i = 256; i < 512; i++) {
         new_vmm->pml[i] = vmm_kernel->pml[i];
     }
 
@@ -82,7 +91,8 @@ void vmm_destroy(vmm_t* vmm) {
 
 
 void vmm_switch_pml(vmm_t* vmm) {
-    asm volatile("mov %0, %%cr3" ::"r"((void*) vmm->pml - get_hhdm())
+    flush_cr3();
+    asm volatile("mov %0, %%cr3" ::"r" ((uint64_t)((void*)vmm->pml - get_hhdm()))
                      : "memory");
 }
 
@@ -140,15 +150,15 @@ bool vmm_unmap_page(vmm_t* vmm, uintptr_t virt, bool lock) {
     uint64_t lvl1_offset = (virt & (0x1ffull << 12)) >> 12;
 
     uint64_t* lvl4 = vmm->pml;
-    uint64_t* lvl3 = walk_pte(lvl4, lvl4_offset, true);
+    uint64_t* lvl3 = walk_pte(lvl4, lvl4_offset, false);
     if (lvl3 == NULL) {
         goto cleanup;
     }
-    uint64_t* lvl2 = walk_pte(lvl3, lvl3_offset, true);
+    uint64_t* lvl2 = walk_pte(lvl3, lvl3_offset, false);
     if (lvl2 == NULL) {
         goto cleanup;
     }
-    uint64_t* lvl1 = walk_pte(lvl2, lvl2_offset, true);
+    uint64_t* lvl1 = walk_pte(lvl2, lvl2_offset, false);
     if (lvl1 == NULL) {
         goto cleanup;
     }
@@ -313,26 +323,26 @@ void vmm_init() {
         uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
         uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
 
-        switch (entry->type) {
-            case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
-                for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
-                    if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
-                        panic("bootloader reclaimable not mapped");
-                    }
-                    if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
-                        panic("bootloader reclaimable not mapped");
-                    }
-                }
-            case LIMINE_MEMMAP_FRAMEBUFFER:
-                for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
-                    if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
-                        panic("framebuffer not mapped");
-                    }
-                    if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
-                        panic("framebuffer not mapped");
-                    }
-                }
-        }
+        // switch (entry->type) {
+        //     case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
+        //         for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
+        //             if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
+        //                 panic("bootloader reclaimable not mapped");
+        //             }
+        //             if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
+        //                 panic("bootloader reclaimable not mapped");
+        //             }
+        //         }
+        //     case LIMINE_MEMMAP_FRAMEBUFFER:
+        //         for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
+        //             if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
+        //                 panic("framebuffer not mapped");
+        //             }
+        //             if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
+        //                 panic("framebuffer not mapped");
+        //             }
+        //         }
+        // }
 
         if (top <= 0x100000000) {
             continue;
@@ -343,16 +353,13 @@ void vmm_init() {
                 continue;
             }
 
-            bool res1 = vmm_map_page(vmm_kernel, j, j,
-                                     PTE_PRESENT | PTE_WRITABLE);
-            if (!res1) {
+            if (vmm_map_page(vmm_kernel, j, j,
+                                     PTE_PRESENT | PTE_WRITABLE)) {
                 panic("Failed to identity map physical memory");
             }
 
-            bool res2 =
-                vmm_map_page(vmm_kernel, j + get_hhdm(), j,
-                             PTE_PRESENT | PTE_WRITABLE | PTE_NO_EXECUTE);
-            if (!res2) {
+            if (!vmm_map_page(vmm_kernel, j + get_hhdm(), j,
+                             PTE_PRESENT | PTE_WRITABLE)) {
                 panic("Failed to map physical memory");
             }
         }
