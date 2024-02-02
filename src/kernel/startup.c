@@ -41,8 +41,8 @@ void _start(void) {
     vmm_init();
     vfs_init();
     syscall_init();
-    read_file_x();
-    read_file_y();
+    // read_file_x();
+    // read_file_y();
 
     // TODO: crashes because of the absence of the lower half mappings
     //  which includes the framebuffer. we should fix this.
@@ -53,7 +53,7 @@ void _start(void) {
 
     uint64_t* ptr1 = kalloc(9000);
     *ptr1 = 8765;
-    kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
+    // kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
     kfree(ptr1);
 
     // user shit
@@ -86,7 +86,7 @@ void _start(void) {
 
     uint64_t* ptr2 = kalloc(9000);
     *ptr2 = 8765;
-    kprintf("ptr2 addr: %p value: %d\n", ptr2, *ptr2);
+    // kprintf("ptr2 addr: %p value: %d\n", ptr2, *ptr2);
     kfree(ptr2);
 
     // important: timer should be after all these code so that
