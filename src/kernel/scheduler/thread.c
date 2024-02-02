@@ -129,7 +129,7 @@ void thread_delete(process_t* process, thread_t* thread) {
     spinlock_release(&lock);
     // release resources
 
-    // TODO: free thread->context crashes the system and 
+    // TODO: free thread->context crashes the system and
     // causes panic: page fault
     // kfree(thread->context);
     kfree(thread->kstack - STACK_SIZE);

@@ -29,9 +29,7 @@ static uint64_t bitmap_prev_index = 0;
 // static uint64_t  total_pages = 0;
 // static uint64_t  usable_pages = 0;
 // static uint64_t  reserved_pages = 0;
-uint64_t get_hhdm() {
-    return hhdm_offset;
-}
+uint64_t get_hhdm() { return hhdm_offset; }
 
 void pmm_init() {
     struct limine_memmap_response* memmap = memmap_req.response;
@@ -62,7 +60,7 @@ void pmm_init() {
     uint64_t bitmap_size = ALIGN_UP(bitmap_top_index / 8, PAGE_SIZE);
 
     klog("PMM ::", "highest addr: %x", highest_addr);
-    klog("PMM ::", "bitmap size: %d", bitmap_size);
+    klog("PMM ::", "bitmap size: %u", bitmap_size);
 
     // Find a hole for the bitmap in the memory map.
     // Find a place for the bitmap to reside in.
@@ -78,7 +76,7 @@ void pmm_init() {
             // resides
             bitmap = (uint8_t*) (entry->base +
                                  get_hhdm()); // offsetting the bitmap to the
-                                               // higher half of the memory
+                                              // higher half of the memory
             // Initialise entire bitmap to 1 (non-free)
             memset(bitmap, 0xff, bitmap_size);
 

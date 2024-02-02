@@ -41,7 +41,6 @@ static uint64_t* walk_pte(uint64_t* pte, uint64_t offset, bool alloc) {
            get_hhdm(); // get_hhdm() because we access using virtual memory
 }
 
-
 vmm_t* vmm_new() {
     vmm_t* new_vmm = pmm_alloc(1);
     new_vmm = (vmm_t*) ((uintptr_t) new_vmm + get_hhdm());
@@ -59,7 +58,7 @@ vmm_t* vmm_new() {
 static void destroy_lvl(uint64_t* lvl, uint64_t lvl_offset) {
     // basis of recursion
     if (lvl == 0) {
-        
+
         return;
     }
     // NOTE: not sure, maybe a bug
@@ -67,10 +66,10 @@ static void destroy_lvl(uint64_t* lvl, uint64_t lvl_offset) {
         if (lvl[i] & PTE_PRESENT) {
             uint64_t* next_lvl = (uint64_t*) (PTE_GET_ADDR(lvl[i]));
             destroy_lvl(next_lvl, lvl_offset - 1);
-            pmm_free((void*)next_lvl - get_hhdm(), 1);
+            pmm_free((void*) next_lvl - get_hhdm(), 1);
         }
     }
-    pmm_free((void*)lvl - get_hhdm(), 1);
+    pmm_free((void*) lvl - get_hhdm(), 1);
 }
 
 void vmm_destroy(vmm_t* vmm) {
@@ -80,10 +79,9 @@ void vmm_destroy(vmm_t* vmm) {
     pmm_free((void*) vmm - get_hhdm(), 1);
 }
 
-
 void vmm_switch_pml(vmm_t* vmm) {
     asm volatile("mov %0, %%cr3" ::"r"((void*) vmm->pml - get_hhdm())
-                     : "memory");
+                 : "memory");
 }
 
 bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical,
@@ -168,7 +166,7 @@ cleanup:
     return ok;
 }
 
-bool vmm_change_flag(vmm_t* vmm, uintptr_t virt, uint64_t flags,bool lock) {
+bool vmm_change_flag(vmm_t* vmm, uintptr_t virt, uint64_t flags, bool lock) {
     if (lock) {
         spinlock_acquire(&vmm->lock);
     }
@@ -314,24 +312,28 @@ void vmm_init() {
         uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
 
         switch (entry->type) {
-            case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
-                for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
-                    if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
-                        panic("bootloader reclaimable not mapped");
-                    }
-                    if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
-                        panic("bootloader reclaimable not mapped");
-                    }
+        case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
+            for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
+                if (!vmm_map_page(vmm_kernel, i + get_hhdm(), i,
+                                  PTE_PRESENT | PTE_WRITABLE)) {
+                    panic("bootloader reclaimable not mapped");
                 }
-            case LIMINE_MEMMAP_FRAMEBUFFER:
-                for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
-                    if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
-                        panic("framebuffer not mapped");
-                    }
-                    if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
-                        panic("framebuffer not mapped");
-                    }
+                if (!vmm_map_page(vmm_kernel, i, i,
+                                  PTE_PRESENT | PTE_WRITABLE)) {
+                    panic("bootloader reclaimable not mapped");
                 }
+            }
+        case LIMINE_MEMMAP_FRAMEBUFFER:
+            for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
+                if (!vmm_map_page(vmm_kernel, i + get_hhdm(), i,
+                                  PTE_PRESENT | PTE_WRITABLE)) {
+                    panic("framebuffer not mapped");
+                }
+                if (!vmm_map_page(vmm_kernel, i, i,
+                                  PTE_PRESENT | PTE_WRITABLE)) {
+                    panic("framebuffer not mapped");
+                }
+            }
         }
 
         if (top <= 0x100000000) {
@@ -343,8 +345,8 @@ void vmm_init() {
                 continue;
             }
 
-            bool res1 = vmm_map_page(vmm_kernel, j, j,
-                                     PTE_PRESENT | PTE_WRITABLE);
+            bool res1 =
+                vmm_map_page(vmm_kernel, j, j, PTE_PRESENT | PTE_WRITABLE);
             if (!res1) {
                 panic("Failed to identity map physical memory");
             }

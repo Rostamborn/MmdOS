@@ -1,10 +1,10 @@
 #include "process.h"
 #include "../lib/alloc.h"
 #include "../lib/logger.h"
+#include "../lib/panic.h"
 #include "../lib/print.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
-#include "../lib/panic.h"
 #include "../scheduler/process.h"
 #include "stdbool.h"
 #include <stdint.h>

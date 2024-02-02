@@ -1,8 +1,8 @@
 #include "idt.h"
 #include "../cpu/cpu.h"
 #include "../cpu/pic.h"
-#include "../lib/panic.h"
 #include "../lib/logger.h"
+#include "../lib/panic.h"
 #include "../terminal/limine_term.h"
 #include "../userland/sys.h"
 #include <stdint.h>
