@@ -109,7 +109,7 @@ execution_context* keyboard_handler(execution_context* frame) {
     case 28: // enter
         if (pressed == 0) {
             prompt_enter_handler();
-            kprintf("\n$: ");
+            kprintf("$: ");
         }
         break;
     case 29: // ctrl
