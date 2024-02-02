@@ -37,28 +37,32 @@ if you want to use gdb:
 ```sh
 make drun
 ```
+
 then open another shell and move to the same directory and:
+
 ```sh
 make gdb
 ```
 
 #### Implemented features
 
-| Feature           | State |
-| ----------------- | ----- |
-| Limine bootloader | works |
-| kernel loading    | works |
-| GDT               | works |
-| IDT               | works |
-| PIC               | works |
-| PIT               | works |
-| Keyboard          | works |
-| printf            | works |
-| basic prompt      | works |
-| Memory Mapping    | works |
-| process           | half way done |
-| contest switching | works |
-| thread | works |
+| Feature           | State                 |
+| ----------------- | --------------------- |
+| Limine bootloader | works                 |
+| kernel loading    | works                 |
+| GDT               | works                 |
+| IDT               | works                 |
+| PIC               | works                 |
+| PIT               | works                 |
+| Keyboard          | works                 |
+| printf            | works                 |
+| basic prompt      | works                 |
+| Memory Mapping    | works                 |
+| process           | works                 |
+| contest switching | works                 |
+| thread            | works                 |
+| file system       | basic vfs implemented |
+| USTar             | works                 |
 
 #### TODO for the forseeable future
 
@@ -71,14 +75,15 @@ make gdb
 | maybe implement ACPI to gain access to more advanced devices |
 | user space |
 | system calls |
-| file system |
+| support for simple file systems like FAT |
+| simple hardware support like usb |
 
 #### Description
 
-The goal is to implement a fully functional OS which would have basic tools and 
+The goal is to implement a fully functional OS which would have basic tools and
 perhaps support libc and some Unix-like programs and applications.
 
 #### Credit
 
-Special thanks to the contributers of [Lyre-OS](https://github.com/Lyre-OS/Lyre) 
+Special thanks to the contributers of [Lyre-OS](https://github.com/Lyre-OS/Lyre)
 for being one of the main references of ideas and implementation.

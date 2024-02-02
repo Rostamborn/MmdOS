@@ -1,7 +1,7 @@
-#include "kheap.h"
 #include "../lib/logger.h"
 #include "../lib/panic.h"
 #include "../scheduler/process.h"
+#include "kheap.h"
 #include "pmm.h"
 #include "vmm.h"
 #include <stdint.h>
@@ -37,12 +37,12 @@ void* u_alloc(uint64_t size) {
     arena_t* new_arena = (arena_t*) (new_alloc);
 
     for (uint64_t i = 0; i < DIV_ROUNDUP(size, PAGE_SIZE); i++) {
-        if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena + i*PAGE_SIZE, (uintptr_t) new_alloc + i*PAGE_SIZE,
+        if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena + i * PAGE_SIZE,
+                          (uintptr_t) new_alloc + i * PAGE_SIZE,
                           PTE_PRESENT | PTE_WRITABLE | PTE_USER)) {
             panic("u_alloc: failed to map new allocated page");
         }
     }
-    
 
     new_arena->next = NULL;
     new_arena->base = (uintptr_t) new_arena;
@@ -89,8 +89,7 @@ void u_free(void* addr) {
             curr->next = arena->next;
         }
 
-        pmm_free((void*) arena,
-                 DIV_ROUNDUP(arena->size, PAGE_SIZE));
+        pmm_free((void*) arena, DIV_ROUNDUP(arena->size, PAGE_SIZE));
 
         for (uint64_t i = 0; i < arena->size / PAGE_SIZE; i++) {
             vmm_unmap_page(process_get_current_vmm(),

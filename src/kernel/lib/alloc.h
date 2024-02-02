@@ -1,8 +1,8 @@
 #ifndef KERNEL_ALLOC_H
 #define KERNEL_ALLOC_H
 
-#include "../mm/kheap.h"
 #include "../mm/heap.h"
+#include "../mm/kheap.h"
 
 static inline void* kalloc(uint64_t size) { return k_alloc(size); }
 
