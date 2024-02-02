@@ -1,4 +1,5 @@
 #include "src/kernel/terminal/prompt.h"
+#include "../lib/util.h"
 #include "src/kernel/lib/print.h"
 #include "src/kernel/terminal/limine_term.h"
 #include <stdint.h>
@@ -21,7 +22,11 @@ void prompt_enter_handler() {
     if (line_len > 0) {
         kprintf("\n");
         line_num++;
-        kprintf("%s", buffer);
+        if (kstrcmp(buffer, "clear")) {
+            prompt_clear();
+        } else {
+            kprintf("%s\n", buffer);
+        }
     }
 
     for (int i = 0; buffer_pointer > 0; buffer_pointer--) {
@@ -47,4 +52,16 @@ void prompt_backspace_handler() {
     buffer_pointer--;
     buffer[buffer_pointer] = '\0';
     kprintf("\b \b");
+}
+
+void prompt_clear() {
+    for (int i = (2 * line_num); i > -1; i--) {
+        char backspace[143] = {[0 ... 141] = '\b'};
+        char space[143] = {[0 ... 141] = ' '};
+
+        kprintf("\033[F%s%s", backspace, space);
+    }
+    kprintf("\033[F");
+    line_num = 1;
+    line_len = 0;
 }
