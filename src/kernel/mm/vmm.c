@@ -320,28 +320,6 @@ void vmm_init() {
         uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
         uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
 
-<<<<<<< HEAD
-        // switch (entry->type) {
-        //     case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
-        //         for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
-        //             if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
-        //                 panic("bootloader reclaimable not mapped");
-        //             }
-        //             if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
-        //                 panic("bootloader reclaimable not mapped");
-        //             }
-        //         }
-        //     case LIMINE_MEMMAP_FRAMEBUFFER:
-        //         for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
-        //             if(!vmm_map_page(vmm_kernel, i + get_hhdm(), i, PTE_PRESENT | PTE_WRITABLE)) {
-        //                 panic("framebuffer not mapped");
-        //             }
-        //             if(!vmm_map_page(vmm_kernel, i, i, PTE_PRESENT | PTE_WRITABLE)) {
-        //                 panic("framebuffer not mapped");
-        //             }
-        //         }
-        // }
-=======
         switch (entry->type) {
         case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
             for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
@@ -366,8 +344,6 @@ void vmm_init() {
                 }
             }
         }
->>>>>>> master
-
         if (top <= 0x100000000) {
             continue;
         }
@@ -377,14 +353,8 @@ void vmm_init() {
                 continue;
             }
 
-<<<<<<< HEAD
-            if (vmm_map_page(vmm_kernel, j, j,
+            if (!vmm_map_page(vmm_kernel, j, j,
                                      PTE_PRESENT | PTE_WRITABLE)) {
-=======
-            bool res1 =
-                vmm_map_page(vmm_kernel, j, j, PTE_PRESENT | PTE_WRITABLE);
-            if (!res1) {
->>>>>>> master
                 panic("Failed to identity map physical memory");
             }
 
