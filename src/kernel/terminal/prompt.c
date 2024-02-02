@@ -19,8 +19,9 @@ void prompt_init() {
 }
 
 void prompt_enter_handler() {
+    kprintf("\n");
+
     if (line_len > 0) {
-        kprintf("\n");
         line_num++;
         if (kstrcmp(buffer, "clear")) {
             prompt_clear();
