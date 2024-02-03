@@ -56,13 +56,18 @@ void prompt_backspace_handler() {
 }
 
 void prompt_clear() {
+    char backspace[143] = {[0 ... 141] = '\b'};
+    char space[143] = {[0 ... 141] = ' '};
     for (int i = (2 * line_num); i > -1; i--) {
-        char backspace[143] = {[0 ... 141] = '\b'};
-        char space[143] = {[0 ... 141] = ' '};
-
         kprintf("\033[F%s%s", backspace, space);
     }
     kprintf("\033[F");
     line_num = 1;
     line_len = 0;
+}
+
+void clear_screen() {
+    for (int i = 0; i < 48; i++) {
+        prompt_clear();
+    }
 }

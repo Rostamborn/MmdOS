@@ -3,6 +3,7 @@
 #include "src/kernel/lib/print.h"
 #include "src/kernel/terminal/limine_term.h"
 #include "src/kernel/terminal/prompt.h"
+#include "../lib/spinlock.h"
 #include <stdint.h>
 
 // typedef enum {
@@ -12,6 +13,10 @@
 //     Alt = 4,
 //     Ctrl = 8,
 // } Key_Modifier;
+
+uint8_t keyboard_buffer = 0;
+spinlock_t keyabord_lock = SPINLOCK_INIT;
+
 
 typedef struct {
     uint8_t shift;
@@ -156,24 +161,37 @@ execution_context* keyboard_handler(execution_context* frame) {
         break;
     default:
         if (pressed == 0) {
-
+            spinlock_acquire(&keyabord_lock);
             if (keyboard.shift && keyboard.caps_lock) {
                 // print lower case
-                kprintf("%c", lower_case[scancode]);
-                prompt_char_handler(lower_case[scancode]);
+                // kprintf("%c", lower_case[scancode]);
+                // prompt_char_handler(lower_case[scancode]);
+                keyboard_buffer = lower_case[scancode];
             } else if (keyboard.shift || keyboard.caps_lock) {
                 // print upper case
-                kprintf("%c", upper_case[scancode]);
-                prompt_char_handler(upper_case[scancode]);
+                // kprintf("%c", upper_case[scancode]);
+                // prompt_char_handler(upper_case[scancode]);
+                keyboard_buffer = upper_case[scancode];
             } else {
                 // print lower case
-                kprintf("%c", lower_case[scancode]);
-                prompt_char_handler(lower_case[scancode]);
+                // kprintf("%c", lower_case[scancode]);
+                // prompt_char_handler(lower_case[scancode]);
+                keyboard_buffer = lower_case[scancode];
             }
+            spinlock_release(&keyabord_lock);
         }
     }
 
     return frame;
+}
+
+uint8_t keyboard_getch() {
+    spinlock_acquire(&keyabord_lock);
+    uint8_t res = keyboard_buffer;
+    keyboard_buffer = 0;
+    spinlock_release(&keyabord_lock);
+
+    return res;
 }
 
 void keyboard_init() { irq_install_handler(1, &keyboard_handler); }

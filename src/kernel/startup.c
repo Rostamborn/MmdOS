@@ -12,6 +12,7 @@
 #include "mm/kheap.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
+#include "programs/gameoflife/gameoflife.h"
 #include "scheduler/process.h"
 #include "scheduler/scheduler.h"
 #include "terminal/limine_term.h"
@@ -51,10 +52,10 @@ void _start(void) {
     // vmm_switch_pml(new_vmm);
     // vmm_switch_pml(vmm_kernel);
 
-    uint64_t* ptr1 = kalloc(9000);
-    *ptr1 = 8765;
-    // kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
-    kfree(ptr1);
+    // uint64_t* ptr1 = kalloc(9000);
+    // *ptr1 = 8765;
+    // // kprintf("ptr1 addr: %p value: %d\n", ptr1, *ptr1);
+    // kfree(ptr1);
 
     // process_t* p = process_create("user_program", &user_program, NULL);
     // p->vmm = vmm_kernel;
@@ -87,19 +88,19 @@ void _start(void) {
     scheduler_init();
 
     // for demonstration ---
-    process_t* p = process_create("adder1", &add_one_to_x, NULL);
+    process_t* p = process_create("adder1", &game_loop, NULL);
     process_t* p2 = process_create("adder2", &add_one_to_y, NULL);
-    // thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z,
-    // NULL); set thread to sleep 10 seconds t->status = SLEEPING; t->wake_time
-    // = timer_get_uptime() + (5 * 1000); set process to sleep 10 seconds
-    p2->status = SLEEPING;
-    p2->wake_time = timer_get_uptime() + (5 * 1000);
-    // ---------------------
-
-    uint64_t* ptr2 = kalloc(9000);
-    *ptr2 = 8765;
-    // kprintf("ptr2 addr: %p value: %d\n", ptr2, *ptr2);
-    kfree(ptr2);
+    // // thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z,
+    // // NULL); set thread to sleep 10 seconds t->status = SLEEPING; t->wake_time
+    // // = timer_get_uptime() + (5 * 1000); set process to sleep 10 seconds
+    // p2->status = SLEEPING;
+    // p2->wake_time = timer_get_uptime() + (5 * 1000);
+    // // ---------------------
+    //
+    // uint64_t* ptr2 = kalloc(9000);
+    // *ptr2 = 8765;
+    // // kprintf("ptr2 addr: %p value: %d\n", ptr2, *ptr2);
+    // kfree(ptr2);
 
     // important: timer should be after all these code so that
     // it won't interrupt anything by mistake

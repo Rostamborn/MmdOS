@@ -7,4 +7,7 @@ void prompt_init();               // setup prompt
 void prompt_enter_handler();      // handle enter key press
 void prompt_char_handler(char c); // handle char key press
 void prompt_backspace_handler();  // handle backspace press
+void prompt_clear();
+void clear_screen();
+
 #endif
