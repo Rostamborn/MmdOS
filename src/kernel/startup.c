@@ -42,7 +42,7 @@ void _start(void) {
     vfs_init();
     syscall_init();
     // read_file_x();
-    // read_file_y();
+    //   read_file_y();
 
     // TODO: crashes because of the absence of the lower half mappings
     //  which includes the framebuffer. we should fix this.
@@ -63,16 +63,19 @@ void _start(void) {
     // // Note: use vmm_switch_pml(p->vmm) to switch mapping directory instantly
     // //
     // void* user_stack = pmm_alloc(16) + 16*PAGE_SIZE;
-    // vmm_map_page(vmm_kernel, (uintptr_t)user_stack, (uintptr_t)user_stack, PTE_PRESENT | PTE_WRITABLE | PTE_USER);
-    // vmm_map_page(p->vmm, (uintptr_t)&user_program, (uintptr_t)&user_program, PTE_PRESENT | PTE_WRITABLE | PTE_USER);
-    // p->threads->ustack = user_stack;
+    // vmm_map_page(vmm_kernel, (uintptr_t)user_stack, (uintptr_t)user_stack,
+    // PTE_PRESENT | PTE_WRITABLE | PTE_USER); vmm_map_page(p->vmm,
+    // (uintptr_t)&user_program, (uintptr_t)&user_program, PTE_PRESENT |
+    // PTE_WRITABLE | PTE_USER); p->threads->ustack = user_stack;
     // tss_set_rsp0((uint64_t)p->threads->kstack);
     // p->threads->context->iret_rip = (uint64_t)&user_program;
     // p->threads->context->iret_rsp = (uint64_t)user_stack;
     // klog("startup ::", "allocated everything");
-    
-    // jmp_user(/* the addr that will be put in rip*/ , /* the user_stack addr */);
-    // // NOTE: you should also map the importted program to user space. just like the above mapping.
+
+    // jmp_user(/* the addr that will be put in rip*/ , /* the user_stack addr
+    // */);
+    // // NOTE: you should also map the importted program to user space. just
+    // like the above mapping.
     //  meaning give the virtual addresses in the lower half
     //
     //
@@ -86,11 +89,9 @@ void _start(void) {
     // for demonstration ---
     process_t* p = process_create("adder1", &add_one_to_x, NULL);
     process_t* p2 = process_create("adder2", &add_one_to_y, NULL);
-    // thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z, NULL);
-    // set thread to sleep 10 seconds
-    // t->status = SLEEPING;
-    // t->wake_time = timer_get_uptime() + (5 * 1000);
-    // set process to sleep 10 seconds
+    // thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z,
+    // NULL); set thread to sleep 10 seconds t->status = SLEEPING; t->wake_time
+    // = timer_get_uptime() + (5 * 1000); set process to sleep 10 seconds
     p2->status = SLEEPING;
     p2->wake_time = timer_get_uptime() + (5 * 1000);
     // ---------------------

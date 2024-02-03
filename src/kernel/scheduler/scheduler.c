@@ -1,11 +1,11 @@
 #include "scheduler.h"
-#include "process.h"
 #include "../cpu/cpu.h"
 #include "../gdt.h"
 #include "../interrupts/timer.h"
 #include "../lib/logger.h"
 #include "../lib/panic.h"
 #include "../lib/spinlock.h"
+#include "process.h"
 #include "stdbool.h"
 
 void scheduler_init() { process_create("idle process", &process_idle, NULL); }
@@ -14,7 +14,7 @@ void scheduler_init() { process_create("idle process", &process_idle, NULL); }
 void scheduler_yield() { asm("int $0x20"); }
 
 execution_context* scheduler_context_switch(execution_context* context) {
-    tss_set_rsp0((uint64_t)process_get_current()->running_thread->kstack);
+    tss_set_rsp0((uint64_t) process_get_current()->running_thread->kstack);
     klog("context switch ::", "switched tss rsp0");
 
     context = process_get_current()->running_thread->context;
@@ -25,7 +25,7 @@ execution_context* scheduler_context_switch(execution_context* context) {
     klog("context switch ::", "switched pml");
 
     return context;
-} 
+}
 
 // private method for schedule
 bool switch_threads(process_t* process) {
@@ -241,12 +241,12 @@ execution_context* schedule(execution_context* restrict context) {
         current_process->running_thread->remaining_quantum =
             DEFAULT_THREAD_RUNNING_QUANTUM;
 
-        return scheduler_context_switch(process_get_current()->running_thread->context);
+        return scheduler_context_switch(
+            process_get_current()->running_thread->context);
     } else if (thread_switched) {
         current_process->running_thread->remaining_quantum =
             DEFAULT_THREAD_RUNNING_QUANTUM;
     }
 
-    
     return current_process->running_thread->context;
 }

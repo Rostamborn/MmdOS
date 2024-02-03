@@ -1,7 +1,7 @@
 #include "vmm.h"
+#include "../cpu/cpu.h"
 #include "../lib/alloc.h"
 #include "../lib/logger.h"
-#include "../cpu/cpu.h"
 #include "../lib/panic.h"
 #include "../lib/util.h"
 #include "../limine.h"
@@ -38,7 +38,7 @@ static uint64_t* walk_pte(uint64_t* pte, uint64_t offset, bool alloc) {
 
     // not sure bout the PTE_USER flag
     pte[offset] = (uint64_t) next_lvl | PTE_PRESENT | PTE_WRITABLE;
-    return (uint64_t*)(next_lvl + get_hhdm());
+    return (uint64_t*) (next_lvl + get_hhdm());
 }
 
 vmm_t* vmm_new() {
@@ -50,12 +50,11 @@ vmm_t* vmm_new() {
     // new_vmm->pml = (uint64_t*) ((uintptr_t) new_vmm->pml + get_hhdm());
     new_vmm->pml = (uint64_t*) ((uintptr_t) new_vmm->pml + get_hhdm());
 
-    vmm_map_page(vmm_kernel, (uintptr_t)((void*)new_vmm + get_hhdm()), (uintptr_t) new_vmm,
-                 PTE_PRESENT | PTE_WRITABLE);
+    vmm_map_page(vmm_kernel, (uintptr_t) ((void*) new_vmm + get_hhdm()),
+                 (uintptr_t) new_vmm, PTE_PRESENT | PTE_WRITABLE);
 
-    vmm_map_page(vmm_kernel, (uintptr_t)((void*)new_vmm->pml + get_hhdm()), (uintptr_t) new_vmm->pml,
-                 PTE_PRESENT | PTE_WRITABLE);
-
+    vmm_map_page(vmm_kernel, (uintptr_t) ((void*) new_vmm->pml + get_hhdm()),
+                 (uintptr_t) new_vmm->pml, PTE_PRESENT | PTE_WRITABLE);
 
     for (uint64_t i = 256; i < 512; i++) {
         new_vmm->pml[i] = vmm_kernel->pml[i];
@@ -89,8 +88,9 @@ void vmm_destroy(vmm_t* vmm) {
 }
 
 void vmm_switch_pml(vmm_t* vmm) {
-    asm volatile("mov %0, %%cr3" ::"r" ((uint64_t)((void*)vmm->pml - get_hhdm()))
-                     : "memory");
+    asm volatile(
+        "mov %0, %%cr3" ::"r"((uint64_t) ((void*) vmm->pml - get_hhdm()))
+        : "memory");
 }
 
 bool vmm_map_page(vmm_t* vmm, uintptr_t virt, uintptr_t physical,
@@ -353,13 +353,12 @@ void vmm_init() {
                 continue;
             }
 
-            if (!vmm_map_page(vmm_kernel, j, j,
-                                     PTE_PRESENT | PTE_WRITABLE)) {
+            if (!vmm_map_page(vmm_kernel, j, j, PTE_PRESENT | PTE_WRITABLE)) {
                 panic("Failed to identity map physical memory");
             }
 
             if (!vmm_map_page(vmm_kernel, j + get_hhdm(), j,
-                             PTE_PRESENT | PTE_WRITABLE)) {
+                              PTE_PRESENT | PTE_WRITABLE)) {
                 panic("Failed to map physical memory");
             }
         }

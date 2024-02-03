@@ -40,11 +40,11 @@ void add_one_to_z() {
 }
 
 void read_file_x() {
-    int  id = vfs_open("/x.txt", 0);
+    int  id = do_syscall(1, "/x.txt", 0, 0, 0);
     char buffer[50];
     kprintf("\n");
     while (1) {
-        int read = vfs_read(id, buffer, 50);
+        int read = (int) do_syscall(3, id, buffer, 50, 0);
         if (read > 0) {
             for (int k = 0; k < read; k++) {
                 kprintf("%c", buffer[k]);
@@ -54,15 +54,15 @@ void read_file_x() {
         }
     }
     kprintf("\n");
-    vfs_close(id);
+    do_syscall(2, id, 0, 0, 0);
 }
 
 void read_file_y() {
-    int  id = vfs_open("/y.txt", 0);
+    int  id = do_syscall(1, "/x.txt", 0, 0, 0);
     char buffer[50];
     kprintf("\n");
     while (1) {
-        int read = vfs_read(id, buffer, 50);
+        int read = (int) do_syscall(3, id, buffer, 50, 0);
         if (read > 0) {
             for (int k = 0; k < read; k++) {
                 kprintf("%c", buffer[k]);
@@ -72,5 +72,5 @@ void read_file_y() {
         }
     }
     kprintf("\n");
-    vfs_close(id);
+    do_syscall(2, id, 0, 0, 0);
 }

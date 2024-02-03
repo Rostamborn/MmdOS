@@ -3,6 +3,7 @@
 #include "../lib/print.h"
 #include "../lib/util.h"
 #include "../limine.h"
+#include "../userland/sys.h"
 #include "ustar.h"
 #include <stdbool.h>
 
@@ -177,6 +178,21 @@ ssize_t vfs_write(int file_descriptor_id, void* buf, size_t nbytes) {
             vfs_opened_files[file_descriptor_id].buf_write_pos;
     }
     return bytes_written;
+}
+
+uint64_t vfs_open_syscall(uint64_t frame, uint64_t path, uint64_t flags,
+                          uint64_t unused, uint64_t unused2) {
+    return vfs_open((char*) path, (int) flags);
+}
+
+uint64_t vfs_close_syscall(uint64_t frame, uint64_t file_id, uint64_t unused1,
+                           uint64_t unused2, uint64_t unused3) {
+    return vfs_close((int) file_id);
+}
+
+uint64_t vfs_read_syscall(uint64_t frame, uint64_t file_id, uint64_t buf,
+                          uint64_t nbytes, uint64_t unused) {
+    return vfs_read((int) file_id, (void*) buf, (size_t) nbytes);
 }
 
 void vfs_init() {

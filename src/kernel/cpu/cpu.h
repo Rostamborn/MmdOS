@@ -39,9 +39,7 @@ static inline void write_cr3(uint64_t cr3) {
     asm volatile("mov %0, %%cr3" : : "r"(cr3));
 }
 
-static inline void flush_cr3() {
-    write_cr3(read_cr3());
-}
+static inline void flush_cr3() { write_cr3(read_cr3()); }
 
 int serial_init();
 
