@@ -44,6 +44,7 @@ void syscall_init(void) {
     syscall_install_handler(1, &vfs_open_syscall);
     syscall_install_handler(2, &vfs_close_syscall);
     syscall_install_handler(3, &vfs_read_syscall);
+    syscall_install_handler(4, &print_syscall);
 }
 
 // __attribute__((naked))
