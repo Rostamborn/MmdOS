@@ -1,5 +1,6 @@
 #include "sys.h"
 #include "../cpu/pic.h"
+#include "../fs/vfs.h"
 #include "../interrupts/idt.h"
 #include "../lib/logger.h"
 #include "../lib/print.h"
@@ -38,7 +39,12 @@ uint64_t _syscall_memcpy(uint64_t frame, uint64_t dest, uint64_t src,
     return size;
 }
 
-void syscall_init(void) { syscall_install_handler(0, &_syscall_memcpy); }
+void syscall_init(void) {
+    syscall_install_handler(0, &_syscall_memcpy);
+    syscall_install_handler(1, &vfs_open_syscall);
+    syscall_install_handler(2, &vfs_close_syscall);
+    syscall_install_handler(3, &vfs_read_syscall);
+}
 
 // __attribute__((naked))
 // uint64_t do_syscall(uint64_t num, uint64_t a0, uint64_t a1, uint64_t a2,

@@ -41,9 +41,12 @@ typedef struct file_descriptor_t {
 
 int vfs_mount(char* device, char* target, char* fs_type);
 // int           vfs_umount(char* device, char* target);
-mountpoint_t* vfs_get_mountpoint(char* path);
-int           vfs_open(const char* filename, int flags);
-int           vfs_close(int file_descriptor_id);
-uint64_t      vfs_read(int file_descriptor_id, void* buf, size_t nbyte);
-void          vfs_init();
+// mountpoint_t* vfs_get_mountpoint(char* path);
+uint64_t vfs_open_syscall(uint64_t frame, uint64_t filename, uint64_t flags,
+                          uint64_t unused, uint64_t unused2);
+uint64_t vfs_close_syscall(uint64_t frame, uint64_t file_descriptor_id,
+                           uint64_t unused, uint64_t unused2, uint64_t unused3);
+uint64_t vfs_read_syscall(uint64_t frame, uint64_t file_id, uint64_t buf,
+                          uint64_t nbyte, uint64_t unused);
+void     vfs_init();
 #endif
