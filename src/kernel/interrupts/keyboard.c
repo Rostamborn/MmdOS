@@ -1,9 +1,9 @@
 #include "src/kernel/interrupts/keyboard.h"
+#include "../lib/spinlock.h"
 #include "src/kernel/interrupts/idt.h"
 #include "src/kernel/lib/print.h"
 #include "src/kernel/terminal/limine_term.h"
 #include "src/kernel/terminal/prompt.h"
-#include "../lib/spinlock.h"
 #include <stdint.h>
 
 // typedef enum {
@@ -14,9 +14,8 @@
 //     Ctrl = 8,
 // } Key_Modifier;
 
-uint8_t keyboard_buffer = 0;
+uint8_t    keyboard_buffer = 0;
 spinlock_t keyabord_lock = SPINLOCK_INIT;
-
 
 typedef struct {
     uint8_t shift;

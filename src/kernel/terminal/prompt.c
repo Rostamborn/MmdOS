@@ -1,7 +1,7 @@
-#include "src/kernel/terminal/prompt.h"
+#include "prompt.h"
+#include "../lib/print.h"
 #include "../lib/util.h"
-#include "src/kernel/lib/print.h"
-#include "src/kernel/terminal/limine_term.h"
+#include "limine_term.h"
 #include <stdint.h>
 
 #define PROMPT_BUFFER_SIZE 1024

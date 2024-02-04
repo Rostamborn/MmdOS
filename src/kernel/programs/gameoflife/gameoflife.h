@@ -9,10 +9,6 @@
 #define GOL_EMPTY ' '
 #define GOL_CURSOR 'X'
 
-// typedef struct {
-//     uint8_t alive;
-// } gol_cell;
-
 void game_loop();
 
 #endif
