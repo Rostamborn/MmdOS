@@ -1,9 +1,9 @@
-#include "src/kernel/interrupts/keyboard.h"
+#include "keyboard.h"
 #include "../lib/spinlock.h"
-#include "src/kernel/interrupts/idt.h"
-#include "src/kernel/lib/print.h"
-#include "src/kernel/terminal/limine_term.h"
-#include "src/kernel/terminal/prompt.h"
+#include "idt.h"
+#include "../lib/print.h"
+#include "../terminal/limine_term.h"
+#include "../terminal/prompt.h"
 #include <stdint.h>
 
 // typedef enum {
@@ -163,18 +163,18 @@ execution_context* keyboard_handler(execution_context* frame) {
             spinlock_acquire(&keyabord_lock);
             if (keyboard.shift && keyboard.caps_lock) {
                 // print lower case
-                // kprintf("%c", lower_case[scancode]);
-                // prompt_char_handler(lower_case[scancode]);
+                kprintf("%c", lower_case[scancode]);
+                prompt_char_handler(lower_case[scancode]);
                 keyboard_buffer = lower_case[scancode];
             } else if (keyboard.shift || keyboard.caps_lock) {
                 // print upper case
-                // kprintf("%c", upper_case[scancode]);
-                // prompt_char_handler(upper_case[scancode]);
+                kprintf("%c", upper_case[scancode]);
+                prompt_char_handler(upper_case[scancode]);
                 keyboard_buffer = upper_case[scancode];
             } else {
                 // print lower case
-                // kprintf("%c", lower_case[scancode]);
-                // prompt_char_handler(lower_case[scancode]);
+                kprintf("%c", lower_case[scancode]);
+                prompt_char_handler(lower_case[scancode]);
                 keyboard_buffer = lower_case[scancode];
             }
             spinlock_release(&keyabord_lock);
