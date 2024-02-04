@@ -124,7 +124,7 @@ uint64_t ustar_read(uint64_t file_id, char* buffer, uint64_t nbytes,
     char* content_pointer = (char*) ((uint64_t) file->header + 512 + offset);
 
     uint64_t i;
-    for (i = 0; (i < nbytes && *content_pointer != NULL); i++) {
+    for (i = 0; (i < nbytes); i++) {
         *b = *content_pointer;
         b++;
         content_pointer++;

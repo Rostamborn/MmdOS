@@ -3,6 +3,7 @@
 #include "../lib/print.h"
 #include "../lib/util.h"
 #include "../limine.h"
+#include "../scheduler/process.h"
 #include "../userland/sys.h"
 #include "ustar.h"
 #include <stdbool.h>
@@ -178,6 +179,31 @@ ssize_t vfs_write(int file_descriptor_id, void* buf, size_t nbytes) {
             vfs_opened_files[file_descriptor_id].buf_write_pos;
     }
     return bytes_written;
+}
+
+int vfs_execute(const char* path) {
+    int id = vfs_open(path, 0);
+    kprintf("id: %d", id);
+    if (id < 0) {
+        return id;
+    }
+    uint64_t  size = vfs_opened_files[id].file_size;
+    uint64_t  read;
+    uint64_t* dest = kalloc(size);
+    uint64_t* iter = dest;
+
+    do {
+        uint64_t buffer[512];
+        read = vfs_read(id, buffer, 512);
+        kprintf("read: %u\n", read);
+        for (uint64_t j = 0; j < read; j++) {
+            *iter = buffer[j];
+            iter++;
+        }
+    } while (read != 0);
+
+    process_t* p = process_create("printer", dest, 0);
+    kprintf(p->name);
 }
 
 uint64_t vfs_open_syscall(uint64_t frame, uint64_t path, uint64_t flags,

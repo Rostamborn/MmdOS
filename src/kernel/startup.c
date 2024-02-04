@@ -100,6 +100,7 @@ void _start(void) {
     *ptr2 = 8765;
     // kprintf("ptr2 addr: %p value: %d\n", ptr2, *ptr2);
     kfree(ptr2);
+    // vfs_execute("/a.out");
 
     // important: timer should be after all these code so that
     // it won't interrupt anything by mistake

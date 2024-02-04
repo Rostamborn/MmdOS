@@ -49,4 +49,7 @@ uint64_t vfs_close_syscall(uint64_t frame, uint64_t file_descriptor_id,
 uint64_t vfs_read_syscall(uint64_t frame, uint64_t file_id, uint64_t buf,
                           uint64_t nbyte, uint64_t unused);
 void     vfs_init();
+
+int vfs_execute(const char* path);
+
 #endif

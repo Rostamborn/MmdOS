@@ -25,7 +25,7 @@ void process_idle() {
 // also add it to queue.
 process_t* process_create(char* restrict name, void* restrict function(void*),
                           void* restrict arg) {
-    disable_interrupts();
+    // disable_interrupts();
 
     process_t* process = (process_t*) kalloc(sizeof(process_t));
 
@@ -33,8 +33,8 @@ process_t* process_create(char* restrict name, void* restrict function(void*),
     process->pid = next_pid++;
     process->status = SPAWNED;
 
-    klog("PROCESS::", "before thread_add");
-    thread_t* thread = thread_add(process, name, &(*function), arg);
+    klog("PROCESS::", "before thread_add %s", name);
+    thread_t* thread = thread_add(process, name, function, arg);
 
     process->vmm = vmm_new();
 
