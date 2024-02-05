@@ -36,14 +36,17 @@ void _start(void) {
     gdt_init();
     serial_init();
     idt_init();
-    prompt_init();
-    keyboard_init();
     pmm_init();
     vmm_init();
     vfs_init();
     syscall_init();
     // read_file_x();
     //   read_file_y();
+
+    // process init
+    scheduler_init();
+    prompt_init();
+    keyboard_init();
 
     // TODO: crashes because of the absence of the lower half mappings
     //  which includes the framebuffer. we should fix this.
@@ -83,9 +86,6 @@ void _start(void) {
     //
     // // when to call jmp_user(&user_program, user_stack)
     // jmp_user(&user_program, user_stack);
-
-    // process init
-    scheduler_init();
 
     // for demonstration ---
     //  game of life process

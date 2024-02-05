@@ -2,8 +2,10 @@
 #include "../cpu/pic.h"
 #include "../fs/vfs.h"
 #include "../interrupts/idt.h"
+#include "../interrupts/keyboard.h"
 #include "../lib/logger.h"
 #include "../lib/print.h"
+#include "../terminal/prompt.h"
 #include <stdint.h>
 
 void* syscall_handlers[32] = {0};
@@ -45,6 +47,9 @@ void syscall_init(void) {
     syscall_install_handler(2, &vfs_close_syscall);
     syscall_install_handler(3, &vfs_read_syscall);
     syscall_install_handler(4, &print_syscall);
+    syscall_install_handler(5, &keyboard_getch_syscall);
+    syscall_install_handler(6, &prompt_lockstdin_syscall);
+    syscall_install_handler(7, &prompt_unlockstdin_syscall);
 }
 
 // __attribute__((naked))
