@@ -1,9 +1,9 @@
 #include "keyboard.h"
-#include "../lib/spinlock.h"
-#include "idt.h"
 #include "../lib/print.h"
+#include "../lib/spinlock.h"
 #include "../terminal/limine_term.h"
 #include "../terminal/prompt.h"
+#include "idt.h"
 #include <stdint.h>
 
 // typedef enum {
@@ -113,7 +113,7 @@ execution_context* keyboard_handler(execution_context* frame) {
     case 28: // enter
         if (pressed == 0) {
             prompt_enter_handler();
-                }
+        }
         break;
     case 29: // ctrl
         break;
