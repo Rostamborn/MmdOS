@@ -1,5 +1,6 @@
 #include "prompt.h"
 #include "../../programs/cat.h"
+#include "../../programs/gameoflife/gameoflife.h"
 #include "../lib/print.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
@@ -53,6 +54,7 @@ uint64_t prompt_unlockstdin_syscall(uint64_t frame, uint64_t unused1,
                                     uint64_t unused4) {
     process_t* p = process_get_current();
     prompt_unlockstdin(p->running_thread->tid);
+    kprintf("\n$: ");
     return 0;
 }
 
@@ -106,6 +108,9 @@ void prompt_enter_handler() {
         } else if (kstrcmp(buffer, "cat", 3)) {
             process_create("cat", cat_command, (char*) buffer);
             yield = true;
+        } else if (kstrcmp(buffer, "gol", 3)) {
+            process_create("gol", game_loop, 3);
+            yield = true;
         } else {
             kprintf("%s\n", buffer);
         }
@@ -145,16 +150,10 @@ void prompt_backspace_handler() {
 void prompt_clear() {
     char backspace[143] = {[0 ... 141] = '\b'};
     char space[143] = {[0 ... 141] = ' '};
-    for (int i = (2 * line_num); i > -1; i--) {
+    for (int i = 48; i > -1; i--) {
         kprintf("\033[F%s%s", backspace, space);
     }
     kprintf("\033[F");
     line_num = 1;
     line_len = 0;
-}
-
-void clear_screen() {
-    for (int i = 0; i < 48; i++) {
-        prompt_clear();
-    }
 }

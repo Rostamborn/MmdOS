@@ -40,7 +40,7 @@ void cat_command() {
     do_syscall(4, "\n", 0, 0, 0);
     int id = do_syscall(1, path, 0, 0, 0);
     if (id < 0) {
-        do_syscall(4, "file could not be open!\n$: ", 0, 0, 0);
+        do_syscall(4, "file could not be open!", 0, 0, 0);
         do_syscall(7, 0, 0, 0, 0);
         return;
     }
@@ -53,6 +53,5 @@ void cat_command() {
         do_syscall(4, buffer, 0, 0, 0);
     } while (read != 0);
     do_syscall(2, id, 0, 0, 0);
-    do_syscall(4, "\n$: ", 0, 0, 0);
     do_syscall(7, 0, 0, 0, 0);
 }

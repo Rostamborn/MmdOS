@@ -12,7 +12,6 @@
 #include "mm/kheap.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
-#include "programs/gameoflife/gameoflife.h"
 #include "scheduler/process.h"
 #include "scheduler/scheduler.h"
 #include "terminal/limine_term.h"

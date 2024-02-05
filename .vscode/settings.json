@@ -35,6 +35,8 @@
     "scheduler.h": "c",
     "alloc.h": "c",
     "process.h": "c",
-    "util.h": "c"
+    "util.h": "c",
+    "timer.h": "c",
+    "gameoflife.h": "c"
   }
 }
