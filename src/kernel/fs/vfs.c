@@ -24,7 +24,7 @@ int vfs_mount(char* device, char* target, char* fs_type) {
     kstrcpy(new_mountpoint->type, fs_type, VFS_TYPE_LENGTH);
     kstrcpy(new_mountpoint->mountpoint, target, VFS_NAME_LENGTH);
 
-    if (kstrcmp(fs_type, "ustar")) {
+    if (kstrcmp(fs_type, "ustar", 5)) {
         operations->read = ustar_read;
         operations->open = ustar_open;
         operations->close = ustar_close;

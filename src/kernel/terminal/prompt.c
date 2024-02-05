@@ -1,5 +1,7 @@
 #include "src/kernel/terminal/prompt.h"
+#include "../../programs/cat.h"
 #include "../lib/util.h"
+#include "../scheduler/process.h"
 #include "src/kernel/lib/print.h"
 #include "src/kernel/terminal/limine_term.h"
 #include <stdint.h>
@@ -20,11 +22,15 @@ void prompt_init() {
 
 void prompt_enter_handler() {
     kprintf("\n");
-
+    bool flag = true;
     if (line_len > 0) {
         line_num++;
-        if (kstrcmp(buffer, "clear")) {
+        if (kstrcmp(buffer, "clear", 5)) {
             prompt_clear();
+
+        } else if (kstrcmp(buffer, "cat ", 4)) {
+            process_create("cat", cat_command, (char*) buffer);
+            flag = false;
         } else {
             kprintf("%s\n", buffer);
         }
@@ -35,6 +41,9 @@ void prompt_enter_handler() {
     }
     line_len = 0;
     line_num++;
+    if (flag == true) {
+        kprintf("$: ");
+    }
 }
 
 void prompt_char_handler(char c) {

@@ -46,13 +46,18 @@ void kstrcpy(char dest[], char* src, uint32_t size) {
     }
 }
 
-bool kstrcmp(char* str1, char* str2) {
+bool kstrcmp(char* str1, char* str2, uint32_t len) {
     while ((*str1 != '\0') && (*str2 != '\0')) {
         if (*str1 != *str2) {
             return false;
         }
         str1++;
         str2++;
+
+        if (len == 1) {
+            return true;
+        }
+        len--;
     }
 
     if ((*str1 == '\0') && (*str2 == '\0')) {

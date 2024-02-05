@@ -20,7 +20,7 @@ int64_t is_already_open(char* name) {
                         155);
             }
 
-            if (kstrcmp(tar_filename, name)) {
+            if (kstrcmp(tar_filename, name, 256)) {
                 return i;
             }
         }
@@ -65,7 +65,7 @@ tar_header_t* tar_file_lookup(const char* searched_file) {
         } else {
             kstrcpy(tar_filename, (char*) (current_record->filename), 155);
         }
-        if (kstrcmp((char*) tar_filename, searched_file)) {
+        if (kstrcmp((char*) tar_filename, searched_file, 256)) {
             return current_record;
         }
 
