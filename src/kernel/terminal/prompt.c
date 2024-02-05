@@ -17,32 +17,35 @@ uint8_t  line_num = 1;
 bool   stdin_lock = false;
 size_t locker_id = 0;
 
-void prompt_lockstdin(size_t caller_id) {
-    spinlock_t* lock = SPINLOCK_INIT;
-    spinlock_acquire(lock);
+uint8_t prompt_lockstdin(size_t caller_id) {
+    spinlock_t lock = SPINLOCK_INIT;
+    spinlock_acquire(&lock);
     if (!stdin_lock) {
         locker_id = caller_id;
         stdin_lock = true;
+        spinlock_release(&lock);
+        return 1;
     }
-    spinlock_release(lock);
+    spinlock_release(&lock);
+    return 0;
 }
 
 void prompt_unlockstdin(size_t caller_id) {
-    spinlock_t* lock = SPINLOCK_INIT;
-    spinlock_acquire(lock);
+    spinlock_t lock = SPINLOCK_INIT;
+    spinlock_acquire(&lock);
     if (stdin_lock && locker_id == caller_id) {
         locker_id = 0;
         stdin_lock = false;
     }
-    spinlock_release(lock);
+    spinlock_release(&lock);
 }
 
 uint64_t prompt_lockstdin_syscall(uint64_t frame, uint64_t unused1,
                                   uint64_t unused2, uint64_t unused3,
                                   uint64_t unused4) {
     process_t* p = process_get_current();
-    prompt_lockstdin(p->running_thread->tid);
-    return 0;
+    uint64_t   result = prompt_lockstdin(p->running_thread->tid);
+    return result;
 }
 
 uint64_t prompt_unlockstdin_syscall(uint64_t frame, uint64_t unused1,
@@ -115,8 +118,9 @@ void prompt_enter_handler() {
     line_num++;
     if (yield == true) {
         // TODO: yield and block syscall
+    } else {
+        kprintf("$: ");
     }
-    kprintf("$: ");
 }
 
 void prompt_char_handler(char c) {

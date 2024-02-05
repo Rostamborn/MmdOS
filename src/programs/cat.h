@@ -1,1 +1,1 @@
-void cat_command(char* path);
+void cat_command();
