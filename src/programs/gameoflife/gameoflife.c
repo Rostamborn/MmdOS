@@ -1,9 +1,9 @@
 #include "gameoflife.h"
-#include "../../interrupts/keyboard.h"
-#include "../../interrupts/timer.h"
-#include "../../lib/logger.h"
-#include "../../lib/print.h"
-#include "../../terminal/prompt.h"
+#include "../../kernel/interrupts/keyboard.h"
+#include "../../kernel/interrupts/timer.h"
+#include "../../kernel/lib/logger.h"
+#include "../../kernel/lib/print.h"
+#include "../../kernel/terminal/prompt.h"
 
 #include <stdint.h>
 
@@ -150,6 +150,14 @@ void gol_key_handler(uint8_t* cells, uint8_t* cursor, uint8_t* state) {
 }
 
 void game_loop() {
+    uint64_t success;
+    while (1) {
+        success = prompt_lockstdin_syscall(0, 0, 0, 0, 0);
+        if (success) {
+            break;
+        }
+    }
+
     klog("Game of life started", "");
     uint64_t delta_time = timer_get_uptime();
 
@@ -162,7 +170,7 @@ void game_loop() {
 
         } else {
             delta_time = timer_get_uptime();
-            clear_screen();
+            prompt_clear();
             gol_key_handler(gol_cells, gol_cursor, &gol_state);
             switch (gol_state) {
             case 1: // run mode
@@ -175,4 +183,5 @@ void game_loop() {
         }
     }
 exit:
+    prompt_unlockstdin_syscall(0, 0, 0, 0, 0);
 }

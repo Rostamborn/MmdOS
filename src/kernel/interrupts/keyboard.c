@@ -1,9 +1,9 @@
 #include "keyboard.h"
-#include "../lib/spinlock.h"
-#include "idt.h"
 #include "../lib/print.h"
+#include "../lib/spinlock.h"
 #include "../terminal/limine_term.h"
 #include "../terminal/prompt.h"
+#include "idt.h"
 #include <stdint.h>
 
 // typedef enum {
@@ -15,6 +15,7 @@
 // } Key_Modifier;
 
 uint8_t    keyboard_buffer = 0;
+bool       keyboard_has_char = false;
 spinlock_t keyabord_lock = SPINLOCK_INIT;
 
 typedef struct {
@@ -104,18 +105,6 @@ execution_context* keyboard_handler(execution_context* frame) {
 
     case 1: // esc
         break;
-    case 14: // backspace
-        if (pressed == 0) {
-            prompt_backspace_handler();
-        }
-
-        break;
-    case 28: // enter
-        if (pressed == 0) {
-            prompt_enter_handler();
-            kprintf("$: ");
-        }
-        break;
     case 29: // ctrl
         break;
     case 56: // alt
@@ -162,21 +151,16 @@ execution_context* keyboard_handler(execution_context* frame) {
         if (pressed == 0) {
             spinlock_acquire(&keyabord_lock);
             if (keyboard.shift && keyboard.caps_lock) {
-                // print lower case
-                kprintf("%c", lower_case[scancode]);
-                prompt_char_handler(lower_case[scancode]);
+
                 keyboard_buffer = lower_case[scancode];
             } else if (keyboard.shift || keyboard.caps_lock) {
-                // print upper case
-                kprintf("%c", upper_case[scancode]);
-                prompt_char_handler(upper_case[scancode]);
+
                 keyboard_buffer = upper_case[scancode];
             } else {
-                // print lower case
-                kprintf("%c", lower_case[scancode]);
-                prompt_char_handler(lower_case[scancode]);
+
                 keyboard_buffer = lower_case[scancode];
             }
+            keyboard_has_char = true;
             spinlock_release(&keyabord_lock);
         }
     }
@@ -188,9 +172,21 @@ uint8_t keyboard_getch() {
     spinlock_acquire(&keyabord_lock);
     uint8_t res = keyboard_buffer;
     keyboard_buffer = 0;
+    keyboard_has_char = false;
     spinlock_release(&keyabord_lock);
 
     return res;
+}
+
+bool keyboard_checkch() { return keyboard_has_char; }
+
+uint64_t keyboard_getch_syscall(uint64_t frame, uint64_t p1, uint64_t p2,
+                                uint64_t p3, uint64_t p4) {
+    if (keyboard_checkch()) {
+        return keyboard_getch();
+    }
+
+    return -1;
 }
 
 void keyboard_init() { irq_install_handler(1, &keyboard_handler); }

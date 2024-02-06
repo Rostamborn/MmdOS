@@ -67,7 +67,7 @@ int64_t kpow(int64_t x, uint16_t y);
 
 void kstrcpy(char dest[], char* src, uint32_t size);
 
-bool kstrcmp(char* str1, char* str2);
+bool kstrcmp(char* str1, char* str2, uint32_t len);
 
 // converts octal number in ascii to its decimal counterpart
 // note that numbers should start with 0

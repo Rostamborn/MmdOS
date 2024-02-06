@@ -43,11 +43,13 @@ LIMINE_DEPLOY := ./disk/limine/limine-deploy
 
 SRC_DIRECTORY := ./
 KERNEL_DIR := ./src/kernel
+PROGRAM_DIR := ./src/programs
 LIB_DIR := ./src/lib
 OBJECTS_DIR := ./obj
 # C_SRCS = $(wildcard *.c)
 # ASM_SRCS = $(wildcard *.asm)
 KERNEL_C_FILES :=  $(shell find $(KERNEL_DIR) -name "*.c")
+PROGRAM_C_FILES := $(shell find $(PROGRAM_DIR) -name "*.c")
 KERNEL_HEADER_FILES :=  $(shell find $(KERNEL_DIR) -name "*.h")
 KERNEL_ASSEMBLY_FILES := $(shell find $(KERNEL_DIR) -name "*.asm")
 
@@ -87,7 +89,7 @@ kernel/development: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
 	nasm src/kernel/userland/user.asm ${NASMFLAGS} -o $(OBJECTS_DIR)/user.o
 
 	@echo "compiling c files to objects"
-	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -D PROD_MODE=0 -c $(KERNEL_C_FILES) ${LIB_C_FILES}
+	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -D PROD_MODE=0 -c $(PROGRAM_C_FILES) $(KERNEL_C_FILES) ${LIB_C_FILES}
 	mv *.o $(OBJECTS_DIR)
 
 	@echo "linking..."
@@ -97,12 +99,15 @@ kernel/development: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
 	@echo "created kernel"
 
 kernel/production: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
+	@echo "compiling assembly files to objects"
+
+	nasm src/kernel/interrupts/interrupt_vector.asm ${NASMFLAGS} -o $(OBJECTS_DIR)/interrupt_vector.o
+	nasm src/kernel/userland/syscall.asm ${NASMFLAGS} -o $(OBJECTS_DIR)/syscall.o
+	nasm src/kernel/userland/user.asm ${NASMFLAGS} -o $(OBJECTS_DIR)/user.o
+
 	@echo "compiling c files to objects"
 	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -D PROD_MODE=1 -c $(KERNEL_C_FILES) ${LIB_C_FILES}
 	mv *.o $(OBJECTS_DIR)
-
-	@echo "compiling assembly files to objects"
-	nasm ${KERNEL_ASSEMBLY_FILES} ${NASMFLAGS} -o $(OBJECTS_DIR)/interrupt_vector.o
 
 	@echo "linking..."
 	$(DEFAULT_LD) $(LDFLAGS) -o $(TARGET) \
@@ -145,3 +150,20 @@ drun: $(ISO_FILENAME)
 
 gdb:
 	gdb -x gdb_commands	
+
+user_program: 
+	nasm src/kernel/userland/syscall.asm ${NASMFLAGS} -o user_program/syscall.o
+	$(DEFAULT_CC) $(DEFAULT_CFLAGS) -I $(SRC_DIRECTORY) -c src/kernel/demo/user_program.c
+	mv *.o user_program
+	$(DEFAULT_LD)   -nostdlib \
+    -static \
+    -pie \
+    --no-dynamic-linker \
+    -z text \
+    -z max-page-size=0x1000 \
+    -T linker.ld -o src/kernel/demo/a.out \
+	user_program/*.o
+
+fs: 
+	cd src/kernel/demo && tar cvf examplefs.tar x.txt y.txt a.out
+	mv src/kernel/demo/examplefs.tar disk

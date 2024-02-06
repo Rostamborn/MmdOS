@@ -20,7 +20,7 @@ int64_t is_already_open(char* name) {
                         155);
             }
 
-            if (kstrcmp(tar_filename, name)) {
+            if (kstrcmp(tar_filename, name, 256)) {
                 return i;
             }
         }
@@ -65,7 +65,7 @@ tar_header_t* tar_file_lookup(const char* searched_file) {
         } else {
             kstrcpy(tar_filename, (char*) (current_record->filename), 155);
         }
-        if (kstrcmp((char*) tar_filename, searched_file)) {
+        if (kstrcmp((char*) tar_filename, searched_file, 256)) {
             return current_record;
         }
 
@@ -124,7 +124,7 @@ uint64_t ustar_read(uint64_t file_id, char* buffer, uint64_t nbytes,
     char* content_pointer = (char*) ((uint64_t) file->header + 512 + offset);
 
     uint64_t i;
-    for (i = 0; (i < nbytes && *content_pointer != NULL); i++) {
+    for (i = 0; (i < nbytes); i++) {
         *b = *content_pointer;
         b++;
         content_pointer++;
