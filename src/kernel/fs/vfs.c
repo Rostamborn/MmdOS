@@ -8,10 +8,12 @@
 #include "ustar.h"
 #include <stdbool.h>
 
-size_t                       next_mountpoint_id = 1;
-mountpoint_t*                mounted_devices[MAX_MOUNTPOINTS];
-uint8_t                      mounted_devices_num = 0;
-file_descriptor_t            vfs_opened_files[MAX_OPENED_FILES];
+size_t            next_mountpoint_id = 1;
+mountpoint_t*     mounted_devices[MAX_MOUNTPOINTS];
+uint8_t           mounted_devices_num = 0;
+file_descriptor_t vfs_opened_files[MAX_OPENED_FILES];
+file_descriptor_t vfs_opened_dirs[MAX_OPENED_FILES];
+
 struct limine_module_request module_req = {.id = LIMINE_MODULE_REQUEST,
                                            .revision = 0};
 
@@ -155,6 +157,23 @@ uint64_t vfs_read(int file_descriptor_id, void* buf, size_t nbytes) {
         return 0;
     }
     file->buf_read_pos += bytes_read;
+    return bytes_read;
+}
+
+uint64_t vfs_read_dir(char* path, void* buf, size_t nbytes, uint64_t offset) {
+    mountpoint_t* mountpoint = vfs_get_mountpoint(path);
+    if (mountpoint == NULL) {
+        return 0;
+    }
+    char* rel_path = get_rel_path(mountpoint, path);
+
+    uint64_t bytes_read =
+        mountpoint->operations->read_dir(path, buf, nbytes, offset);
+
+    if (bytes_read == 0) {
+        return 0;
+    }
+
     return bytes_read;
 }
 

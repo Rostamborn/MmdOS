@@ -33,10 +33,20 @@ typedef struct ustar_file_descriptor {
     ssize_t       size;
 } ustar_file_descriptor;
 
+typedef struct ustar_directory_descriptor {
+    tar_header_t* header;
+    uint16_t      references;
+    ssize_t       size;
+} ustar_directory_descriptor;
+
 int64_t  ustar_open(char* path, int flags);
 uint64_t ustar_read(uint64_t file_id, char* buffer, size_t nbytes,
                     uint64_t offset);
 int64_t  ustar_close(uint64_t file_id);
-void     ustar_set_start_address(uint64_t address);
-ssize_t  ustar_get_file_size(uint64_t file_id);
+
+uint64_t ustar_read_dir(char* path, char* buffer, size_t nbytes,
+                        uint64_t offset);
+
+void    ustar_set_start_address(uint64_t address);
+ssize_t ustar_get_file_size(uint64_t file_id);
 #endif

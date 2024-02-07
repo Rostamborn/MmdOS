@@ -1,6 +1,7 @@
 #include "prompt.h"
 #include "../../programs/cat.h"
 #include "../../programs/gameoflife/gameoflife.h"
+#include "../lib/logger.h"
 #include "../lib/print.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
@@ -14,6 +15,7 @@ uint8_t  line_len = 0;
 char     buffer[PROMPT_BUFFER_SIZE];
 uint16_t buffer_pointer = 0;
 uint8_t  line_num = 1;
+char*    current_working_dir = "/";
 
 bool   stdin_lock = false;
 size_t locker_id = 0;
@@ -116,11 +118,12 @@ void prompt_enter_handler() {
         }
     }
 
-    for (int i = 0; buffer_pointer > 0; buffer_pointer--) {
-        buffer[buffer_pointer - 1] = '\0';
+    for (int i = 0; i < PROMPT_BUFFER_SIZE; i++) {
+        buffer[i] = '\0';
     }
     line_len = 0;
     line_num++;
+    buffer_pointer = 0;
     if (yield == true) {
         // TODO: yield and block syscall
     } else {

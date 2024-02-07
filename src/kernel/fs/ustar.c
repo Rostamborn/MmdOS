@@ -3,8 +3,9 @@
 #include "../lib/print.h"
 #include "../lib/util.h"
 
-uint64_t               tar_fs_start_address;
-ustar_file_descriptor* open_files[MAX_USTAR_OPEN_FILES] = {0};
+uint64_t                    tar_fs_start_address;
+ustar_file_descriptor*      open_files[MAX_USTAR_OPEN_FILES] = {0};
+ustar_directory_descriptor* open_dirs[MAX_USTAR_OPEN_FILES] = {0};
 
 int64_t is_already_open(char* name) {
     for (int64_t i = 0; i < MAX_USTAR_OPEN_FILES; i++) {
@@ -65,6 +66,11 @@ tar_header_t* tar_file_lookup(const char* searched_file) {
         } else {
             kstrcpy(tar_filename, (char*) (current_record->filename), 155);
         }
+        for (int i = 0; i < 255; i++) {
+            if (tar_filename[i] == '\\') {
+                tar_filename[i] = '/';
+            }
+        }
         if (kstrcmp((char*) tar_filename, searched_file, 256)) {
             return current_record;
         }
@@ -82,6 +88,49 @@ tar_header_t* tar_file_lookup(const char* searched_file) {
     return NULL;
 }
 
+tar_header_t* tar_file_prefix_lookup(const char*   searched_directory,
+                                     uint64_t      length,
+                                     tar_header_t* current_record) {
+    char tar_filename[256];
+    int  zero_counter = 0;
+    // The starting address should be known somehow to the OS
+    if (current_record == NULL) {
+        current_record = (tar_header_t*) tar_fs_start_address;
+    }
+    while (zero_counter < 2) {
+
+        if (is_zeroed(current_record)) {
+            zero_counter++;
+            continue;
+        }
+        zero_counter = 0;
+        if (current_record->filename_prefix[0] != 0) {
+            kstrcpy(tar_filename, current_record->filename_prefix, 155);
+            kstrcpy(tar_filename + 155, current_record->filename, 100);
+        } else {
+            kstrcpy(tar_filename, (char*) (current_record->filename), 155);
+        }
+        for (int i = 0; i < 255; i++) {
+            if (tar_filename[i] == '\\') {
+                tar_filename[i] = '/';
+            }
+        }
+        if (kstrcmp((char*) tar_filename, searched_directory, length)) {
+            return current_record;
+        }
+
+        // move to next record
+        uint64_t file_size = oct_ascii_to_dec(current_record->file_size, 12);
+        if (file_size % 512 != 0) {
+            file_size = (file_size / 512 + 1) * 512;
+        }
+        current_record =
+            (tar_header_t*) ((uint64_t) (current_record) + 512 + file_size);
+    }
+
+    // file not found
+    return NULL;
+}
 int64_t ustar_open(char* path, int flags) {
     int64_t id = is_already_open(path);
     if (id > -1) {
@@ -130,6 +179,24 @@ uint64_t ustar_read(uint64_t file_id, char* buffer, uint64_t nbytes,
         content_pointer++;
     }
     return i;
+}
+
+uint64_t ustar_read_dir(char* dir, char* buffer, uint64_t nbytes,
+                        uint64_t offset) {
+    char* b = buffer;
+
+    uint64_t length = 0;
+    char*    iterator = dir;
+
+    while (*iterator != 0) {
+        length++;
+        iterator++;
+    }
+
+    tar_header_t* header = NULL;
+    while (true) {
+        header = tar_file_prefix_lookup(dir, length, header);
+        }
 }
 
 int64_t ustar_close(uint64_t file_id) {

@@ -30,11 +30,10 @@ void cat_command() {
                 do_syscall(4, "\b \b", 0, 0, 0);
             } else {
                 char p[2] = {read_char, 0};
+                path[index] = (char) (read_char);
+                index++;
                 do_syscall(4, p, 0, 0, 0);
             }
-
-            path[index] = (char) (read_char);
-            index++;
         }
     }
     do_syscall(4, "\n", 0, 0, 0);

@@ -19,6 +19,13 @@ typedef struct fs_operations_t {
                      size_t nbyte);
     ssize_t (*get_file_size)(
         uint64_t file_descriptor); // TODO: maybe do this in open
+
+    int64_t (*open_dir)(const char* path, int flags, ...);
+
+    int64_t (*close_dir)(uint64_t file_descriptor);
+
+    uint64_t (*read_dir)(uint64_t file_descriptor, char* read_buffer,
+                         uint64_t nbyte, uint64_t offset);
 } fs_operations_t;
 
 typedef struct mountpoint_t {
