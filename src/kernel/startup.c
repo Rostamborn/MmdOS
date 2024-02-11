@@ -88,7 +88,7 @@ void _start(void) {
 
     // for demonstration ---
     //  game of life process
-    // process_t* p = process_create("adder1", &game_loop, NULL);
+    process_t* p = process_create("adder1", &add_one_to_x, NULL);
     process_t* p2 = process_create("adder2", &add_one_to_y, NULL);
     // // thread_t* t = thread_add(p, "second thread of adder1", &add_one_to_z,
     // // NULL); set thread to sleep 10 seconds t->status = SLEEPING;
