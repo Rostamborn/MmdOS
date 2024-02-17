@@ -7,13 +7,14 @@
 #include <stdint.h>
 
 void* u_alloc(uint64_t size) {
+    // vmm_t* curr_vmm = vmm_kernel;
     vmm_t* curr_vmm = process_get_current_vmm();
 
     arena_t* current = curr_vmm->arena;
     if (current != NULL) {
         for (arena_t* arena = current; arena != NULL; arena = arena->next) {
-            if ((arena->size - arena->offset) >=
-                size + sizeof(arena_metadata)) {
+            if ((arena->size - arena->offset) >= size + sizeof(arena_metadata)) {
+
                 arena_metadata* metadata =
                     (arena_metadata*) ((uintptr_t) arena->base + arena->offset);
                 metadata->arena_base = arena->base;
@@ -22,49 +23,53 @@ void* u_alloc(uint64_t size) {
                                      sizeof(arena_metadata));
 
                 arena->offset =
-                    ALIGN_UP(arena->offset + size + sizeof(arena_metadata),
-                             DEFAULT_ALIGNMENT);
+                    /* ALIGN_UP( */arena->offset + size + sizeof(arena_metadata);
+                           /*   DEFAULT_ALIGNMENT); */
                 arena->allocated++;
 
                 return ret;
             }
-            current = arena; // last one that is not NULL
+            // current = arena; // last one that is not NULL
         }
     }
 
     // no arena or no space in current arena
-    void*    new_alloc = pmm_alloc(DIV_ROUNDUP(size, PAGE_SIZE));
-    arena_t* new_arena = (arena_t*) (new_alloc);
-
-    for (uint64_t i = 0; i < DIV_ROUNDUP(size, PAGE_SIZE); i++) {
-        if (!vmm_map_page(curr_vmm, (uintptr_t) new_arena + i * PAGE_SIZE,
+    void*    new_alloc = pmm_alloc(DIV_ROUNDUP(size + sizeof(arena_t) + sizeof(arena_metadata), PAGE_SIZE));
+    for (uint64_t i = 0; i < DIV_ROUNDUP(size + sizeof(arena_t) + sizeof(arena_metadata), PAGE_SIZE); i++) {
+        if (!vmm_map_page(curr_vmm, (uintptr_t) new_alloc + i * PAGE_SIZE,
                           (uintptr_t) new_alloc + i * PAGE_SIZE,
-                          PTE_PRESENT | PTE_WRITABLE | PTE_USER)) {
-            panic("u_alloc: failed to map new allocated page");
+                          PTE_PRESENT | PTE_WRITABLE)) {
+            panic("k_alloc: failed to map new allocated page");
         }
     }
 
+    arena_t* new_arena = (arena_t*) (new_alloc);
+
     new_arena->next = NULL;
-    new_arena->base = (uintptr_t) new_arena;
-    new_arena->size = ALIGN_UP(size, PAGE_SIZE);
-    new_arena->offset = sizeof(arena_t);
+    new_arena->base = (uintptr_t) (new_arena);
+    new_arena->size = ALIGN_UP(size + sizeof(arena_t) + sizeof(arena_metadata), PAGE_SIZE);
+    new_arena->offset = (uint64_t)sizeof(arena_t);
     new_arena->allocated = 0;
 
-    if (current == NULL) {
-        curr_vmm->arena = new_arena;
-    } else {
-        current->next = new_arena;
+    current = curr_vmm->arena;
+    while (current != NULL) {
+        current = current->next;
     }
+    current = new_arena;
+    // if (current == NULL) {
+    //     curr_vmm->arena = new_arena;
+    // } else {
+    //     current->next = new_arena;
+    // }
 
     arena_metadata* metadata =
         (arena_metadata*) (new_arena->base + new_arena->offset);
-    metadata->arena_base = (uint64_t) new_arena;
+    metadata->arena_base = (uint64_t) new_arena->base;
 
-    void* ret =
-        (void*) (new_arena->base + new_arena->offset + sizeof(arena_metadata));
+    void* ret = (void*) (new_arena->base + new_arena->offset + sizeof(arena_metadata));
 
-    new_arena->offset = ALIGN_UP(
-        new_arena->offset + size + sizeof(arena_metadata), DEFAULT_ALIGNMENT);
+    new_arena->offset =/*  ALIGN_UP( */
+        new_arena->offset + size + sizeof(arena_metadata)/* , DEFAULT_ALIGNMENT) */;
     new_arena->allocated++;
 
     return ret;
@@ -79,21 +84,22 @@ void u_free(void* addr) {
 
     if (arena->allocated <= 0) {
         // free arena
-        arena_t* curr = process_get_current_vmm()->arena;
-        if (curr == arena) {
-            curr = arena->next;
-        } else {
-            while (curr->next != arena) {
-                curr = curr->next;
-            }
-            curr->next = arena->next;
-        }
+        klog("u_free ::", "allocated <= 0");
+        // arena_t* curr = vmm_kernel->arena;
+        // if (curr == arena) {
+        //     curr = arena->next;
+        // } else {
+        //     while (curr->next != arena) {
+        //         curr = curr->next;
+        //     }
+        //     curr->next = arena->next;
+        // }
 
-        pmm_free((void*) arena, DIV_ROUNDUP(arena->size, PAGE_SIZE));
+        pmm_free((void*) arena->base,
+                 DIV_ROUNDUP(arena->size, PAGE_SIZE));
 
         for (uint64_t i = 0; i < arena->size / PAGE_SIZE; i++) {
-            vmm_unmap_page(process_get_current_vmm(),
-                           (uintptr_t) arena + i * PAGE_SIZE, true);
+            vmm_unmap_page(vmm_kernel, (uintptr_t) arena + i * PAGE_SIZE, true);
         }
     }
 
