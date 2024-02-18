@@ -113,7 +113,7 @@ void prompt_enter_handler() {
             process_create("gol", gol_game_loop, 3);
             yield = true;
         } else if (kstrcmp(buffer, "snake", 5)) {
-            process_create("gol", snake_game_loop, 3);
+            process_create("snake", snake_game_loop, 3);
             yield = true;
         } else {
             kprintf("%s\n", buffer);
