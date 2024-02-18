@@ -1,6 +1,7 @@
 #include "prompt.h"
 #include "../../programs/cat.h"
 #include "../../programs/gameoflife/gameoflife.h"
+#include "../../programs/snake/snake.h"
 #include "../lib/print.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
@@ -109,7 +110,10 @@ void prompt_enter_handler() {
             process_create("cat", cat_command, (char*) buffer);
             yield = true;
         } else if (kstrcmp(buffer, "gol", 3)) {
-            process_create("gol", game_loop, 3);
+            process_create("gol", gol_game_loop, 3);
+            yield = true;
+        } else if (kstrcmp(buffer, "snake", 5)) {
+            process_create("gol", snake_game_loop, 3);
             yield = true;
         } else {
             kprintf("%s\n", buffer);
