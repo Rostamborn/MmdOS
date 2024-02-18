@@ -31,6 +31,7 @@ int vfs_mount(char* device, char* target, char* fs_type) {
         operations->open = ustar_open;
         operations->close = ustar_close;
         operations->get_file_size = ustar_get_file_size;
+        operations->read_dir = ustar_read_dir;
     }
 
     new_mountpoint->operations = operations;
@@ -161,15 +162,17 @@ uint64_t vfs_read(int file_descriptor_id, void* buf, size_t nbytes) {
 }
 
 uint64_t vfs_read_dir(char* path, void* buf, size_t nbytes, uint64_t offset) {
+    kprintf("vfs0\n");
     mountpoint_t* mountpoint = vfs_get_mountpoint(path);
     if (mountpoint == NULL) {
         return 0;
     }
+    kprintf("vfs1\n");
     char* rel_path = get_rel_path(mountpoint, path);
-
+    kprintf("vfs2\n");
     uint64_t bytes_read =
         mountpoint->operations->read_dir(path, buf, nbytes, offset);
-
+    kprintf("vfs3\n");
     if (bytes_read == 0) {
         return 0;
     }
@@ -238,6 +241,11 @@ uint64_t vfs_close_syscall(uint64_t frame, uint64_t file_id, uint64_t unused1,
 uint64_t vfs_read_syscall(uint64_t frame, uint64_t file_id, uint64_t buf,
                           uint64_t nbytes, uint64_t unused) {
     return vfs_read((int) file_id, (void*) buf, (size_t) nbytes);
+}
+
+uint64_t vfs_read_dir_syscall(uint64_t frame, uint64_t path, uint64_t buf,
+                              uint64_t nbytes, uint64_t offset) {
+    return vfs_read_dir((char*) path, (void*) buf, (size_t) nbytes, offset);
 }
 
 void vfs_init() {

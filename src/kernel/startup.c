@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <threads.h>
 // #include <stdint.h>
+#include "../programs/ls.h"
 
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own
 // functions*
@@ -106,6 +107,7 @@ void _start(void) {
 
     // important: timer should be after all these code so that
     // it won't interrupt anything by mistake
+    ls_command();
     timer_init();
 
     for (;;)
