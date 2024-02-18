@@ -14,19 +14,12 @@ void scheduler_init() { process_create("idle process", &process_idle, NULL); }
 void scheduler_yield() { asm("int $0x20"); }
 
 execution_context* scheduler_context_switch(execution_context* context) {
+    // rsp0 contains kernel stack
     tss_set_rsp0((uint64_t) process_get_current()->running_thread->kstack);
-    // klog("context switch ::", "switched tss rsp0");
 
     context = process_get_current()->running_thread->context;
-    // klog("context switch ::", "update context");
 
-    if (process_get_current_vmm() == NULL) {
-        klog("context switch ::", "vmm nil");
-    }
     vmm_switch_pml(process_get_current_vmm());
-    // vmm_switch_pml(vmm_kernel);
-    // // vmm_switch_pml(vmm_kernel);
-    klog("context switch ::", "switched pml");
 
     return context;
 }

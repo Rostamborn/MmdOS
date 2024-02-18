@@ -137,7 +137,7 @@ void thread_delete(process_t* process, thread_t* thread) {
     // free(thread->ustack - STACK_SIZE);
     //
     // kfree(thread->kstack - STACK_SIZE);
-    // kfree(thread);
+    kfree(thread);
 
     return;
 }

@@ -149,9 +149,9 @@ void prompt_backspace_handler() {
 
 void prompt_clear() {
     char backspace[143] = {[0 ... 141] = '\b'};
-    char space[143] = {[0 ... 141] = ' '};
+    char space[143] = {[0 ... 100] = ' '}; // Arman: 100 char, Mahbod 141 char
     for (int i = 48; i > -1; i--) {
-        kprintf("\033[F%s%s", backspace, space);
+        kprintf("\033[F%s", space);
     }
     kprintf("\033[F");
     line_num = 1;
