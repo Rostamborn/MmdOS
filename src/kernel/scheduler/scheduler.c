@@ -20,9 +20,13 @@ execution_context* scheduler_context_switch(execution_context* context) {
     context = process_get_current()->running_thread->context;
     // klog("context switch ::", "update context");
 
-    // vmm_switch_pml(process_get_current_vmm());
+    if (process_get_current_vmm() == NULL) {
+        klog("context switch ::", "vmm nil");
+    }
+    vmm_switch_pml(process_get_current_vmm());
+    // vmm_switch_pml(vmm_kernel);
     // // vmm_switch_pml(vmm_kernel);
-    // klog("context switch ::", "switched pml");
+    klog("context switch ::", "switched pml");
 
     return context;
 }
