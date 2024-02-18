@@ -6,6 +6,8 @@
 
 #define SNAKE_MAX_SIZE (SNAKE_WIDTH*SNAKE_HEIGHT)
 
+#define SNAKE_SEED 123456
+
 #define SNAKE_BORDER '*'
 #define SNAKE_EMPTY ' '
 #define SNAKE_BLOCK '#'

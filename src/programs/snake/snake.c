@@ -25,6 +25,19 @@ enum snake_dir {
     Stop,
 };
 
+int16_t snake_rand(int16_t min, int16_t max) {
+    static uint16_t seed = 0;
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return min + (seed % (max - min + 1));
+}
+
+int16_t snake_new_fruit_pos() {
+    int16_t i = snake_rand(1, SNAKE_HEIGHT-1);
+    int16_t j = snake_rand(1, SNAKE_WIDTH-1);
+
+    return (i * SNAKE_WIDTH) + j;
+}
+
 void snake_init_cells(uint8_t* cells) {
     for (int16_t i = 0; i < SNAKE_WIDTH * SNAKE_HEIGHT; i++) {
         cells[i] = Empty;
@@ -40,22 +53,14 @@ void snake_init_snake(int16_t* snake) {
     snake[0] = (SNAKE_HEIGHT*SNAKE_WIDTH)/2 - 10;
 }
 
-// void snake_draw_map() {
-//     char line[SNAKE_HEIGHT + 2] = {0};
-//     line[SNAKE_HEIGHT + 1] = '\0';
-//     line[SNAKE_HEIGHT] = '\n';
-//     for (uint64_t i = 0; i < SNAKE_WIDTH; i++) {
-//         for (int16_t j = 0; j < SNAKE_HEIGHT; j++) {
-//             int16_t index = SNAKE_CI(i, j);
-//             if (i == 0 || i == SNAKE_WIDTH - 1 || j == 0 || j == SNAKE_HEIGHT - 1) {
-//                 line[j] = SNAKE_BORDER;
-//             } else {
-//                 line[j] = SNAKE_EMPTY;
-//             }
-//         }
-//         kprintf(line);
-//     }
-// }
+void snake_restart(uint8_t* cells, int16_t* snake, uint8_t* state, int16_t* head, enum snake_dir* direction, int16_t* fruit) {
+    *state = 0;
+    snake_init_snake(snake);
+    snake_init_cells(cells);
+    *head = 0;
+    *direction = Stop;
+    *fruit = 1010;
+}
 
 void snake_draw(uint8_t* cells) {
     char line[SNAKE_WIDTH + 2] = {0};
@@ -95,7 +100,6 @@ void snake_draw(uint8_t* cells) {
 int16_t snake_cal_next(int16_t* snake, int16_t head, enum snake_dir direction, uint8_t* state) {
     int16_t res = 0;
     int16_t h = snake[head];
-    klog("cal_next", "snake[head]: %d", h);
     int16_t i = 0;
     int16_t j = 0;
 
@@ -105,32 +109,27 @@ int16_t snake_cal_next(int16_t* snake, int16_t head, enum snake_dir direction, u
     }
     i -= 1;
     j = h + SNAKE_WIDTH;
-    klog("cal_next", "i: %d, j: %d", i, j);
 
     switch (direction) {
         case Left:
-            // res = SNAKE_CI(i, j-1);
             if (j-1 < 0) {
                 j = SNAKE_WIDTH;
             }
             res = ((i * SNAKE_WIDTH) + j-1);
             break;
         case Right:
-            // res = SNAKE_CI(i, j+1);
             if (j+1 > SNAKE_WIDTH) {
                 j = 0;
             }
             res = ((i * SNAKE_WIDTH) + j+1);
             break;
         case Up:
-            // res = SNAKE_CI(i-1, j);
             if (i-1 < 0) {
                 i = SNAKE_HEIGHT;
             }
             res = ((i-1) * SNAKE_WIDTH) + j;
             break;
         case Down:
-            // res = SNAKE_CI(i+1, j);
             if (i+1 > SNAKE_HEIGHT) {
                 i = 0;
             }
@@ -141,7 +140,6 @@ int16_t snake_cal_next(int16_t* snake, int16_t head, enum snake_dir direction, u
             break;
     }
 
-    klog("cal_next", "res: %d", res);
     return res;
 }
 
@@ -149,44 +147,24 @@ void snake_update(uint8_t* cells, int16_t* snake, enum snake_dir* direction, uin
     int16_t next_cell = snake_cal_next(snake, *head, *direction, state);
 
     if (cells[next_cell] == Snake_Body || cells[next_cell] == Block) {
-        *state = 0;
-        *head = 0;
-        snake_init_snake(snake);
-        snake_init_cells(cells);
-        *direction = Stop;
+        snake_restart(cells, snake, state, head, direction, fruit);
     } else {
         if (cells[next_cell] == Fruit) {
-            *fruit = 0;
-
-            int16_t h = *head;
-            // cells[snake[0]] = Empty;
-            while ((h-1) >= 0) {
-                snake[h-1] = snake[h];
-                h -= 1;
-            }
+            *fruit = snake_new_fruit_pos();
             *head += 1;
             snake[*head] = next_cell;
-            // cells[*head] = Snake_Body;
-            // cells[next_cell] = Snake_Head;
 
         } else {
-            int16_t h = *head;
-            // cells[snake[0]] = Empty;
-            while ((h-1) >= 0) {
-                snake[h-1] = snake[h];
-                h -= 1;
+            int16_t h = 0;
+            while (h < *head) {
+                snake[h] = snake[h+1];
+                h += 1;
             }
             snake[*head] = next_cell;
-            // cells[*head] = Snake_Body;
-            // cells[next_cell] = Snake_Head;
         }
     }
-    klog("update", "snake[0]: %d, snake[1]: %d", snake[0], snake[1]);
     
     for (int16_t i = 0; i < SNAKE_HEIGHT*SNAKE_WIDTH; i++) {
-        if (i == *fruit) {
-            continue;
-        }
         cells[i] = Empty;
     }
 
@@ -196,6 +174,7 @@ void snake_update(uint8_t* cells, int16_t* snake, enum snake_dir* direction, uin
     }
     int16_t index = snake[*head];
     cells[index] = Snake_Head;
+    cells[*fruit] = Fruit;
 }
 
 void snake_key_handler(uint8_t* cells, int16_t* snake, enum snake_dir* direction, uint8_t* state, int16_t* head, int16_t* fruit) {
@@ -203,28 +182,31 @@ void snake_key_handler(uint8_t* cells, int16_t* snake, enum snake_dir* direction
 
     switch (key) {
         case 'w':
-            *direction = Up;
+            if (*direction != Down) {
+                *direction = Up;
+            }
             break;
         case 's':
-            *direction = Down;
+            if (*direction != Up) {
+                *direction = Down;
+            }
             break;
         case 'a':
-            *direction = Left;
+            if (*direction != Right) {
+                *direction = Left;
+            }
             break;
         case 'd':
-            *direction = Right;
+            if (*direction != Left) {
+                *direction = Right;
+            }
             break;
         case 'f':
             if (*state == 0) {
                 *state = 1;
                 *direction = Up;
             } else if (*state == 1) {
-                *state = 0;
-                snake_init_snake(snake);
-                snake_init_cells(cells);
-                *head = 0;
-                *direction = Stop;
-                *fruit = 1010;
+                snake_restart(cells, snake, state, head, direction, fruit);
             }
             break;
         case 'q':
@@ -259,7 +241,7 @@ void snake_game_loop() {
     cells[fruit] = Fruit;
 
     while(1) {
-        if (timer_get_uptime() - delta_time < 50) {
+        if (timer_get_uptime() - delta_time < 70) {
 
         } else {
             delta_time = timer_get_uptime();
