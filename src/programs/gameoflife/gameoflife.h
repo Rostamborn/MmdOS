@@ -9,6 +9,6 @@
 #define GOL_EMPTY ' '
 #define GOL_CURSOR 'X'
 
-void game_loop();
+void gol_game_loop();
 
 #endif
