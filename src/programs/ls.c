@@ -1,7 +1,7 @@
-#include "../kernel/lib/print.h"
+#include "../kernel/fs/vfs.h"
 #include "../kernel/userland/sys.h"
 
-void cat_command() {
+void ls_command() {
     char     path[512];
     uint16_t index = 0;
     uint64_t read_char;
@@ -36,21 +36,12 @@ void cat_command() {
             }
         }
     }
-    do_syscall(4, "\n", 0, 0, 0);
-    int id = do_syscall(1, path, 0, 0, 0);
-    if (id < 0) {
-        do_syscall(4, "file could not be open!", 0, 0, 0);
-        do_syscall(7, 0, 0, 0, 0);
-        return;
-    }
-    uint64_t read;
-    do {
-        char buffer[512];
-        read = do_syscall(3, id, buffer, 511, 0);
-        buffer[read] = '\0';
 
-        do_syscall(4, buffer, 0, 0, 0);
-    } while (read != 0);
-    do_syscall(2, id, 0, 0, 0);
+    char buffer[1024];
+    buffer[0] = '\n';
+    uint64_t read = vfs_read_dir_syscall(0, path, buffer + 1, 1023, 0);
+    buffer[read] = '\0';
+    do_syscall(4, buffer, 0, 0, 0);
+
     do_syscall(7, 0, 0, 0, 0);
 }

@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <threads.h>
 // #include <stdint.h>
+#include "../programs/ls.h"
 
 // NOTE(Arman): *We can't use stdlib at all. We have to write our own
 // functions*
@@ -97,11 +98,11 @@ void _start(void) {
     // p2->status = SLEEPING;
     // p2->wake_time = timer_get_uptime() + (5 * 1000);
     // // ---------------------
-    //
-    uint64_t* ptr2 = kalloc(9000);
-    *ptr2 = 8765;
+    // //
+    // uint64_t* ptr2 = kalloc(9000);
+    // *ptr2 = 8765;
     // kprintf("ptr2 addr: %p value: %d\n", ptr2, *ptr2);
-    kfree(ptr2);
+    // kfree(ptr2);
     // vfs_execute("/a.out");
 
     // important: timer should be after all these code so that

@@ -16,7 +16,7 @@
 
 uint8_t    keyboard_buffer = 0;
 bool       keyboard_has_char = false;
-spinlock_t keyabord_lock = SPINLOCK_INIT;
+spinlock_t keyboard_lock = SPINLOCK_INIT;
 
 typedef struct {
     uint8_t shift;
@@ -149,7 +149,7 @@ execution_context* keyboard_handler(execution_context* frame) {
         break;
     default:
         if (pressed == 0) {
-            spinlock_acquire(&keyabord_lock);
+            spinlock_acquire(&keyboard_lock);
             if (keyboard.shift && keyboard.caps_lock) {
 
                 keyboard_buffer = lower_case[scancode];
@@ -161,7 +161,7 @@ execution_context* keyboard_handler(execution_context* frame) {
                 keyboard_buffer = lower_case[scancode];
             }
             keyboard_has_char = true;
-            spinlock_release(&keyabord_lock);
+            spinlock_release(&keyboard_lock);
         }
     }
 
@@ -169,11 +169,11 @@ execution_context* keyboard_handler(execution_context* frame) {
 }
 
 uint8_t keyboard_getch() {
-    spinlock_acquire(&keyabord_lock);
+    spinlock_acquire(&keyboard_lock);
     uint8_t res = keyboard_buffer;
     keyboard_buffer = 0;
     keyboard_has_char = false;
-    spinlock_release(&keyabord_lock);
+    spinlock_release(&keyboard_lock);
 
     return res;
 }

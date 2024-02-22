@@ -8,10 +8,12 @@
 #include "ustar.h"
 #include <stdbool.h>
 
-size_t                       next_mountpoint_id = 1;
-mountpoint_t*                mounted_devices[MAX_MOUNTPOINTS];
-uint8_t                      mounted_devices_num = 0;
-file_descriptor_t            vfs_opened_files[MAX_OPENED_FILES];
+size_t            next_mountpoint_id = 1;
+mountpoint_t*     mounted_devices[MAX_MOUNTPOINTS];
+uint8_t           mounted_devices_num = 0;
+file_descriptor_t vfs_opened_files[MAX_OPENED_FILES];
+file_descriptor_t vfs_opened_dirs[MAX_OPENED_FILES];
+
 struct limine_module_request module_req = {.id = LIMINE_MODULE_REQUEST,
                                            .revision = 0};
 
@@ -29,6 +31,7 @@ int vfs_mount(char* device, char* target, char* fs_type) {
         operations->open = ustar_open;
         operations->close = ustar_close;
         operations->get_file_size = ustar_get_file_size;
+        operations->read_dir = ustar_read_dir;
     }
 
     new_mountpoint->operations = operations;
@@ -158,6 +161,22 @@ uint64_t vfs_read(int file_descriptor_id, void* buf, size_t nbytes) {
     return bytes_read;
 }
 
+uint64_t vfs_read_dir(char* path, void* buf, size_t nbytes, uint64_t offset) {
+    kprintf("");
+    mountpoint_t* mountpoint = vfs_get_mountpoint(path);
+    if (mountpoint == NULL) {
+        return 0;
+    }
+    char*    rel_path = get_rel_path(mountpoint, path);
+    uint64_t bytes_read =
+        mountpoint->operations->read_dir(rel_path, buf, nbytes, offset);
+    if (bytes_read == 0) {
+        return 0;
+    }
+
+    return bytes_read;
+}
+
 ssize_t vfs_write(int file_descriptor_id, void* buf, size_t nbytes) {
     if (vfs_opened_files[file_descriptor_id].fs_file_id == -1) {
         return -1;
@@ -219,6 +238,11 @@ uint64_t vfs_close_syscall(uint64_t frame, uint64_t file_id, uint64_t unused1,
 uint64_t vfs_read_syscall(uint64_t frame, uint64_t file_id, uint64_t buf,
                           uint64_t nbytes, uint64_t unused) {
     return vfs_read((int) file_id, (void*) buf, (size_t) nbytes);
+}
+
+uint64_t vfs_read_dir_syscall(uint64_t frame, uint64_t path, uint64_t buf,
+                              uint64_t nbytes, uint64_t offset) {
+    return vfs_read_dir((char*) path, (void*) buf, (size_t) nbytes, offset);
 }
 
 void vfs_init() {

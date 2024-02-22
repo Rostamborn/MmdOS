@@ -19,6 +19,13 @@ typedef struct fs_operations_t {
                      size_t nbyte);
     ssize_t (*get_file_size)(
         uint64_t file_descriptor); // TODO: maybe do this in open
+
+    int64_t (*open_dir)(const char* path, int flags, ...);
+
+    int64_t (*close_dir)(uint64_t file_descriptor);
+
+    uint64_t (*read_dir)(uint64_t file_descriptor, char* read_buffer,
+                         uint64_t nbyte, uint64_t offset);
 } fs_operations_t;
 
 typedef struct mountpoint_t {
@@ -48,6 +55,9 @@ uint64_t vfs_close_syscall(uint64_t frame, uint64_t file_descriptor_id,
                            uint64_t unused, uint64_t unused2, uint64_t unused3);
 uint64_t vfs_read_syscall(uint64_t frame, uint64_t file_id, uint64_t buf,
                           uint64_t nbyte, uint64_t unused);
+
+uint64_t vfs_read_dir_syscall(uint64_t frame, uint64_t path, uint64_t buf,
+                              uint64_t nbytes, uint64_t offset);
 void     vfs_init();
 
 int vfs_execute(const char* path);

@@ -1,0 +1,2 @@
+now this is file z!
+file z is in folder directory!

@@ -26,9 +26,7 @@ void process_idle() {
 process_t* process_create(char* restrict name, void* restrict function(void*),
                           void* restrict arg) {
     // disable_interrupts();
-
     process_t* process = (process_t*) kalloc(sizeof(process_t));
-
     kstrcpy(process->name, name, PROCESS_NAME_MAX_LEN);
     process->pid = next_pid++;
     process->status = SPAWNED;

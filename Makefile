@@ -82,6 +82,9 @@ prod: $(OBJS)
 	make deploy-limine -B
 
 kernel/development: $(KERNEL_C_FILES, LIB_C_FILES, KERNEL_ASSEMBLY_FILES)
+	@echo "making file system"
+	make fs -B
+
 	@echo "compiling assembly files to objects"
 
 	nasm src/kernel/interrupts/interrupt_vector.asm ${NASMFLAGS} -o $(OBJECTS_DIR)/interrupt_vector.o
@@ -165,5 +168,5 @@ user_program:
 	user_program/*.o
 
 fs: 
-	cd src/kernel/demo && tar cvf examplefs.tar x.txt y.txt a.out
-	mv src/kernel/demo/examplefs.tar disk
+	cd src/kernel/demo/root && tar cvf examplefs.tar *
+	mv src/kernel/demo/root/examplefs.tar disk
