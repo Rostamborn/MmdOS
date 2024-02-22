@@ -107,7 +107,6 @@ void _start(void) {
 
     // important: timer should be after all these code so that
     // it won't interrupt anything by mistake
-    ls_command();
     timer_init();
 
     for (;;)

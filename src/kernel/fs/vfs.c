@@ -162,17 +162,14 @@ uint64_t vfs_read(int file_descriptor_id, void* buf, size_t nbytes) {
 }
 
 uint64_t vfs_read_dir(char* path, void* buf, size_t nbytes, uint64_t offset) {
-    kprintf("vfs0\n");
+    kprintf("");
     mountpoint_t* mountpoint = vfs_get_mountpoint(path);
     if (mountpoint == NULL) {
         return 0;
     }
-    kprintf("vfs1\n");
-    char* rel_path = get_rel_path(mountpoint, path);
-    kprintf("vfs2\n");
+    char*    rel_path = get_rel_path(mountpoint, path);
     uint64_t bytes_read =
-        mountpoint->operations->read_dir(path, buf, nbytes, offset);
-    kprintf("vfs3\n");
+        mountpoint->operations->read_dir(rel_path, buf, nbytes, offset);
     if (bytes_read == 0) {
         return 0;
     }

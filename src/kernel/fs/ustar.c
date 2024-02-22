@@ -10,43 +10,53 @@ ustar_directory_descriptor* open_dirs[MAX_USTAR_OPEN_FILES] = {0};
 bool is_in_same_dir(char* path1, char* path2) {
 
     // remove extra /
-    if (*path1 != '\0' && path1 == '/') {
+    if (*path1 != '\0' && *path1 == '/') {
         path1++;
     }
 
-    if (*path2 != '\0' && path2 == '/') {
+    if (*path2 != '\0' && *path2 == '/') {
         path2++;
     }
-
-    if (*path1 == '\0') {
-        return true;
-    }
-
     if (*path2 == '\0') {
-        return true;
+        return false;
     }
 
-    bool flag = false;
-
-    while (*path1 == *path2) {
-        path1++;
-        path2++;
-        if (*path1 == '\0' && ((*path2 == '/') || (*path2 == '\0'))) {
-            kprintf("1\n");
-            flag = true;
-            break;
-        } else if (*path1 == '/' && (*path2 == '/' || *path2 == '\0')) {
-            kprintf("2\n");
-            flag = true;
-            break;
-        } else if (*path1 == '\0' || *path2 == '\0') {
-            flag = false;
-            kprintf("3\n");
-            break;
-        }
+    uint16_t index1 = 0;
+    while (*(path1 + index1) != '\0' && *(path1 + index1) != '/') {
+        index1++;
     }
+    *(path1 + index1) = '\0';
 
-    return flag;
+    uint16_t index2 = 0;
+    while (*(path2 + index2) != '\0' && *(path2 + index2) != '/') {
+        index2++;
+    }
+    *(path2 + index2) = '\0';
+    bool result = kstrcmp(path1, path2, 0);
+    return result;
+
+    // bool flag = false;
+
+    // while (*path1 == *path2) {
+
+    //     if (*path1 == '\0' && ((*path2 == '/') || (*path2 == '\0'))) {
+    //         kprintf("1\n");
+    //         flag = true;
+    //         break;
+    //     } else if (*path1 == '/' && (*path2 == '/' || *path2 == '\0')) {
+    //         kprintf("2\n");
+    //         flag = true;
+    //         break;
+    //     } else if (*path1 == '\0' || *path2 == '\0') {
+    //         flag = false;
+    //         kprintf("3\n");
+    //         break;
+    //     }
+    //     path1++;
+    //     path2++;
+    // }
+
+    // return flag;
 }
 
 char* remove_prefix(char* dest, char* prefix) {
@@ -58,14 +68,24 @@ char* remove_prefix(char* dest, char* prefix) {
         prefix++;
     }
 
+    if (*prefix == '\0') {
+        return dest;
+    }
+
     while (*dest == *prefix) {
         dest++;
         prefix++;
-
         if (*dest == '\0' || *prefix == '\0') {
             break;
         }
     }
+
+    if (*dest != '/') {
+        return "\0";
+    } else {
+        dest++;
+    }
+
     return dest;
 }
 
@@ -246,7 +266,6 @@ uint64_t ustar_read(uint64_t file_id, char* buffer, uint64_t nbytes,
 
 uint64_t ustar_read_dir(char* dir, char* buffer, uint64_t nbytes,
                         uint64_t offset) {
-    dir = "/folder2";
     char*    b = buffer;
     char*    pathes[50];
     uint32_t pathes_len = 0;
@@ -280,16 +299,13 @@ uint64_t ustar_read_dir(char* dir, char* buffer, uint64_t nbytes,
             }
         }
         char* path = remove_prefix(tar_filename, dir);
-        if (path == NULL) {
+        if (*path == '\0') {
             continue;
         }
         uint32_t index = 0;
         bool     duplicate = false;
         while (index < 50 && pathes[index] != NULL) {
-            kprintf("if: %s == %s\n", remove_prefix(tar_filename, dir),
-                    remove_prefix(pathes[index], dir));
-            if (is_in_same_dir(remove_prefix(tar_filename, dir),
-                               remove_prefix(pathes[index], dir))) {
+            if (is_in_same_dir(path, remove_prefix(pathes[index], dir))) {
 
                 duplicate = true;
                 break;
@@ -297,15 +313,9 @@ uint64_t ustar_read_dir(char* dir, char* buffer, uint64_t nbytes,
             index++;
         }
         if (!duplicate) {
-            kprintf("--------\n");
-            kprintf("path: %s\n", tar_filename);
-            kprintf("--------\n");
-            pathes[pathes_len] = tar_filename;
+
+            pathes[pathes_len] = path;
             pathes_len++;
-        } else {
-            kprintf("+++++++\n");
-            kprintf("path: %s\n", tar_filename);
-            kprintf("+++++++\n");
         }
     }
 
@@ -342,3 +352,5 @@ void ustar_set_start_address(uint64_t address) {
 ssize_t ustar_get_file_size(uint64_t file_id) {
     return open_files[file_id]->size;
 }
+
+// (a|b)*ba(a|b)* | a*b*

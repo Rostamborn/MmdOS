@@ -1,6 +1,7 @@
 #include "prompt.h"
 #include "../../programs/cat.h"
 #include "../../programs/gameoflife/gameoflife.h"
+#include "../../programs/ls.h"
 #include "../lib/logger.h"
 #include "../lib/print.h"
 #include "../lib/spinlock.h"
@@ -112,6 +113,9 @@ void prompt_enter_handler() {
             yield = true;
         } else if (kstrcmp(buffer, "gol", 3)) {
             process_create("gol", game_loop, 3);
+            yield = true;
+        } else if (kstrcmp(buffer, "ls", 2)) {
+            process_create("ls", ls_command, (char*) buffer);
             yield = true;
         } else {
             kprintf("%s\n", buffer);
