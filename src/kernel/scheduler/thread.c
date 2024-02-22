@@ -134,8 +134,9 @@ void thread_delete(process_t* process, thread_t* thread) {
     // TODO: free thread->context crashes the system and
     // causes panic: page fault
     // kfree(thread->context);
-    kfree(thread->kstack - STACK_SIZE);
     // free(thread->ustack - STACK_SIZE);
+    //
+    // kfree(thread->kstack - STACK_SIZE);
     kfree(thread);
 
     return;

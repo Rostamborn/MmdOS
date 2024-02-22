@@ -2,6 +2,7 @@
 #include "../../programs/cat.h"
 #include "../../programs/gameoflife/gameoflife.h"
 #include "../../programs/ls.h"
+#include "../../programs/snake/snake.h"
 #include "../lib/logger.h"
 #include "../lib/print.h"
 #include "../lib/spinlock.h"
@@ -112,7 +113,10 @@ void prompt_enter_handler() {
             process_create("cat", cat_command, (char*) buffer);
             yield = true;
         } else if (kstrcmp(buffer, "gol", 3)) {
-            process_create("gol", game_loop, 3);
+            process_create("gol", gol_game_loop, 3);
+            yield = true;
+        } else if (kstrcmp(buffer, "snake", 5)) {
+            process_create("snake", snake_game_loop, 3);
             yield = true;
         } else if (kstrcmp(buffer, "ls", 2)) {
             process_create("ls", ls_command, (char*) buffer);
@@ -156,9 +160,9 @@ void prompt_backspace_handler() {
 
 void prompt_clear() {
     char backspace[143] = {[0 ... 141] = '\b'};
-    char space[143] = {[0 ... 141] = ' '};
+    char space[143] = {[0 ... 100] = ' '}; // Arman: 100 char, Mahbod 141 char
     for (int i = 48; i > -1; i--) {
-        kprintf("\033[F%s%s", backspace, space);
+        kprintf("\033[F%s", space);
     }
     kprintf("\033[F");
     line_num = 1;

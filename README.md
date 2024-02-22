@@ -59,23 +59,23 @@ make gdb
 | basic prompt      | works                 |
 | Memory Mapping    | works                 |
 | process           | works                 |
-| contest switching | works                 |
+| context switching | works                 |
 | thread            | works                 |
 | file system       | basic vfs implemented |
 | USTar             | works                 |
+| userspace         | needs more testing    |
+| games             | snake and gameoflife work|
+| programs          | cat, ls work          |
 
 #### TODO for the forseeable future
 
-**_ In the future, rewrite the assignment to registers and etc. using Unions _**
 | Feature to be implemented |
 | ------- |
-| better memory map |
-| unique address spaces for processes |
-| more features for process management |
 | maybe implement ACPI to gain access to more advanced devices |
 | user space |
-| system calls |
 | support for simple file systems like FAT |
+| support for ELF |
+| syscalls to execute binaries like ELFs |
 | simple hardware support like usb |
 
 #### Description

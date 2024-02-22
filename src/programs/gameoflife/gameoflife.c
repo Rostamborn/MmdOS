@@ -149,7 +149,7 @@ void gol_key_handler(uint8_t* cells, uint8_t* cursor, uint8_t* state) {
     }
 }
 
-void game_loop() {
+void gol_game_loop() {
     uint64_t success;
     while (1) {
         success = prompt_lockstdin_syscall(0, 0, 0, 0, 0);
@@ -166,7 +166,7 @@ void game_loop() {
     uint8_t gol_state = 0; // 0 = config, 1 = run, 2 = quit
 
     while (1) {
-        if (timer_get_uptime() - delta_time < 200) {
+        if (timer_get_uptime() - delta_time < 50) {
 
         } else {
             delta_time = timer_get_uptime();

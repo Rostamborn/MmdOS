@@ -56,7 +56,7 @@ vmm_t* vmm_new() {
     vmm_map_page(vmm_kernel, (uintptr_t) ((void*) new_vmm->pml + get_hhdm()),
                  (uintptr_t) new_vmm->pml, PTE_PRESENT | PTE_WRITABLE);
 
-    for (uint64_t i = 256; i < 512; i++) {
+    for (uint64_t i = 0; i < 512; i++) {
         new_vmm->pml[i] = vmm_kernel->pml[i];
     }
 
