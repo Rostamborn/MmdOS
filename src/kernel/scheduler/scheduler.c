@@ -15,64 +15,13 @@ void scheduler_yield() { asm("int $0x20"); }
 
 execution_context* scheduler_context_switch(execution_context* context) {
     // rsp0 contains kernel stack
-    tss_set_rsp0((uint64_t) process_get_current()->running_thread->kstack);
+    tss_set_rsp0((uint64_t) process_get_current()->kstack);
 
-    context = process_get_current()->running_thread->context;
+    context = process_get_current()->context;
 
     vmm_switch_pml(process_get_current_vmm());
 
     return context;
-}
-
-// private method for schedule
-bool switch_threads(process_t* process) {
-
-    for (int i = 0; i < process->threads_count + 1; i++) {
-
-        if (process->threads == NULL) {
-            process->status = DEAD;
-            return false;
-        }
-
-        switch (process->running_thread->status) {
-        case READY:
-            return true;
-
-        case RUNNING:
-            process->running_thread->status = READY;
-            break;
-
-        case SLEEPING:
-            uint64_t uptime = timer_get_uptime();
-
-            if (uptime > process->running_thread->wake_time) {
-                process->running_thread->wake_time = 0;
-
-                // TODO: in future check if it should be blocked
-                process->running_thread->status = READY;
-                return true;
-            }
-            break;
-
-        case DEAD:
-            thread_delete(process, process->running_thread);
-            continue;
-
-        default:
-            panic("SCHEDULER ::",
-                  "unhandled status when switching thread! tid: %d, status: %d",
-                  process->running_thread->tid,
-                  process->running_thread->status);
-            break;
-        }
-
-        if (process->running_thread->next != NULL) {
-            process->running_thread = process->running_thread->next;
-        } else {
-            process->running_thread = process->threads;
-        }
-    }
-    return false;
 }
 
 bool stay_idle(process_t* process) {
@@ -81,12 +30,7 @@ bool stay_idle(process_t* process) {
         if (process->status != SLEEPING) {
             return false;
         }
-        for (thread_t* scan = process->threads; scan != NULL;
-             scan = scan->next) {
-            if (scan->status != SLEEPING) {
-                return false;
-            }
-        }
+
         process = process->next;
     }
 
@@ -97,7 +41,7 @@ execution_context* schedule(execution_context* restrict context) {
     // making sure there are processes in the list
     process_t* processes_list = process_get_list();
     if (processes_list == NULL) {
-        return context;
+        panic("SCHEDULER ::", "process list empty!");
     }
 
     // making sure current_process is not NULL
@@ -109,7 +53,6 @@ execution_context* schedule(execution_context* restrict context) {
 
     bool still_scheduling = true;
     bool process_switched = false;
-    bool thread_switched = false;
 
     while (still_scheduling) {
 
@@ -132,33 +75,12 @@ execution_context* schedule(execution_context* restrict context) {
 
         case RUNNING:
             current_process->remaining_quantum--;
-            current_process->running_thread->remaining_quantum--;
-            current_process->running_thread->context = context;
-
-            if (current_process->running_thread->status == DEAD) {
-                thread_delete(current_process, current_process->running_thread);
-                thread_switched = true;
-            }
-
-            if (current_process->status == DEAD) {
-                // let the next iteration of loop handle dead
-                break;
-            }
-
-            // check if current thread should keep running
-            if (current_process->running_thread->remaining_quantum > 0) {
-                still_scheduling = false;
-                break;
-            }
+            current_process->context = context;
 
             // check if current process should keep running
             if (current_process->remaining_quantum > 0) {
-                bool success = switch_threads(current_process);
-                thread_switched = true;
-                if (success) {
-                    still_scheduling = false;
-                    break;
-                }
+                still_scheduling = false;
+                break;
             }
 
             current_process->status = READY;
@@ -194,23 +116,9 @@ execution_context* schedule(execution_context* restrict context) {
         }
 
         if (!still_scheduling) {
-            if (current_process->threads == NULL) {
-                current_process->status = DEAD;
-                still_scheduling = true;
-                continue;
-            }
 
             if ((current_process->pid == 1) && stay_idle(current_process)) {
                 still_scheduling = false;
-            }
-
-            if (current_process->running_thread->status == DEAD ||
-                current_process->running_thread->status == SLEEPING) {
-                bool success = switch_threads(current_process);
-                thread_switched = true;
-                if (!success) {
-                    still_scheduling = true;
-                }
             }
         }
 
@@ -231,19 +139,12 @@ execution_context* schedule(execution_context* restrict context) {
 
     process_set_current(current_process);
     current_process->status = RUNNING;
-    current_process->running_thread->status = RUNNING;
 
     if (process_switched) {
         current_process->remaining_quantum = DEFAULT_PROCESS_RUNNING_QUANTUM;
-        current_process->running_thread->remaining_quantum =
-            DEFAULT_THREAD_RUNNING_QUANTUM;
 
-        return scheduler_context_switch(
-            process_get_current()->running_thread->context);
-    } else if (thread_switched) {
-        current_process->running_thread->remaining_quantum =
-            DEFAULT_THREAD_RUNNING_QUANTUM;
+        return scheduler_context_switch(process_get_current()->context);
     }
 
-    return current_process->running_thread->context;
+    return current_process->context;
 }

@@ -49,7 +49,7 @@ uint64_t prompt_lockstdin_syscall(uint64_t frame, uint64_t unused1,
                                   uint64_t unused2, uint64_t unused3,
                                   uint64_t unused4) {
     process_t* p = process_get_current();
-    uint64_t   result = prompt_lockstdin(p->running_thread->tid);
+    uint64_t   result = prompt_lockstdin(p->pid);
     return result;
 }
 
@@ -57,7 +57,7 @@ uint64_t prompt_unlockstdin_syscall(uint64_t frame, uint64_t unused1,
                                     uint64_t unused2, uint64_t unused3,
                                     uint64_t unused4) {
     process_t* p = process_get_current();
-    prompt_unlockstdin(p->running_thread->tid);
+    prompt_unlockstdin(p->pid);
     kprintf("\n$: ");
     return 0;
 }

@@ -5,25 +5,32 @@
 #include "../mm/vmm.h"
 #include "stddef.h"
 #include "stdint.h"
-#include "thread.h"
 
 #define PROCESS_NAME_MAX_LEN 64
 #define MAX_RESOURCE_IDS 255
 #define DEFAULT_PROCESS_RUNNING_QUANTUM 3
+
+#ifndef KERNEL_STATUS_T_DEF
+#define KERNEL_STATUS_T_DEF
+// determine what condition the process or thread is in
+// TODO: add more states e.q. BLOCKED
+typedef enum { SPAWNED, READY, RUNNING, SLEEPING, DEAD } status_t;
+#endif
 
 typedef struct process_t {
     size_t   pid;
     status_t status;
     vmm_t*   vmm;
     // stores system-wide ids to keep track of resources
-    size_t            resources[MAX_RESOURCE_IDS];
-    char              name[PROCESS_NAME_MAX_LEN];
-    struct thread_t*  threads;
-    struct thread_t*  running_thread;
-    int16_t           remaining_quantum;
-    int8_t            threads_count;
-    uint64_t          wake_time;
-    struct process_t* next;
+    size_t             resources[MAX_RESOURCE_IDS];
+    char               name[PROCESS_NAME_MAX_LEN];
+    int16_t            remaining_quantum;
+    uint64_t           wake_time;
+    struct process_t*  next;
+    execution_context* context;
+    // keeping pointer to stack so to free it easily later on
+    void* ustack;
+    void* kstack;
 } process_t;
 
 // created pcb and allocates memory to process.
