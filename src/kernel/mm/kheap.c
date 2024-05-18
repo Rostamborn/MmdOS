@@ -93,7 +93,6 @@ void k_free(void* addr) {
 
     if (arena->allocated <= 0) {
         // free arena
-        klog("k_free ::", "allocated <= 0");
         // arena_t* curr = vmm_kernel->arena;
         // if (curr == arena) {
         //     curr = arena->next;

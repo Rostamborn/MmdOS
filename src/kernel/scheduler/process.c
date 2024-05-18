@@ -1,4 +1,5 @@
 #include "process.h"
+#include "scheduler.h"
 #include "../lib/alloc.h"
 #include "../lib/logger.h"
 #include "../lib/panic.h"
@@ -17,15 +18,15 @@ process_t* current_process;
 size_t     next_pid = 1;
 
 void* alloc_stack(uint8_t mode) {
-    return kalloc(STACK_SIZE) + STACK_SIZE;
-    // if (mode == KERNEL_MODE) {
-    //     return kalloc(STACK_SIZE) + STACK_SIZE;
-    // } else if (mode == USER_MODE) {
-    //     return malloc(STACK_SIZE) + STACK_SIZE;
-    // } else {
-    //     panic("alloc_stack: invalid mode");
-    //     return NULL;
-    // }
+    // return kalloc(STACK_SIZE) + STACK_SIZE;
+    if (mode == KERNEL_MODE) {
+        return kalloc(STACK_SIZE) + STACK_SIZE;
+    } else if (mode == USER_MODE) {
+        return malloc(STACK_SIZE) + STACK_SIZE;
+    } else {
+        panic("alloc_stack: invalid mode");
+        return NULL;
+    }
 }
 
 // set status to DEAD
@@ -147,12 +148,11 @@ void process_delete(process_t* process) {
         current_process = processes_list;
     }
 
-    spinlock_release(&lock);
     // freeing resources
-    // TODO: free process->resources
-    // TODO: free root page table if not used by other processes
-    // TODO: free stacks
+    // kfree(process->kstack); TODO: This leads to page fault
+    kfree(process->context);
     kfree(process);
+    spinlock_release(&lock);
 
     return;
 }

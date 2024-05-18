@@ -312,57 +312,57 @@ void vmm_init() {
         }
     }
 
-    struct limine_memmap_response* memmap = memmap_req.response;
-    for (uint64_t i = 0; i < memmap->entry_count; i++) {
-        struct limine_memmap_entry* entry = memmap->entries[i];
-
-        // identity map the higher half
-        uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
-        uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
-
-        switch (entry->type) {
-        case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
-            for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
-                if (!vmm_map_page(vmm_kernel, i + get_hhdm(), i,
-                                  PTE_PRESENT | PTE_WRITABLE)) {
-                    panic("bootloader reclaimable not mapped");
-                }
-                if (!vmm_map_page(vmm_kernel, i, i,
-                                  PTE_PRESENT | PTE_WRITABLE)) {
-                    panic("bootloader reclaimable not mapped");
-                }
-            }
-        case LIMINE_MEMMAP_FRAMEBUFFER:
-            for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
-                if (!vmm_map_page(vmm_kernel, i + get_hhdm(), i,
-                                  PTE_PRESENT | PTE_WRITABLE)) {
-                    panic("framebuffer not mapped");
-                }
-                if (!vmm_map_page(vmm_kernel, i, i,
-                                  PTE_PRESENT | PTE_WRITABLE)) {
-                    panic("framebuffer not mapped");
-                }
-            }
-        }
-        if (top <= 0x100000000) {
-            continue;
-        }
-
-        for (uintptr_t j = base; j < top; j += PAGE_SIZE) {
-            if (j < 0x100000000) {
-                continue;
-            }
-
-            if (!vmm_map_page(vmm_kernel, j, j, PTE_PRESENT | PTE_WRITABLE)) {
-                panic("Failed to identity map physical memory");
-            }
-
-            if (!vmm_map_page(vmm_kernel, j + get_hhdm(), j,
-                              PTE_PRESENT | PTE_WRITABLE)) {
-                panic("Failed to map physical memory");
-            }
-        }
-    }
+    // struct limine_memmap_response* memmap = memmap_req.response;
+    // for (uint64_t i = 0; i < memmap->entry_count; i++) {
+    //     struct limine_memmap_entry* entry = memmap->entries[i];
+    //
+    //     // identity map the higher half
+    //     uintptr_t base = ALIGN_DOWN(entry->base, PAGE_SIZE);
+    //     uintptr_t top = ALIGN_UP(entry->base + entry->length, PAGE_SIZE);
+    //
+    //     switch (entry->type) {
+    //     case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
+    //         for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
+    //             if (!vmm_map_page(vmm_kernel, i + get_hhdm(), i,
+    //                               PTE_PRESENT | PTE_WRITABLE)) {
+    //                 panic("bootloader reclaimable not mapped");
+    //             }
+    //             if (!vmm_map_page(vmm_kernel, i, i,
+    //                               PTE_PRESENT | PTE_WRITABLE)) {
+    //                 panic("bootloader reclaimable not mapped");
+    //             }
+    //         }
+    //     case LIMINE_MEMMAP_FRAMEBUFFER:
+    //         for (uintptr_t i = base; i < top; i += PAGE_SIZE) {
+    //             if (!vmm_map_page(vmm_kernel, i + get_hhdm(), i,
+    //                               PTE_PRESENT | PTE_WRITABLE)) {
+    //                 panic("framebuffer not mapped");
+    //             }
+    //             if (!vmm_map_page(vmm_kernel, i, i,
+    //                               PTE_PRESENT | PTE_WRITABLE)) {
+    //                 panic("framebuffer not mapped");
+    //             }
+    //         }
+    //     }
+    //     if (top <= 0x100000000) {
+    //         continue;
+    //     }
+    //
+    //     for (uintptr_t j = base; j < top; j += PAGE_SIZE) {
+    //         if (j < 0x100000000) {
+    //             continue;
+    //         }
+    //
+    //         if (!vmm_map_page(vmm_kernel, j, j, PTE_PRESENT | PTE_WRITABLE)) {
+    //             panic("Failed to identity map physical memory");
+    //         }
+    //
+    //         if (!vmm_map_page(vmm_kernel, j + get_hhdm(), j,
+    //                           PTE_PRESENT | PTE_WRITABLE)) {
+    //             panic("Failed to map physical memory");
+    //         }
+    //     }
+    // }
 
     vmm_switch_pml(vmm_kernel);
 

@@ -29,7 +29,7 @@ typedef struct fs_operations_t {
 } fs_operations_t;
 
 typedef struct mountpoint_t {
-    u_int8_t         id;
+    uint8_t         id;
     char             type[VFS_TYPE_LENGTH];
     char             mountpoint[VFS_NAME_LENGTH];
     char*            device;
