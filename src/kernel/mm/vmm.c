@@ -41,6 +41,7 @@ static uint64_t* walk_pte(uint64_t* pte, uint64_t offset, bool alloc) {
     return (uint64_t*) (next_lvl + get_hhdm());
 }
 
+// TODO: this is the worst code I've written
 vmm_t* vmm_new() {
     vmm_t* new_vmm = pmm_alloc(1);
     new_vmm = (vmm_t*) ((uintptr_t) new_vmm + get_hhdm());
@@ -56,6 +57,7 @@ vmm_t* vmm_new() {
     vmm_map_page(vmm_kernel, (uintptr_t) ((void*) new_vmm->pml + get_hhdm()),
                  (uintptr_t) new_vmm->pml, PTE_PRESENT | PTE_WRITABLE);
 
+    // TODO: i must be 256 to map only the higher half
     for (uint64_t i = 0; i < 512; i++) {
         new_vmm->pml[i] = vmm_kernel->pml[i];
     }

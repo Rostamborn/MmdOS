@@ -1,4 +1,4 @@
-#include "src/kernel/cpu/cpu.h"
+#include "cpu.h"
 #include <stdint.h>
 
 // IRQ default constants

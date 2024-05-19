@@ -83,7 +83,10 @@ make gdb
 The goal is to implement a fully functional OS which would have basic tools and
 perhaps support libc and some Unix-like programs and applications.
 
-#### Credit
+#### Credits
 
-Special thanks to the contributers of [Lyre-OS](https://github.com/Lyre-OS/Lyre)
-for being one of the main references of ideas and implementation.
+As we are beginners in OSdev and low level programming, we have had to use and  
+read extensive amount of sources to have some understanging on the subject matter.  
+The names wouldn't fit here, but we shall reference [OSdev Projects](https://wiki.osdev.org/Projects) which contains a lot  
+of very good projects that can be used as references for learning.
+We definitely have a great appreciation for every single one of them that helped us in any ways.

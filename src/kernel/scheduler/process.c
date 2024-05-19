@@ -1,5 +1,6 @@
 #include "process.h"
 #include "scheduler.h"
+#include "../mm/vmm.h"
 #include "../lib/alloc.h"
 #include "../lib/logger.h"
 #include "../lib/panic.h"
@@ -63,7 +64,6 @@ process_t* process_create(char* restrict name, void* restrict function(void*),
     process->context = context;
 
     process->kstack = alloc_stack(KERNEL_MODE);
-    // thread->ustack = alloc_stack(USER_MODE);
     process->ustack = NULL;
     process->context->iret_ss = 0x30;
     process->context->iret_rsp = (uint64_t) process->kstack;
@@ -150,7 +150,7 @@ void process_delete(process_t* process) {
 
     // freeing resources
     // kfree(process->kstack); TODO: This leads to page fault
-    kfree(process->context);
+    // kfree(process->context); TODO: This leads to page fault
     kfree(process);
     spinlock_release(&lock);
 

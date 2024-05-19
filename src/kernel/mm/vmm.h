@@ -39,7 +39,7 @@ void vmm_init();
 
 vmm_t* vmm_new();
 
-void vmm_destroy_pml(vmm_t* vmm);
+void vmm_destroy(vmm_t* vmm);
 
 void vmm_switch_pml(vmm_t* vmm);
 
