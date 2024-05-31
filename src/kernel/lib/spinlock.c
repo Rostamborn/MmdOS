@@ -1,4 +1,4 @@
-#include "src/kernel/lib/spinlock.h"
+#include "spinlock.h"
 
 void spinlock_acquire(spinlock_t* lock) {
     for (;;) {

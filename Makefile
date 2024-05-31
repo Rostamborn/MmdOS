@@ -13,6 +13,7 @@ override DEFAULT_CFLAGS += \
 	-Wextra \
     -mcmodel=large \
 	-fno-stack-protector \
+	-Iinclude \
 
 override LDFLAGS += \
 	-m elf_x86_64 \

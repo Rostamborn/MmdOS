@@ -10,17 +10,6 @@
 #define PIC_COMMAND_SLAVE 0xa0
 #define PIC_DATA_SLAVE 0xa1
 
-// #define ICW_1 0x11
-// #define ICW_2_MASTER 0x20
-// #define ICW_2_SLAVE 0x28
-// #define ICW_3_MASTER 0x4
-// #define ICW_3_SLAVE 0x2
-// #define ICW_4 0x1
-
-// extern inline void io_wait(void) {
-//     outb(0x80, 0);
-// }
-
 // https://wiki.osdev.org/Serial_Ports
 int serial_init() {
     outb(PORT + 1, 0x00); // Disable all interrupts
@@ -48,14 +37,6 @@ int serial_init() {
 
 // PORT + 5 is the transmit buffer
 void log_to_serial(char* string) {
-    // char* log = LOG_PREFIX;
-    // while (*log != '\0') {
-    //     while ((inb(PORT + 5) & 0x20) == 0)
-    //         ;             // *check if transmit buffer is empty*
-    //     outb(PORT, *log); // write char to serial port
-    //     log++;
-    // }
-    //
     while (*string != '\0') {
         while ((inb(PORT + 5) & 0x20) == 0)
             ;                // *check if transmit buffer is empty*
@@ -95,20 +76,6 @@ void log_to_serial_digit(uint64_t digit) {
 
     log_to_serial(str);
 }
-
-// void disable_pic() {
-//     // ICW: https://wiki.osdev.org/8259_PIC#Initialisation
-//     outb(PIC_COMMAND_MASTER, ICW_1);
-//     outb(PIC_COMMAND_SLAVE, ICW_1);
-//     outb(PIC_DATA_MASTER, ICW_2_MASTER);
-//     outb(PIC_DATA_SLAVE, ICW_2_SLAVE);
-//     outb(PIC_DATA_MASTER, ICW_3_MASTER);
-//     outb(PIC_DATA_SLAVE, ICW_3_SLAVE);
-//     outb(PIC_DATA_MASTER, ICW_4);
-//     outb(PIC_DATA_SLAVE, ICW_4);
-//     outb(PIC_DATA_MASTER, 0xff);
-//     outb(PIC_DATA_SLAVE, 0xff);
-// }
 
 uint64_t rdmsr(uint32_t msr) {  // read model specific register insctruction
     uint32_t low = 0, high = 0; // low: eax, high: edx, input: ecx

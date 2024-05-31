@@ -4,7 +4,6 @@
 #include "../lib/util.h"
 #include "../limine.h"
 #include "../scheduler/process.h"
-#include "../userland/sys.h"
 #include "ustar.h"
 #include <stdbool.h>
 

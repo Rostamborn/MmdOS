@@ -1,7 +1,4 @@
 #include "vmm.h"
-#include "../cpu/cpu.h"
-#include "../lib/alloc.h"
-#include "../lib/logger.h"
 #include "../lib/panic.h"
 #include "../lib/util.h"
 #include "../limine.h"
@@ -242,7 +239,6 @@ uint64_t vmm_virt2phys(vmm_t* vmm, uintptr_t virt, bool alloc) {
     uint64_t* pte = vmm_virt2pte(vmm, virt, alloc);
     if (pte == NULL) {
         // invalid physical address
-        klog("VMM ::", "invalid physical address");
         return 0;
     }
 
@@ -368,5 +364,4 @@ void vmm_init() {
 
     vmm_switch_pml(vmm_kernel);
 
-    klog("VMM ::", "vmm init finished");
 }

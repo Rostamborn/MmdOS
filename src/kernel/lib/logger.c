@@ -1,6 +1,6 @@
-#include "src/kernel/lib/logger.h"
-#include "src/kernel/cpu/cpu.h"
-#include "src/kernel/lib/formatter.h"
+#include "logger.h"
+#include "../cpu/cpu.h"
+#include "formatter.h"
 #include <stdarg.h>
 #include <stdint.h>
 

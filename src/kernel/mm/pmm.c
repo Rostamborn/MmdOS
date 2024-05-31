@@ -1,5 +1,4 @@
 #include "pmm.h"
-#include "../lib/logger.h"
 #include "../lib/panic.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
@@ -59,9 +58,6 @@ void pmm_init() {
     bitmap_top_index = highest_addr / PAGE_SIZE;
     uint64_t bitmap_size = ALIGN_UP(bitmap_top_index / 8, PAGE_SIZE);
 
-    klog("PMM ::", "highest addr: %x", highest_addr);
-    klog("PMM ::", "bitmap size: %u", bitmap_size);
-
     // Find a hole for the bitmap in the memory map.
     // Find a place for the bitmap to reside in.
     for (uint8_t i = 0; i < memmap->entry_count; i++) {
@@ -107,8 +103,6 @@ void pmm_init() {
             bitmap_clear(bitmap, (entry->base + j) / PAGE_SIZE);
         }
     }
-
-    klog("PMM ::", "finished pmm initialization");
 }
 
 void* physical_alloc(uint64_t n_pages, uint64_t limit) {

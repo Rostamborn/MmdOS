@@ -1,10 +1,7 @@
 #include "scheduler.h"
 #include "../cpu/cpu.h"
 #include "../gdt.h"
-#include "../interrupts/timer.h"
-#include "../lib/logger.h"
 #include "../lib/panic.h"
-#include "../lib/spinlock.h"
 #include "process.h"
 #include "stdbool.h"
 

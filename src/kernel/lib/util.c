@@ -1,5 +1,4 @@
 #include "util.h"
-#include "logger.h"
 #include <stdint.h>
 
 uint64_t div_round_up(uint64_t addr, uint64_t align) {

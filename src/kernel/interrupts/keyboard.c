@@ -1,18 +1,8 @@
 #include "keyboard.h"
-#include "../lib/print.h"
 #include "../lib/spinlock.h"
 #include "../terminal/limine_term.h"
-#include "../terminal/prompt.h"
 #include "idt.h"
 #include <stdint.h>
-
-// typedef enum {
-//     None = 0,
-//     Shift = 1,
-//     Caps_Lock = 2,
-//     Alt = 4,
-//     Ctrl = 8,
-// } Key_Modifier;
 
 uint8_t    keyboard_buffer = 0;
 bool       keyboard_has_char = false;

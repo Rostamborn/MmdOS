@@ -1,9 +1,7 @@
 #include "sys.h"
 #include "../cpu/pic.h"
 #include "../fs/vfs.h"
-#include "../interrupts/idt.h"
 #include "../interrupts/keyboard.h"
-#include "../lib/logger.h"
 #include "../lib/print.h"
 #include "../terminal/prompt.h"
 #include <stdint.h>

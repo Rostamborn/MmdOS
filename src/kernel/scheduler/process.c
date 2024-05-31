@@ -4,7 +4,6 @@
 #include "../lib/alloc.h"
 #include "../lib/logger.h"
 #include "../lib/panic.h"
-#include "../lib/print.h"
 #include "../lib/spinlock.h"
 #include "../lib/util.h"
 #include "../scheduler/process.h"
@@ -19,11 +18,10 @@ process_t* current_process;
 size_t     next_pid = 1;
 
 void* alloc_stack(uint8_t mode) {
-    // return kalloc(STACK_SIZE) + STACK_SIZE;
     if (mode == KERNEL_MODE) {
         return kalloc(STACK_SIZE) + STACK_SIZE;
     } else if (mode == USER_MODE) {
-        return malloc(STACK_SIZE) + STACK_SIZE;
+        return NULL; //TODO: add a way of allocating userspace stack
     } else {
         panic("alloc_stack: invalid mode");
         return NULL;
